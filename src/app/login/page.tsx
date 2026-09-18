@@ -1,0 +1,147 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
+import { Github, Mail, Loader2, Zap, FlaskConical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Logo } from "@/components/shared/logo";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [sendingMagic, setSendingMagic] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
+
+  /* Demo login button is enabled only when ALLOW_DEMO_LOGIN=true on the server
+     AND exposed to the client via NEXT_PUBLIC_ALLOW_DEMO_LOGIN (dev preview). */
+  const hasDemo = process.env.NEXT_PUBLIC_ALLOW_DEMO_LOGIN === "true";
+
+  async function sendMagicLink(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.includes("@")) {
+      toast.error("Enter a valid email");
+      return;
+    }
+    setSendingMagic(true);
+    const result = await signIn("resend", { email, redirect: false });
+    setSendingMagic(false);
+    if (result?.error) {
+      toast.error("Couldn't send the magic link. Is RESEND_API_KEY configured?");
+    } else {
+      router.push("/verify-request");
+    }
+  }
+
+  async function demoLogin() {
+    setDemoLoading(true);
+    try {
+      /* No email sent — the route picks ADMIN_EMAILS[0] (or dev@hackmate.local). */
+      const res = await fetch("/api/auth/demo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (!res.ok) throw new Error((await res.json()).error ?? "Dev sign-in failed");
+      const data = await res.json();
+      toast.success(`Signed in as ${data.email ?? "dev account"} (admin)`);
+      router.push("/");
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setDemoLoading(false);
+    }
+  }
+
+  return (
+    <div className="pt-16 pb-8 flex justify-center">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <Logo className="h-12 w-12" />
+            <span className="text-3xl font-extrabold tracking-tight">HackMate</span>
+          </div>
+          <p className="text-muted-foreground text-balance">
+            One account for developers and designers, pitchers and PMs.
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign in</CardTitle>
+            <CardDescription>
+              Free forever. No credit card. No dark patterns.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <Button
+              variant="outline"
+              className="w-full h-11 font-semibold"
+              onClick={() => signIn("github", { callbackUrl: "/" })}
+            >
+              <Github className="h-4.5 w-4.5 mr-2" /> Continue with GitHub
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Developers: we import your languages, repos and activity to verify skills automatically.
+            </p>
+
+            <div className="flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground uppercase tracking-wider">or</span>
+              <Separator className="flex-1" />
+            </div>
+
+            <form onSubmit={sendMagicLink} className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email magic link</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@college.edu"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <Button type="submit" className="w-full h-11 font-semibold" disabled={sendingMagic}>
+                {sendingMagic ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
+                Send magic link
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                For designers, PMs and pitching specialists — no GitHub needed.
+              </p>
+            </form>
+
+            {hasDemo && (
+              <>
+                <div className="flex items-center gap-3">
+                  <Separator className="flex-1" />
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider">dev</span>
+                  <Separator className="flex-1" />
+                </div>
+                <Button variant="ghost" className="w-full border border-dashed" onClick={demoLogin} disabled={demoLoading}>
+                  {demoLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <FlaskConical className="h-4 w-4 mr-2" />
+                  )}
+                  Quick dev sign-in — admin (local only)
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <p className="text-xs text-muted-foreground text-center mt-6 max-w-xs mx-auto text-balance">
+          <Zap className="inline h-3 w-3 text-primary" /> By signing in you agree to be a good teammate.
+          That&apos;s the whole ToS.
+        </p>
+      </div>
+    </div>
+  );
+}
