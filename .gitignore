@@ -72,3 +72,5 @@ screenshots/
 tool-results/
 worklog.md
 Caddyfile
+
+.env.example
