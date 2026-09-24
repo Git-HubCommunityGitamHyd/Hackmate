@@ -14,7 +14,7 @@ export function SiteFooter() {
         <nav className="flex items-center gap-5" aria-label="Footer">
           <Link href="/" className="label-harsh hover:text-primary transition-colors">Discover</Link>
           <Link href="/login" className="label-harsh hover:text-primary transition-colors">Sign in</Link>
-          <span className="hidden sm:inline label-harsh">built by students · $0/month stack</span>
+          <span className="hidden sm:inline label-harsh">v0.1 (Alpha) కొత్త ప్రారంభం</span>
         </nav>
       </div>
     </footer>
