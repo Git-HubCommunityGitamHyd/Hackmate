@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { MatchRing } from "@/components/shared/match-ring";
 import { SkillBadge } from "@/components/shared/badges";
+import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { api, type PersonRecommendation, type PersonCardDTO } from "@/hooks/use-api";
 
 /** Direct invite dialog for team leaders — shows gap-ranked candidates first. */
@@ -163,7 +164,10 @@ function CandidateRow({
     <div className="flex items-center gap-3 p-2.5 rounded-lg border">
       <UserAvatar name={person.name} image={person.image} emergency={person.emergencyAvailable} className="h-9 w-9" />
       <div className="flex-1 min-w-0">
-        <span className="text-sm font-semibold truncate block">{person.name}</span>
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-semibold truncate">{person.name}</span>
+          {person.idVerified && <VerifiedBadge compact />}
+        </div>
         {why ? (
           <p className="text-[11px] text-muted-foreground line-clamp-1">{why}</p>
         ) : (

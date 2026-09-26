@@ -1,6 +1,8 @@
 import type {
   Commitment,
   ExperienceLevel,
+  IdVerificationStatus,
+  LinkedInImport,
   RecruitmentStatus,
   SkillCategory,
 } from "@/lib/db/schema";
@@ -28,6 +30,7 @@ export interface RoleDTO {
 export interface PersonCardDTO {
   id: string;
   name: string;
+  idVerified: boolean;
   image: string | null;
   bio: string | null;
   collegeName: string | null;
@@ -95,6 +98,7 @@ export interface TeamDetailDTO extends TeamCardDTO {
     userId: string;
     name: string;
     image: string | null;
+    idVerified: boolean;
     isAdmin: boolean;
     role: RoleDTO | null;
     topSkills: SkillDTO[];
@@ -123,9 +127,11 @@ export interface TeamDetailDTO extends TeamCardDTO {
 }
 
 export interface ProfileDTO extends PersonCardDTO {
+  idVerificationStatus?: IdVerificationStatus;
   email: string;
   username: string | null;
   linkedinUrl: string | null;
+  linkedinData: LinkedInImport | null;
   portfolioUrl: string | null;
   githubData: {
     login: string;

@@ -44,7 +44,7 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
   let userRows = await db
     .select({
       u: schema.users,
-      collegeName: schema.colleges.name,
+      collegeName: sql<string | null>`coalesce(${schema.users.collegeName}, ${schema.colleges.name})`,
     })
     .from(schema.users)
     .leftJoin(schema.colleges, eq(schema.users.collegeId, schema.colleges.id))
@@ -135,6 +135,7 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
   let list: PersonCardDTO[] = userRows.map(({ u, collegeName }) => ({
     id: u.id,
     name: u.name ?? "Anonymous",
+    idVerified: u.idVerified,
     image: u.image,
     bio: u.bio,
     collegeName: collegeName ?? null,
@@ -177,7 +178,10 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
      otherwise members whose status became team_full / not_looking would
      404 on their own profile. */
   const [userRow] = await db
-    .select({ u: schema.users, collegeName: schema.colleges.name })
+    .select({
+      u: schema.users,
+      collegeName: sql<string | null>`coalesce(${schema.users.collegeName}, ${schema.colleges.name})`,
+    })
     .from(schema.users)
     .leftJoin(schema.colleges, eq(schema.users.collegeId, schema.colleges.id))
     .where(eq(schema.users.id, userId))
@@ -288,6 +292,8 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
   return {
     id: u.id,
     name: u.name ?? "Anonymous",
+    idVerified: u.idVerified,
+    idVerificationStatus: u.idVerificationStatus,
     image: u.image,
     bio: u.bio,
     collegeName: userRow.collegeName ?? null,
@@ -305,6 +311,7 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
     email: u.email,
     username: u.username,
     linkedinUrl: u.linkedinUrl,
+    linkedinData: (u.linkedinData as ProfileDTO["linkedinData"]) ?? null,
     portfolioUrl: u.portfolioUrl,
     githubData: (u.githubData as ProfileDTO["githubData"]) ?? null,
     availability: avail

@@ -22,6 +22,7 @@ async function teamAggregates(teamIds: string[]) {
         userId: schema.teamMembers.userId,
         name: schema.users.name,
         image: schema.users.image,
+        idVerified: schema.users.idVerified,
         isAdmin: schema.teamMembers.isAdmin,
         roleId: schema.teamMembers.roleId,
         experienceLevel: schema.users.experienceLevel,
@@ -441,6 +442,7 @@ export async function getTeamDetail(
       userId: m.userId,
       name: m.name ?? "Anonymous",
       image: m.image,
+      idVerified: m.idVerified,
       isAdmin: m.isAdmin,
       role: (rolesByUser.get(m.userId) ?? [])[0]
         ? {

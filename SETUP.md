@@ -23,11 +23,16 @@ place. No keys ever go in the code.
 | `PUSHER_APP_ID` `PUSHER_KEY` `PUSHER_SECRET` `PUSHER_CLUSTER` | Realtime chat (server) | pusher.com, Channels app, App Keys | for realtime chat |
 | `NEXT_PUBLIC_PUSHER_KEY` `NEXT_PUBLIC_PUSHER_CLUSTER` | Realtime chat (browser) | same Pusher app, same values | with Pusher |
 | `BLOB_READ_WRITE_TOKEN` | Avatar and logo uploads | Vercel dashboard, Storage, Blob | for uploads |
+| `ID_BLOB_READ_WRITE_TOKEN` | Private college ID image store | Vercel dashboard, private Blob store | college ID verification |
+| `ID_BLOB_STORE_ID` | Private store ID for Vercel OIDC | Vercel Blob store settings | optional alternative to ID token |
+| `SURYA_SERVICE_URL` | Private Surya OCR service base URL | Your persistent Python service | college ID verification |
+| `SURYA_SERVICE_TOKEN` | Shared app/service Bearer secret | Generate a random secret | college ID verification |
 | `CRON_SECRET` | Signs the Vercel Cron requests | generate any random string | production, for cron |
 | `DATABASE_SSL_ROOT_CERT` | Path to the CockroachDB root cert for strict TLS | CockroachDB console, download CA cert | optional |
 | `ALLOW_DEMO_LOGIN` | Dev-only quick admin sign in button | set to `true` | dev only, never production |
 
-Everything except `DATABASE_URL` and `AUTH_SECRET` is optional: the app
+Everything except `DATABASE_URL` and `AUTH_SECRET` is optional for core app
+startup (college ID verification also requires its two service variables): the app
 degrades gracefully (no Pusher key means chat polls every 4 seconds, no
 Resend key means the email form shows a clear error, no Blob token means
 avatar upload is disabled).
@@ -73,6 +78,71 @@ Dev-only quick sign in: with `ALLOW_DEMO_LOGIN=true`, the login page shows a
 quick admin sign in button that signs you in as your first `ADMIN_EMAILS`
 account (or `dev@hackmate.local`) with admin rights, handy before GitHub OAuth
 is configured. Never enable it in production, leave both flags unset.
+
+## College ID verification
+
+College ID verification uses a persistent Python service running the current
+Surya 2 OCR API. The Next.js route authenticates the user, validates and
+normalizes the image, stores it privately, calls Surya, compares the recognized
+name and institution with the user's profile, checks duplicate images and
+student IDs, and saves only the status and keyed hashes. OCR text and extracted
+personal details are not stored.
+
+### Local setup
+
+1. Apply the database migration with `bun run db:migrate`.
+2. Install Python 3.10+ and create an isolated environment in
+   `services/surya-ocr`.
+3. Install the service dependencies:
+   ```powershell
+   cd services/surya-ocr
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+4. Install the `llama-server` binary from the
+   [llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases) for
+   CPU/Apple Silicon inference, or configure a compatible existing Surya 2
+   inference server. Surya also supports a vLLM backend on NVIDIA GPUs.
+5. Set `SURYA_SERVICE_TOKEN` in `.env.local` to a generated random secret and
+   set the same value in the OCR service environment. Set
+   `SURYA_SERVICE_URL=http://localhost:8000` in `.env.local`. For local
+   inference, configure `SURYA_INFERENCE_BACKEND=llama.cpp` in the service
+   environment; optionally point `SURYA_INFERENCE_URL` at an existing
+   compatible `/v1` inference endpoint.
+6. Run the OCR service in a separate terminal:
+   ```powershell
+   uvicorn main:app --host 127.0.0.1 --port 8000
+   ```
+7. Start Next.js as usual. Without a Blob token, development ID files are
+   stored under `.data/private-college-ids/`, outside `public/` and ignored
+   by Git. If testing Blob storage locally, set `ID_BLOB_READ_WRITE_TOKEN` to
+   the separate private store's token.
+
+### Production deployment
+
+- Deploy `services/surya-ocr` as a persistent private Python service, not as a
+  Next.js/Vercel serverless function. Build it with
+  `docker build -t hackmate-surya services/surya-ocr` or deploy the source
+  directly. The service exposes `/ocr` (Bearer-token protected) and `/healthz`;
+  use private networking and TLS in production.
+- Provide a persistent Surya 2 inference backend: use vLLM on a supported
+  NVIDIA GPU or llama.cpp on a CPU-capable host, or set
+  `SURYA_INFERENCE_URL` to an existing compatible backend. The service keeps a
+  single `SuryaInferenceManager`/`RecognitionPredictor` instance for reuse.
+- Set `SURYA_SERVICE_URL` and the same high-entropy `SURYA_SERVICE_TOKEN` in
+  the Vercel app and OCR service. Also configure the app's normal
+  `AUTH_SECRET`. The endpoint allows up to 60 seconds, subject to the Vercel
+  plan's function duration limits; choose a plan/backend that supports OCR
+  latency.
+- Create a separate **private** Vercel Blob store. Set
+  `ID_BLOB_READ_WRITE_TOKEN` to its token, or configure `ID_BLOB_STORE_ID` to
+  use Vercel OIDC. The public `BLOB_READ_WRITE_TOKEN` for avatars/logos is
+  intentionally not used for ID documents.
+- Only authenticated users can retrieve their own image through
+  `/api/verification/document`. Public profiles expose only `idVerified`.
+- Surya's code is Apache-2.0 licensed; review the current model-weight
+  OpenRAIL-M terms for your intended use before production deployment.
 
 ## Admin access: posting and managing hackathons
 

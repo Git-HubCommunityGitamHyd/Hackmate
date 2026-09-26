@@ -23,6 +23,7 @@ export const profileSchema = z.object({
   githubUsername: z.string().max(80).optional().or(z.literal("")),
   linkedinUrl: z.string().url().optional().or(z.literal("")),
   portfolioUrl: z.string().url().optional().or(z.literal("")),
+  collegeName: z.string().max(160).optional().or(z.literal("")),
   collegeId: z.string().uuid().nullable().optional(),
   graduationYear: z.number().int().min(2000).max(2035).nullable().optional(),
   experienceLevel: experienceSchema,

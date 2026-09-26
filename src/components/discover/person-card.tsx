@@ -5,6 +5,7 @@ import { Github, Clock, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/shared/user-avatar";
+import { VerifiedBadge } from "@/components/shared/verified-badge";
 import {
   SkillBadge,
   RecruitmentBadge,
@@ -37,6 +38,7 @@ export function PersonCard({
                 <h3 className="font-bold text-base leading-tight hover:text-primary transition-colors">
                   {person.name}
                 </h3>
+                {person.idVerified && <VerifiedBadge compact />}
               </Link>
               {person.emergencyAvailable && <EmergencyBadge />}
             </div>

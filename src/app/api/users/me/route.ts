@@ -1,15 +1,36 @@
 import { NextRequest } from "next/server";
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { profileSchema } from "@/lib/validations";
 import { getProfile } from "@/lib/queries/people";
 import type { TeamDetailDTO } from "@/lib/queries/types";
 import { ok, fail, withUser } from "@/lib/api";
+import { PROCESSING_STALE_AFTER_MS } from "@/lib/verification/constants";
 
 /** GET /api/users/me — full own profile + my active team. */
 export async function GET() {
   return withUser(async (user) => {
+    const staleBefore = new Date(Date.now() - PROCESSING_STALE_AFTER_MS);
+    await db
+      .update(schema.users)
+      .set({
+        idVerified: false,
+        idVerificationStatus: "NOT_VERIFIED",
+        idVerificationStartedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(schema.users.id, user.id),
+          eq(schema.users.idVerificationStatus, "PROCESSING"),
+          or(
+            isNull(schema.users.idVerificationStartedAt),
+            lt(schema.users.idVerificationStartedAt, staleBefore),
+          ),
+        ),
+      );
+
     const profile = await getProfile(user.id);
     if (!profile) return fail("Profile not found", 404);
 
@@ -44,17 +65,29 @@ export async function PUT(req: NextRequest) {
       return fail(parsed.error.issues[0]?.message ?? "Invalid profile data", 422);
     }
     const data = parsed.data;
+    // Compare against the stored identity atomically with the profile update.
+    const resetVerification = and(
+      eq(schema.users.idVerified, true),
+      or(
+        sql`${schema.users.name} IS DISTINCT FROM ${data.name}`,
+        sql`${schema.users.collegeName} IS DISTINCT FROM ${data.collegeName || null}`,
+      ),
+    );
 
     await db
       .update(schema.users)
       .set({
+        idVerified: sql`CASE WHEN ${resetVerification} THEN false ELSE ${schema.users.idVerified} END`,
+        idVerificationStatus: sql`CASE WHEN ${resetVerification} THEN 'NOT_VERIFIED' ELSE ${schema.users.idVerificationStatus} END`,
+        idVerifiedAt: sql`CASE WHEN ${resetVerification} THEN NULL ELSE ${schema.users.idVerifiedAt} END`,
         name: data.name,
         username: data.username || null,
         bio: data.bio || null,
         githubUsername: data.githubUsername || null,
         linkedinUrl: data.linkedinUrl || null,
         portfolioUrl: data.portfolioUrl || null,
-        collegeId: data.collegeId ?? null,
+        collegeName: data.collegeName || null,
+        collegeId: data.collegeId,
         graduationYear: data.graduationYear ?? null,
         experienceLevel: data.experienceLevel,
         commitment: data.commitment,
