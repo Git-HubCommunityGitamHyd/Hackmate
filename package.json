@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint .",
+    "test": "node --import tsx --test src/lib/verification/verification.test.ts",
     "db:push": "tsx scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/lib/db/seed.ts",
@@ -96,7 +97,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "^16.1.1",
-    "tailwindcss": "^4",
+    "tailwindcss": "^4.3.3",
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
   },

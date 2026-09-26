@@ -56,6 +56,7 @@ server.log
 # keep the env template, ignore real secrets
 !.env.example
 .env.local
+.data/private-college-ids/
 
 # local embedded postgres (sandbox/dev preview only)
 .pgdata/

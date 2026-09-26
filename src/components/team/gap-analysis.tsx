@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/shared/user-avatar";
+import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { MatchRing } from "@/components/shared/match-ring";
 import { CompletenessMeter } from "./completeness-meter";
 import type { CompositionReport } from "@/lib/matching/composition";
@@ -61,6 +62,7 @@ export function GapAnalysisPanel({
                       <Link href={`/profile/${person.id}`} className="text-sm font-semibold hover:text-primary truncate">
                         {rec.name}
                       </Link>
+                      {person.idVerified && <VerifiedBadge compact />}
                       {rec.emergencyAvailable && <ShieldAlert className="h-3.5 w-3.5 text-red-500" />}
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2">{rec.why}</p>

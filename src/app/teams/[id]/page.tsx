@@ -22,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { CommitmentBadge, SkillBadge } from "@/components/shared/badges";
+import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { MatchRing } from "@/components/shared/match-ring";
 import { EmptyState } from "@/components/shared/empty-state";
 import { GapAnalysisPanel } from "@/components/team/gap-analysis";
@@ -238,6 +239,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-sm">{m.name}</span>
+                      {m.idVerified && <VerifiedBadge compact />}
                       {m.isAdmin && (
                         <Badge variant="secondary" className="text-[10px] py-0">lead</Badge>
                       )}

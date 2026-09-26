@@ -33,6 +33,8 @@ import {
 } from "@/lib/constants";
 import type { SkillCategory } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
+import { LinkedInImportCard } from "@/components/profile/linkedin-import-card";
+import { CollegeIdVerification } from "@/components/profile/college-id-verification";
 
 interface SkillSel {
   slug: string;
@@ -51,6 +53,7 @@ export default function EditProfilePage() {
     githubUsername: "",
     linkedinUrl: "",
     portfolioUrl: "",
+    collegeName: "",
     graduationYear: "",
     experienceLevel: "intermediate",
     commitment: "serious",
@@ -84,6 +87,7 @@ export default function EditProfilePage() {
       githubUsername: profile.githubUsername ?? "",
       linkedinUrl: profile.linkedinUrl ?? "",
       portfolioUrl: profile.portfolioUrl ?? "",
+      collegeName: profile.collegeName ?? "",
       graduationYear: profile.graduationYear ? String(profile.graduationYear) : "",
       experienceLevel: profile.experienceLevel ?? "intermediate",
       commitment: profile.commitment ?? "serious",
@@ -120,7 +124,7 @@ export default function EditProfilePage() {
         body: JSON.stringify({
           ...form,
           graduationYear: form.graduationYear ? Number(form.graduationYear) : null,
-          collegeId: null,
+          collegeName: form.collegeName,
           skills,
           roles,
           availability: avail,
@@ -219,6 +223,16 @@ export default function EditProfilePage() {
             <Input id="gradyear" type="number" min={2000} max={2035} value={form.graduationYear} onChange={(e) => setForm({ ...form, graduationYear: e.target.value })} />
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="college">College / university</Label>
+            <Input
+              id="college"
+              maxLength={160}
+              value={form.collegeName}
+              onChange={(e) => setForm({ ...form, collegeName: e.target.value })}
+              placeholder="Your college or university"
+            />
+          </div>
+          <div className="space-y-1.5">
             <Label htmlFor="linkedin">LinkedIn URL</Label>
             <Input id="linkedin" value={form.linkedinUrl} onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })} placeholder="https://…" />
           </div>
@@ -228,6 +242,26 @@ export default function EditProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {profile && <CollegeIdVerification profile={profile} />}
+
+      {profile && (
+        <LinkedInImportCard
+          profileId={profile.id}
+          linkedinUrl={form.linkedinUrl}
+          onLinkedInUrlChange={(linkedinUrl) => setForm((current) => ({ ...current, linkedinUrl }))}
+          onImported={(result) =>
+            setForm((current) => ({
+              ...current,
+              linkedinUrl: result.linkedinUrl ?? current.linkedinUrl,
+              bio:
+                result.bioFilled && !current.bio.trim()
+                  ? result.bio ?? current.bio
+                  : current.bio,
+            }))
+          }
+        />
+      )}
 
       {/* Roles */}
       <Card>
