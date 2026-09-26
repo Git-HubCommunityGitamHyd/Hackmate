@@ -256,20 +256,21 @@ export function PixelCanvas({
         // Event listeners
         const resizeObserver = new ResizeObserver(() => initPixels());
         resizeObserver.observe(container);
+
         if (!noFocus) {
-            container.addEventListener("mousemove", onMouseMove);
-            container.addEventListener("mouseleave", onMouseLeave);
-            container.addEventListener("touchmove", onTouchMove, { passive: true });
-            container.addEventListener("touchend", onTouchEnd);
+        window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("mouseleave", onMouseLeave);
+        window.addEventListener("touchmove", onTouchMove, { passive: true });
+        window.addEventListener("touchend", onTouchEnd);
         }
 
         return () => {
-            cancelAnimationFrame(animationRef.current);
-            resizeObserver.disconnect();
-            container.removeEventListener("mousemove", onMouseMove);
-            container.removeEventListener("mouseleave", onMouseLeave);
-            container.removeEventListener("touchmove", onTouchMove);
-            container.removeEventListener("touchend", onTouchEnd);
+        cancelAnimationFrame(animationRef.current);
+        resizeObserver.disconnect();
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseleave", onMouseLeave);
+        window.removeEventListener("touchmove", onTouchMove);
+        window.removeEventListener("touchend", onTouchEnd);
         };
     }, [gap, speed, noFocus, variant, getColorFromIntensity]);
 
