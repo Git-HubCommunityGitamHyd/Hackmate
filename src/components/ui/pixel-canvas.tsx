@@ -254,7 +254,8 @@ export function PixelCanvas({
         animationRef.current = requestAnimationFrame(draw);
 
         // Event listeners
-        window.addEventListener("resize", initPixels);
+        const resizeObserver = new ResizeObserver(() => initPixels());
+        resizeObserver.observe(container);
         if (!noFocus) {
             container.addEventListener("mousemove", onMouseMove);
             container.addEventListener("mouseleave", onMouseLeave);
@@ -264,7 +265,7 @@ export function PixelCanvas({
 
         return () => {
             cancelAnimationFrame(animationRef.current);
-            window.removeEventListener("resize", initPixels);
+            resizeObserver.disconnect();
             container.removeEventListener("mousemove", onMouseMove);
             container.removeEventListener("mouseleave", onMouseLeave);
             container.removeEventListener("touchmove", onTouchMove);

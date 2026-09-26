@@ -131,7 +131,7 @@ export function LoginClient() {
   }
 
   return (
-    <div className="relative pt-10 pb-12 overflow-hidden">
+    <div className="relative min-h-screen pt-10 pb-12 overflow-hidden">
       <PixelCanvas
         className="absolute inset-0 z-0"
         variant="glow"
