@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/shared/logo";
+import { PixelCanvas } from "@/components/ui/pixel-canvas";
 
 const MATCH_WEIGHTS = [
   { label: "Skill overlap", weight: "40%", hint: "What you know vs what they need" },
@@ -130,7 +131,15 @@ export function LoginClient() {
   }
 
   return (
-    <div className="pt-10 pb-12">
+    <div className="relative pt-10 pb-12 overflow-hidden">
+      <PixelCanvas
+        className="absolute inset-0 z-0"
+        variant="glow"
+        gap={9}
+        speed={0.03}
+        colors={["#052e12", "#0d5c2a", "#16a34a", "#4ade80"]}
+      />
+      <div className="relative z-10">
       {/* Mobile: brand + sign-in first */}
       <div className="lg:hidden mb-8 text-center">
         <div className="inline-flex items-center gap-3 mb-3">
@@ -227,5 +236,6 @@ export function LoginClient() {
         </div>
       </div>
     </div>
+  </div>
   );
 }
