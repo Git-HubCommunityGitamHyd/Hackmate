@@ -87,7 +87,7 @@ export function LoginClient() {
       <PixelCanvas
         className="fixed inset-0 z-0"
         variant="glow"
-        gap={10}
+        gap={11}
         speed={0.03}
         colors={["#052e12", "#0d5c2a", "#16a34a", "#4ade80"]}
       />
