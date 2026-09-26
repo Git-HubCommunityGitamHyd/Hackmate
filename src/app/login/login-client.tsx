@@ -13,14 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/shared/logo";
 import { PixelCanvas } from "@/components/ui/pixel-canvas";
 
-const MATCH_WEIGHTS = [
-  { label: "Skill overlap", weight: "40%", hint: "What you know vs what they need" },
-  { label: "Availability", weight: "20%", hint: "Hours and time windows line up" },
-  { label: "Commitment", weight: "15%", hint: "Casual to win-at-all-costs" },
-  { label: "Experience delta", weight: "15%", hint: "Neither carrying nor carried" },
-  { label: "Role fit", weight: "10%", hint: "Fills an open role, not a duplicate" },
-];
-
 function ProjectInfo() {
   return (
     <div className="space-y-6">
@@ -112,7 +104,11 @@ export function LoginClient() {
       </div>
 
       <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 lg:items-start max-w-6xl mx-auto">
-
+        {/* Desktop: project info column */}
+        <div className="hidden lg:block">
+          <ProjectInfo />
+        </div>
+        
         {/* Sign-in */}
         <div className="w-full max-w-md mx-auto lg:mx-0 lg:pt-2">
           <Card>
@@ -184,6 +180,11 @@ export function LoginClient() {
             <Zap className="inline h-3 w-3 text-primary" /> By signing in you agree to be a good teammate.
             That&apos;s the whole ToS.
           </p>
+        </div>
+
+        {/* Mobile: project info below the card */}
+        <div className="lg:hidden border-t pt-8">
+          <ProjectInfo />
         </div>
       </div>
     </div>
