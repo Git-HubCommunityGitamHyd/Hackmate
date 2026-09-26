@@ -1,0 +1,93 @@
+.root {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+
+  color: inherit;
+
+  transform:
+    perspective(900px)
+    rotateX(var(--tilt-x, 0deg))
+    rotateY(var(--tilt-y, 0deg));
+
+  transform-style: preserve-3d;
+  transition: transform 0.18s ease-out;
+
+  border: 1px solid rgba(255, 255, 255, 0.10);
+
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.18);
+}
+
+/* Main transparent glass */
+.glass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  pointer-events: none;
+}
+
+/* Refraction layer */
+.refraction {
+  position: absolute;
+  inset: -8px;
+  z-index: 1;
+
+  background: rgba(255, 255, 255, 0.012);
+
+  pointer-events: none;
+
+  /*
+   * The SVG displacement filter bends whatever
+   * is visible through the glass.
+   */
+}
+
+/* Subtle vertical fluting.
+   This is intentionally very low contrast. */
+.flutes {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  pointer-events: none;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 8px,
+      rgba(255, 255, 255, 0.018) 9px,
+      rgba(255, 255, 255, 0.018) 10px,
+      transparent 11px,
+      transparent 18px
+    );
+
+  opacity: 0.65;
+}
+
+/* Content sits above the glass */
+.content {
+  position: relative;
+  z-index: 3;
+
+  height: 100%;
+
+  transform: translateZ(18px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    transform: none;
+    transition: none;
+  }
+
+  .content {
+    transform: none;
+  }
+}

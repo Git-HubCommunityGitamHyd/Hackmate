@@ -20,6 +20,7 @@ import { TeamCard } from "@/components/discover/team-card";
 import { PersonCard } from "@/components/discover/person-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useCurrentUser, useHackathons, useTeams, usePeople, useSearch } from "@/hooks/use-api";
+import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
 
 export default function DiscoverPage() {
   const { user, isAuthenticated } = useCurrentUser();
@@ -53,7 +54,15 @@ export default function DiscoverPage() {
       {/* Compact header: actions only — project details live on the login screen */}
       <section className="mb-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <h1 className="text-2xl font-extrabold tracking-tight">Discover</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">
+            <KineticTextReveal
+              text="Discover"
+              splitBy="words"
+              distance={8}
+              stagger={0.015}
+              blur={false}
+            />
+          </h1>
           <div className="flex items-center gap-2 flex-wrap">
             {!isAuthenticated && (
               <Button asChild size="sm" className="font-semibold">
