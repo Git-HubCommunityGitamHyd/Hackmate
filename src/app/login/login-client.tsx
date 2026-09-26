@@ -13,73 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/shared/logo";
 import { PixelCanvas } from "@/components/ui/pixel-canvas";
 
-const MATCH_WEIGHTS = [
-  { label: "Skill overlap", weight: "40%", hint: "What you know vs what they need" },
-  { label: "Availability", weight: "20%", hint: "Hours and time windows line up" },
-  { label: "Commitment", weight: "15%", hint: "Casual to win-at-all-costs" },
-  { label: "Experience delta", weight: "15%", hint: "Neither carrying nor carried" },
-  { label: "Role fit", weight: "10%", hint: "Fills an open role, not a duplicate" },
-];
-
-function ProjectInfo() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <p className="label-harsh mb-3">Hackathon team finder</p>
-        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-balance">
-          Find your people.{" "}
-          <span className="text-primary">Win your hackathon.</span>
-        </h2>
-        <p className="text-muted-foreground mt-4 max-w-xl leading-relaxed">
-          HackMate is where students find hackathon teammates. Build a profile with your
-          skills, roles, availability and commitment, browse hackathons posted by
-          organizers, and form teams around ideas. Teams get a workspace with realtime
-          chat and a submission checklist, and the whole thing runs on free tiers.
-        </p>
-      </div>
-
-      <div className="fluted-panel">
-        <div className="p-4 flex items-start gap-3 relative z-10">
-          <Radar className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-          <div>
-            <p className="label-harsh text-primary/90">Team Composition Intelligence</p>
-            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-              &ldquo;Your team has strong ML and frontend coverage. You have no member with
-              backend/cloud experience. Arjun knows FastAPI, PostgreSQL and AWS and is
-              available for the entire hackathon.&rdquo; A composition analysis instead of
-              a match percentage: what your team covers, what is missing, and who fills
-              the gap.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h3 className="label-harsh mb-4 flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" /> How HackMate matches you
-        </h3>
-        <div className="grid sm:grid-cols-2 gap-2.5">
-          {MATCH_WEIGHTS.map((w) => (
-            <div key={w.label} className="flex items-center gap-3 p-3 rounded-sm border bg-muted/30">
-              <span className="text-xl font-extrabold text-primary w-12 shrink-0">{w.weight}</span>
-              <div className="min-w-0">
-                <div className="text-sm font-semibold">{w.label}</div>
-                <div className="text-xs text-muted-foreground">{w.hint}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-muted-foreground mt-4 max-w-xl leading-relaxed">
-          Deterministic scoring: a SQL prefilter plus TypeScript weighted ranking over
-          about 50 candidates. No black box, every match card shows the exact reasons.
-          Emergency-available students are boosted with a red pulse. Sign in with GitHub
-          and your languages, repos and activity are imported to verify skills
-          automatically; designers, PMs and pitchers can use an email magic link instead.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 export function LoginClient() {
   const router = useRouter();
@@ -152,10 +85,6 @@ export function LoginClient() {
       </div>
 
       <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 lg:items-start max-w-6xl mx-auto">
-        {/* Desktop: project info column */}
-        <div className="hidden lg:block">
-          <ProjectInfo />
-        </div>
 
         {/* Sign-in */}
         <div className="w-full max-w-md mx-auto lg:mx-0 lg:pt-2">
@@ -228,11 +157,6 @@ export function LoginClient() {
             <Zap className="inline h-3 w-3 text-primary" /> By signing in you agree to be a good teammate.
             That&apos;s the whole ToS.
           </p>
-        </div>
-
-        {/* Mobile: project info below the card */}
-        <div className="lg:hidden border-t pt-8">
-          <ProjectInfo />
         </div>
       </div>
     </div>
