@@ -111,7 +111,7 @@ export function LoginClient() {
         
         {/* Sign-in */}
         <div className="w-full max-w-md mx-auto lg:mx-0 lg:pt-2">
-          <Card>
+          <Card className="bg-card/70 backdrop-blur-md">
             <CardHeader>
               <CardTitle>Sign in</CardTitle>
               <CardDescription>
