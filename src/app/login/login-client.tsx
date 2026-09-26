@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import { Github, Mail, Loader2, Zap, FlaskConical, Radar, Sparkles } from "lucide-react";
+import { Github, Mail, Loader2, Zap, FlaskConical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,33 @@ import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/shared/logo";
 import { PixelCanvas } from "@/components/ui/pixel-canvas";
 
+const MATCH_WEIGHTS = [
+  { label: "Skill overlap", weight: "40%", hint: "What you know vs what they need" },
+  { label: "Availability", weight: "20%", hint: "Hours and time windows line up" },
+  { label: "Commitment", weight: "15%", hint: "Casual to win-at-all-costs" },
+  { label: "Experience delta", weight: "15%", hint: "Neither carrying nor carried" },
+  { label: "Role fit", weight: "10%", hint: "Fills an open role, not a duplicate" },
+];
+
+function ProjectInfo() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="label-harsh mb-3">Hackathon team finder</p>
+        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-balance">
+          Find your people.{" "}
+          <span className="text-primary">Win your hackathon.</span>
+        </h2>
+        <p className="text-muted-foreground mt-4 max-w-xl leading-relaxed">
+          HackMate is where students find hackathon teammates. Build a profile with your
+          skills, roles, availability and commitment, browse hackathons posted by
+          organizers, and form teams around ideas. Teams get a workspace with realtime
+          chat and a submission checklist, and the whole thing runs on free tiers.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export function LoginClient() {
   const router = useRouter();
