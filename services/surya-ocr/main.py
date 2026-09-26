@@ -164,6 +164,8 @@ async def ocr(
             if source.format not in ALLOWED_FORMATS:
                 raise HTTPException(status_code=415, detail="Unsupported image type")
             image = source.convert("RGB")
+    except Image.DecompressionBombError as error:
+        raise HTTPException(status_code=413, detail="Image is too large") from error
     except UnidentifiedImageError as error:
         raise HTTPException(status_code=422, detail="Invalid image") from error
 

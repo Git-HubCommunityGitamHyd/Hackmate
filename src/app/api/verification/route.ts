@@ -130,6 +130,7 @@ export async function POST(request: NextRequest) {
         .where(
           and(
             ne(schema.users.id, user.id),
+            eq(schema.users.idVerificationStatus, "VERIFIED"),
             isNotNull(schema.users.idVerificationImageHash),
           ),
         ),
@@ -140,6 +141,7 @@ export async function POST(request: NextRequest) {
             .where(
               and(
                 ne(schema.users.id, user.id),
+                eq(schema.users.idVerificationStatus, "VERIFIED"),
                 eq(schema.users.idVerificationStudentHash, studentHash),
               ),
             )

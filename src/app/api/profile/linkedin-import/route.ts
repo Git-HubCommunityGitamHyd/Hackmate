@@ -45,65 +45,68 @@ export async function POST(req: Request) {
       }
     }
 
-    const [current] = await db
-      .select({
-        bio: schema.users.bio,
-        linkedinUrl: schema.users.linkedinUrl,
-        linkedinData: schema.users.linkedinData,
-      })
-      .from(schema.users)
-      .where(eq(schema.users.id, user.id))
-      .limit(1);
-    if (!current) return fail("Profile not found", 404);
+    return db.transaction(async (tx) => {
+      const [current] = await tx
+        .select({
+          bio: schema.users.bio,
+          linkedinUrl: schema.users.linkedinUrl,
+          linkedinData: schema.users.linkedinData,
+        })
+        .from(schema.users)
+        .where(eq(schema.users.id, user.id))
+        .limit(1)
+        .for("update");
+      if (!current) return fail("Profile not found", 404);
 
-    const previous = current.linkedinData;
-    const linkedinData = imported
-      ? {
-          headline: previous?.headline || imported.headline,
-          about: previous?.about || imported.about,
-          experiences:
-            previous?.experiences.length ? previous.experiences : imported.experiences,
-          education: previous?.education.length ? previous.education : imported.education,
-          skills: previous?.skills.length ? previous.skills : imported.skills,
-        }
-      : previous;
-    const update: {
-      updatedAt: Date;
-      linkedinUrl?: SQL;
-      linkedinData?: LinkedInImport | null;
-      bio?: SQL;
-    } = { updatedAt: new Date() };
+      const previous = current.linkedinData;
+      const linkedinData = imported
+        ? {
+            headline: previous?.headline || imported.headline,
+            about: previous?.about || imported.about,
+            experiences:
+              previous?.experiences.length ? previous.experiences : imported.experiences,
+            education: previous?.education.length ? previous.education : imported.education,
+            skills: previous?.skills.length ? previous.skills : imported.skills,
+          }
+        : previous;
+      const update: {
+        updatedAt: Date;
+        linkedinUrl?: SQL;
+        linkedinData?: LinkedInImport | null;
+        bio?: SQL;
+      } = { updatedAt: new Date() };
 
-    if (normalizedUrl) {
-      update.linkedinUrl = sql`CASE
-        WHEN ${schema.users.linkedinUrl} IS NULL OR trim(${schema.users.linkedinUrl}) = ''
-        THEN ${normalizedUrl.url}
-        ELSE ${schema.users.linkedinUrl}
-      END`;
-    }
-    if (imported) update.linkedinData = linkedinData;
-    if (imported?.about) {
-      update.bio = sql`CASE
-        WHEN ${schema.users.bio} IS NULL OR trim(${schema.users.bio}) = ''
-        THEN ${imported.about}
-        ELSE ${schema.users.bio}
-      END`;
-    }
+      if (normalizedUrl) {
+        update.linkedinUrl = sql`CASE
+          WHEN ${schema.users.linkedinUrl} IS NULL OR trim(${schema.users.linkedinUrl}) = ''
+          THEN ${normalizedUrl.url}
+          ELSE ${schema.users.linkedinUrl}
+        END`;
+      }
+      if (imported) update.linkedinData = linkedinData;
+      if (imported?.about) {
+        update.bio = sql`CASE
+          WHEN ${schema.users.bio} IS NULL OR trim(${schema.users.bio}) = ''
+          THEN ${imported.about}
+          ELSE ${schema.users.bio}
+        END`;
+      }
 
-    const [saved] = await db
-      .update(schema.users)
-      .set(update)
-      .where(eq(schema.users.id, user.id))
-      .returning({
-        linkedinUrl: schema.users.linkedinUrl,
-        bio: schema.users.bio,
+      const [saved] = await tx
+        .update(schema.users)
+        .set(update)
+        .where(eq(schema.users.id, user.id))
+        .returning({
+          linkedinUrl: schema.users.linkedinUrl,
+          bio: schema.users.bio,
+        });
+
+      return ok({
+        linkedinUrl: saved.linkedinUrl,
+        linkedinData,
+        bio: saved.bio,
+        bioFilled: !!imported?.about && !current.bio?.trim(),
       });
-
-    return ok({
-      linkedinUrl: saved.linkedinUrl,
-      linkedinData,
-      bio: saved.bio,
-      bioFilled: !!imported?.about && !current.bio?.trim(),
     });
   });
 }
