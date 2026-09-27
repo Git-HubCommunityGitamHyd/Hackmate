@@ -17,6 +17,7 @@ interface ImportResult {
   bioFilled: boolean;
 }
 
+/** Submit a LinkedIn URL or CSV export and propagate saved data to the parent form and profile queries. */
 export function LinkedInImportCard({
   profileId,
   linkedinUrl,
@@ -33,6 +34,7 @@ export function LinkedInImportCard({
   const queryClient = useQueryClient();
 
   const importProfile = useMutation({
+    /** Submit the profile URL and selected CSV, throwing when the import API reports an error. */
     mutationFn: async () => {
       const formData = new FormData();
       formData.set("linkedinUrl", linkedinUrl);
@@ -45,6 +47,7 @@ export function LinkedInImportCard({
       if (!response.ok) throw new Error(result.error ?? "LinkedIn import failed");
       return result as ImportResult;
     },
+    /** Apply saved import data, refresh profile queries, and clear the selected CSV. */
     onSuccess: async (result) => {
       onImported(result);
       await Promise.all([
@@ -55,6 +58,7 @@ export function LinkedInImportCard({
       setFile(null);
       if (fileInput.current) fileInput.current.value = "";
     },
+    /** Show the import failure returned by the mutation. */
     onError: (error: Error) => toast.error(error.message),
   });
 

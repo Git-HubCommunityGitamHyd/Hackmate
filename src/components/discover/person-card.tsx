@@ -16,6 +16,7 @@ import {
 import { MatchRing } from "@/components/shared/match-ring";
 import type { PersonCardDTO } from "@/lib/queries/types";
 
+/** Render a discovery profile card with skills, verification status, and optional match and action controls. */
 export function PersonCard({
   person,
   showMatch,

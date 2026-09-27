@@ -11,6 +11,7 @@ import {
 } from "./constants";
 
 export class UploadValidationError extends Error {
+  /** Create an upload validation error with the HTTP status to return to the client. */
   constructor(
     message: string,
     public readonly status: number,
@@ -26,6 +27,7 @@ export interface ProcessedImage {
   documentImage: boolean;
 }
 
+/** Return the uploaded File or throw a 422 UploadValidationError for missing or non-file input. */
 export function requireCollegeIdFile(
   value: FormDataEntryValue | null,
 ): File {
@@ -40,6 +42,11 @@ export function requireCollegeIdFile(
   return value;
 }
 
+/**
+ * Validate upload size and image type, then rotate and resize to a metadata-stripped JPEG.
+ * Returns the image buffer with dimension/sharpness and entropy quality flags.
+ * @throws UploadValidationError for empty, oversized, unsupported, or unreadable input.
+ */
 export async function processCollegeIdImage(
   bytes: Buffer,
   claimedType: string,
@@ -114,6 +121,7 @@ export async function processCollegeIdImage(
   };
 }
 
+/** Compute a 64-bit difference hash as 16 hex digits from adjacent grayscale pixels. */
 export async function perceptualImageHash(buffer: Buffer): Promise<string> {
   const { data } = await sharp(buffer)
     .resize(9, 8, { fit: "fill" })
@@ -136,12 +144,20 @@ export async function perceptualImageHash(buffer: Buffer): Promise<string> {
   return hash;
 }
 
+/**
+ * Return a SHA-256 HMAC of the supplied student ID using the server secret.
+ * Callers must normalize the ID before hashing for consistent duplicate detection.
+ */
 export function hashStudentId(studentId: string, secret: string): string {
   return createHmac("sha256", secret)
     .update(studentId)
     .digest("hex");
 }
 
+/**
+ * Count differing bits between two 64-bit hex hashes.
+ * Returns Number.MAX_SAFE_INTEGER when either hash is malformed.
+ */
 export function imageHashDistance(left: string, right: string): number {
   if (!/^[0-9a-f]{16}$/i.test(left) || !/^[0-9a-f]{16}$/i.test(right)) {
     return Number.MAX_SAFE_INTEGER;

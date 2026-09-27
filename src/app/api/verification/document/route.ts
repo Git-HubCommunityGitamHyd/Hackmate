@@ -5,6 +5,10 @@ import { readCollegeIdImage } from "@/lib/verification/storage";
 
 export const runtime = "nodejs";
 
+/**
+ * Download the authenticated user's stored college ID as a private, uncached JPEG.
+ * Return 401 without a session or 404 when no document is available.
+ */
 export async function GET() {
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);

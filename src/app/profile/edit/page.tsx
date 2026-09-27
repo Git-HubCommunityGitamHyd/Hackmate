@@ -42,6 +42,7 @@ interface SkillSel {
   isPrimary: boolean;
 }
 
+/** Edit the current user's profile, import LinkedIn details, and submit college ID verification. */
 export default function EditProfilePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -119,6 +120,7 @@ export default function EditProfilePage() {
   }
 
   const save = useMutation({
+    /** Save the current form, skills, roles, availability, and compatibility answers. */
     mutationFn: () =>
       api("/api/users/me", {
         method: "PUT",
@@ -132,6 +134,7 @@ export default function EditProfilePage() {
           compat,
         }),
       }),
+    /** Refresh profile queries and navigate to the saved profile after a successful update. */
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["me"] }),

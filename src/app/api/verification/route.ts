@@ -29,6 +29,11 @@ import { deleteCollegeIdImage, storeCollegeIdImage } from "@/lib/verification/st
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+/**
+ * Verify an authenticated user's college ID upload using OCR and duplicate checks.
+ * Claim the processing attempt, store its private image, and persist the decision
+ * only while the attempt and profile identity still match.
+ */
 export async function POST(request: NextRequest) {
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);

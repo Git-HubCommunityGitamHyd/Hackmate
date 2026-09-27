@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { LinkedInImport } from "@/lib/db/schema";
 
+/** Render populated LinkedIn profile sections, returning null when no imported details exist. */
 export function LinkedInSections({
   data,
   linkedinUrl,

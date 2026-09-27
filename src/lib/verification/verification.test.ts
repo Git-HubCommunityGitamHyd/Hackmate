@@ -14,6 +14,7 @@ import {
 import { collegeSimilarity, nameSimilarity } from "./matching";
 import type { OcrBlock } from "./types";
 
+/** Build a successful OCR block fixture with fixed confidence and the given reading order. */
 function block(text: string, readingOrder: number): OcrBlock {
   return {
     text,

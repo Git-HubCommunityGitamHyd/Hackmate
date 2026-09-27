@@ -11,6 +11,7 @@ import type { TeamCardDTO, TeamDetailDTO } from "./types";
 /* Shared aggregation helpers                                          */
 /* ------------------------------------------------------------------ */
 
+/** Batch-load members, wanted skills, and needed roles into maps keyed by team ID. */
 async function teamAggregates(teamIds: string[]) {
   if (teamIds.length === 0)
     return { membersByTeam: new Map<string, any[]>(), wantedByTeam: new Map<string, any[]>(), neededByTeam: new Map<string, any[]>() };
@@ -233,6 +234,10 @@ export async function listTeams(
 /* Team detail — with full Composition Intelligence                    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Load team members, composition analysis, and viewer-specific membership and match details.
+ * Returns null when the team does not exist.
+ */
 export async function getTeamDetail(
   teamId: string,
   viewerId?: string | null,

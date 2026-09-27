@@ -36,28 +36,34 @@ class TextContentParser(html.parser.HTMLParser):
     }
 
     def __init__(self) -> None:
+        """Initialize the HTML parser and its text fragments with character references decoded."""
         super().__init__(convert_charrefs=True)
         self.parts: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        """Insert a line break before a block element to preserve OCR text boundaries."""
         if tag in self.block_tags:
             self.parts.append("\n")
 
     def handle_endtag(self, tag: str) -> None:
+        """Insert a line break after a block element to keep adjacent text separate."""
         if tag in self.block_tags:
             self.parts.append("\n")
 
     def handle_data(self, data: str) -> None:
+        """Append a decoded text fragment from the OCR HTML."""
         self.parts.append(data)
 
 
 def get_field(value: Any, name: str, default: Any = None) -> Any:
+    """Read a dictionary key or object attribute, returning the default when absent."""
     if isinstance(value, dict):
         return value.get(name, default)
     return getattr(value, name, default)
 
 
 def to_float(value: Any) -> float | None:
+    """Return a numeric confidence in [0, 1], or None for invalid or out-of-range values."""
     try:
         parsed = float(value)
     except (TypeError, ValueError):
@@ -66,6 +72,7 @@ def to_float(value: Any) -> float | None:
 
 
 def to_bbox(value: Any) -> list[float] | None:
+    """Return four numeric bounding-box coordinates, or None when conversion or length is invalid."""
     try:
         values = [float(item) for item in value]
     except (TypeError, ValueError):
@@ -74,6 +81,10 @@ def to_bbox(value: Any) -> list[float] | None:
 
 
 def recognize(image: Image.Image) -> dict[str, Any]:
+    """Run the initialized predictor and convert its first page into ordered plain-text blocks.
+
+    Return the blocks and mean valid confidence for nonempty text, or zero when absent.
+    """
     predictions = recognition_predictor([image])
     if not predictions:
         return {"blocks": [], "confidence": 0.0}
@@ -121,6 +132,7 @@ def recognize(image: Image.Image) -> dict[str, Any]:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    """Initialize the shared Surya predictor at startup and clear its reference after shutdown."""
     global recognition_predictor
     from surya.inference import SuryaInferenceManager
     from surya.recognition import RecognitionPredictor
@@ -142,6 +154,7 @@ app = FastAPI(
 
 @app.get("/healthz")
 async def health() -> dict[str, str]:
+    """Return the health endpoint response without running OCR."""
     return {"status": "ok"}
 
 
@@ -150,6 +163,10 @@ async def ocr(
     file: UploadFile = File(...),
     authorization: str | None = Header(default=None),
 ) -> dict[str, Any]:
+    """Authenticate and validate a JPEG or PNG upload, then serialize OCR inference.
+
+    Raise HTTPException for invalid uploads, unauthorized access, or unavailable OCR.
+    """
     expected_token = os.environ.get("SURYA_SERVICE_TOKEN", "")
     supplied_token = authorization.removeprefix("Bearer ").strip() if authorization else ""
     if not expected_token or not secrets.compare_digest(supplied_token, expected_token):

@@ -18,6 +18,7 @@ export interface PeopleFilters {
   limit?: number;
 }
 
+/** List discoverable people matching the supplied filters with skills, roles, and verification badges. */
 export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO[]> {
   const where: (SQLWrapper | undefined)[] = [];
   if (filters.emergencyOnly) {
@@ -173,6 +174,10 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
 /* Full profile: badges, history, previous-team graph                  */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Load a full profile by user ID, including LinkedIn data and verification status.
+ * Returns null for a missing user and does not apply discovery visibility filters.
+ */
 export async function getProfile(userId: string): Promise<ProfileDTO | null> {
   /* NOTE: fetch the user directly — do NOT reuse people() filters here,
      otherwise members whose status became team_full / not_looking would

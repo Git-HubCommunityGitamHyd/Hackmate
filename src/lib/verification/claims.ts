@@ -4,6 +4,10 @@ import { db, schema } from "@/lib/db";
 export type VerificationClaimKind = "student" | "image";
 export type ClaimResult = "created" | "owned" | "duplicate";
 
+/**
+ * Reserve an image or student hash for a user without overwriting an existing claim.
+ * Returns whether the claim was created, already owned, or unavailable to this user.
+ */
 export async function reserveVerificationClaim(
   kind: VerificationClaimKind,
   value: string,
@@ -29,6 +33,7 @@ export async function reserveVerificationClaim(
   return existing?.userId === userId ? "owned" : "duplicate";
 }
 
+/** Delete a matching verification claim only when it belongs to the supplied user. */
 export async function releaseVerificationClaim(
   kind: VerificationClaimKind,
   value: string,

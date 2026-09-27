@@ -1,5 +1,9 @@
 import type { LinkedInImport } from "@/lib/db/schema";
 
+/**
+ * Parse nonempty CSV rows, supporting escaped quotes and multiline fields.
+ * @throws If a quoted field is unterminated or followed by an unexpected character.
+ */
 function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -52,10 +56,12 @@ function parseCsv(text: string): string[][] {
   return rows;
 }
 
+/** Create a lowercase alphanumeric key for matching CSV column aliases. */
 function normalizeHeader(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+/** Return the first nonempty value for the supplied header aliases, or null. */
 function getValue(
   values: string[],
   indexByHeader: Map<string, number>,
@@ -69,6 +75,11 @@ function getValue(
   return null;
 }
 
+/**
+ * Extract profile details, positions, education, and skills from a LinkedIn CSV.
+ * Uses the filename and column aliases to identify export sections.
+ * @throws If the CSV is malformed, lacks data rows, or contains no supported details.
+ */
 export function parseLinkedInCsv(text: string, fileName: string): LinkedInImport {
   const rows = parseCsv(text);
   if (rows.length < 2) throw new Error("The CSV must include a header and at least one data row");
@@ -148,6 +159,10 @@ export function parseLinkedInCsv(text: string, fileName: string): LinkedInImport
   return imported;
 }
 
+/**
+ * Return the canonical HTTPS profile URL and decoded LinkedIn username.
+ * @throws If the URL is not a supported LinkedIn /in/ profile URL.
+ */
 export function normalizeLinkedInProfileUrl(value: string): { url: string; username: string } {
   let parsed: URL;
   try {

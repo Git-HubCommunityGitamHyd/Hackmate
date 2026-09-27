@@ -46,6 +46,7 @@ const BADGE_ICONS: Record<string, typeof Trophy> = {
   "worked-together": Users,
 };
 
+/** Load and display a student profile, including verified status and imported LinkedIn details. */
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { user, isAuthenticated } = useCurrentUser();

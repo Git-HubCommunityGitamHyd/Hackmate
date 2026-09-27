@@ -5,6 +5,7 @@ const COLLEGE_EXPANSIONS: ReadonlyArray<[RegExp, string]> = [
   [/\binst\b/g, "institute"],
 ];
 
+/** Normalize accents, case, separators, and OCR pipe characters for text matching. */
 export function normalizeText(value: string): string {
   return value
     .normalize("NFKD")
@@ -16,6 +17,7 @@ export function normalizeText(value: string): string {
     .replace(/\s+/g, " ");
 }
 
+/** Return normalized Levenshtein similarity, treating matching initials as a 0.9 match. */
 function editSimilarity(left: string, right: string): number {
   if (left === right) return 1;
   if (!left || !right) return 0;
@@ -38,6 +40,7 @@ function editSimilarity(left: string, right: string): number {
   return 1 - previous[right.length] / Math.max(left.length, right.length);
 }
 
+/** Score a token pair, accepting matching initials and discarding similarities below 0.6. */
 function tokenSimilarity(left: string, right: string): number {
   if (left === right) return 1;
   if (left[0] === right[0] && (left.length === 1 || right.length === 1)) {
@@ -47,6 +50,10 @@ function tokenSimilarity(left: string, right: string): number {
   return similarity >= 0.6 ? similarity : 0;
 }
 
+/**
+ * Greedily pair tokens by similarity without reusing a token.
+ * Normalize the sum by the longer token list so unmatched tokens reduce the score.
+ */
 function unorderedTokenSimilarity(left: string[], right: string[]): number {
   if (left.length === 0 || right.length === 0) return 0;
   const pairs = left.flatMap((leftToken, leftIndex) =>
@@ -70,6 +77,7 @@ function unorderedTokenSimilarity(left: string[], right: string[]): number {
   return total / Math.max(left.length, right.length);
 }
 
+/** Compare names independent of token order after removing accents and common titles. */
 export function nameSimilarity(profileName: string, extractedName: string): number {
   const excludedTitles = new Set(["mr", "mrs", "ms", "miss", "dr", "prof"]);
   return unorderedTokenSimilarity(
@@ -82,10 +90,12 @@ export function nameSimilarity(profileName: string, extractedName: string): numb
   );
 }
 
+/** Compare college names after normalization and expansion of known abbreviations. */
 export function collegeSimilarity(
   profileCollege: string,
   extractedCollege: string,
 ): number {
+  /** Expand known college abbreviations in normalized text. */
   const expand = (value: string) =>
     COLLEGE_EXPANSIONS.reduce(
       (text, [pattern, replacement]) => text.replace(pattern, replacement),
@@ -94,6 +104,7 @@ export function collegeSimilarity(
   return unorderedTokenSimilarity(expand(profileCollege).split(" "), expand(extractedCollege).split(" "));
 }
 
+/** Return uppercase ASCII letters and digits for consistent student ID hashing. */
 export function normalizeStudentId(value: string): string {
   return normalizeText(value).replace(/[^a-z0-9]/g, "").toUpperCase();
 }

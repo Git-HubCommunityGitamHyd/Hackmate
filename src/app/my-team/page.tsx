@@ -97,6 +97,7 @@ export default function MyTeamPage() {
   return <TeamWorkspace team={team} notif={notif} inviteOpen={inviteOpen} setInviteOpen={setInviteOpen} />;
 }
 
+/** Render team members, verification badges, chat, and membership controls for the viewer. */
 function TeamWorkspace({
   team,
   notif,

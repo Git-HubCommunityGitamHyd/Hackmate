@@ -147,6 +147,7 @@ export function InviteDialog({
   );
 }
 
+/** Show a candidate's verification badge, match context, and invitation action. */
 function CandidateRow({
   person,
   matchScore,

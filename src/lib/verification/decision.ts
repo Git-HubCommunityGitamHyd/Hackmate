@@ -17,6 +17,11 @@ export interface VerificationInput {
   duplicateDetected: boolean;
 }
 
+/**
+ * Combine OCR confidence, identity matches, image quality, and duplicate evidence.
+ * Returns VERIFIED only when every required check passes; strong mismatches or a
+ * missing document produce REJECTED, and remaining cases produce NEEDS_REVIEW.
+ */
 export function decideVerification(
   input: VerificationInput,
 ): VerificationDecision {

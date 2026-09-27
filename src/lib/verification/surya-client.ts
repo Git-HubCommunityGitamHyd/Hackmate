@@ -16,6 +16,11 @@ const ocrResponseSchema = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+/**
+ * Send a JPEG to the authenticated Surya OCR service with a 50-second timeout.
+ * Returns validated OCR blocks and confidence.
+ * @throws If configuration is missing, the request fails, or the response is invalid.
+ */
 export async function recognizeWithSurya(image: Buffer): Promise<OcrResult> {
   const serviceUrl = process.env.SURYA_SERVICE_URL;
   const serviceToken = process.env.SURYA_SERVICE_TOKEN;

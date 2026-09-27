@@ -15,6 +15,7 @@ const FIELD_LABELS: Record<keyof ExtractedCollegeId, RegExp> = {
 const INSTITUTION_WORDS =
   /\b(?:university|universities|college|institute|institution|campus|school of)\b/i;
 
+/** Collect normalized nonempty lines from OCR blocks without skip or error flags. */
 function linesFromBlocks(blocks: OcrBlock[]): string[] {
   return blocks
     .filter((block) => !block.skipped && !block.error)
@@ -23,6 +24,7 @@ function linesFromBlocks(blocks: OcrBlock[]): string[] {
     .filter(Boolean);
 }
 
+/** Read a labeled value on this line or the next, stopping at another field label. */
 function readField(
   lines: string[],
   pattern: RegExp,
@@ -39,6 +41,10 @@ function readField(
   return nextLine || undefined;
 }
 
+/**
+ * Extract the first available value for each ID field from usable OCR text.
+ * Falls back to an institution-like line when no labeled college value is found.
+ */
 export function extractCollegeIdFields(
   blocks: OcrBlock[],
 ): ExtractedCollegeId {
@@ -60,6 +66,7 @@ export function extractCollegeIdFields(
   return extracted;
 }
 
+/** Estimate whether usable OCR text has enough content or ID label cues to be a document. */
 export function isDocumentLike(blocks: OcrBlock[]): boolean {
   const readable = blocks.filter(
     (block) => !block.skipped && !block.error && block.text.trim().length > 0,

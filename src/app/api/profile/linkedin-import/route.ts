@@ -6,6 +6,10 @@ import { normalizeLinkedInProfileUrl, parseLinkedInCsv } from "@/lib/linkedin-im
 
 const MAX_CSV_BYTES = 5 * 1024 * 1024;
 
+/**
+ * Import the authenticated user's LinkedIn URL and optional CSV export.
+ * Fill empty profile fields and import sections while preserving existing content.
+ */
 export async function POST(req: Request) {
   return withUser(async (user) => {
     const form = await req.formData();

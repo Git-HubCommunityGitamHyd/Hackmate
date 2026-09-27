@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
+/** Render an accessible college ID verification badge, optionally with a visible text label. */
 export function VerifiedBadge({
   compact = true,
 }: {

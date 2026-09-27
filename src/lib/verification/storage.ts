@@ -10,6 +10,10 @@ const LOCAL_DIRECTORY = path.resolve(
 );
 const PATHNAME_PREFIX = "college-id/";
 
+/**
+ * Resolve a generated college ID pathname inside the private local directory.
+ * @throws If the pathname format or resolved location is invalid.
+ */
 function localPath(pathname: string): string {
   if (!/^college-id\/[0-9a-f-]{36}\.jpg$/i.test(pathname)) {
     throw new Error("Invalid private ID document pathname.");
@@ -21,12 +25,17 @@ function localPath(pathname: string): string {
   return resolved;
 }
 
+/** Allow local storage only outside production when neither Blob credential option is set. */
 function filesystemStorageEnabled(): boolean {
   return process.env.NODE_ENV !== "production" &&
     !process.env.ID_BLOB_READ_WRITE_TOKEN &&
     !process.env.ID_BLOB_STORE_ID;
 }
 
+/**
+ * Choose the private ID Blob token or store ID, preferring the token.
+ * @throws If neither storage option is configured.
+ */
 function privateBlobOptions(): { token?: string; storeId?: string } {
   const token = process.env.ID_BLOB_READ_WRITE_TOKEN;
   const storeId = process.env.ID_BLOB_STORE_ID;
@@ -35,6 +44,10 @@ function privateBlobOptions(): { token?: string; storeId?: string } {
   throw new Error("Private ID Blob storage is not configured.");
 }
 
+/**
+ * Store a JPEG under a random private pathname and return that pathname.
+ * Uses restricted filesystem permissions locally or private Vercel Blob storage.
+ */
 export async function storeCollegeIdImage(image: Buffer): Promise<string> {
   const pathname = `${PATHNAME_PREFIX}${randomUUID()}.jpg`;
   if (filesystemStorageEnabled()) {
@@ -53,6 +66,7 @@ export async function storeCollegeIdImage(image: Buffer): Promise<string> {
   return pathname;
 }
 
+/** Read a private ID image as a local buffer or Blob stream; return null when unavailable. */
 export async function readCollegeIdImage(
   pathname: string,
 ): Promise<Buffer | ReadableStream<Uint8Array> | null> {
@@ -72,6 +86,7 @@ export async function readCollegeIdImage(
   return blob.stream;
 }
 
+/** Delete a private ID image from the configured backend, ignoring missing local files. */
 export async function deleteCollegeIdImage(pathname: string): Promise<void> {
   if (filesystemStorageEnabled()) {
     try {

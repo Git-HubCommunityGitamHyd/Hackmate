@@ -21,6 +21,7 @@ interface VerificationResponse {
   message: string;
 }
 
+/** Render ID upload and verification status, polling the current profile while processing. */
 export function CollegeIdVerification({
   profile,
 }: {
@@ -37,6 +38,7 @@ export function CollegeIdVerification({
   }, [profile.idVerificationStatus, queryClient]);
 
   const verification = useMutation({
+    /** Upload the selected ID and return its verification result, throwing on an API error. */
     mutationFn: async (file: File): Promise<VerificationResponse> => {
       const form = new FormData();
       form.append("file", file);
@@ -50,6 +52,7 @@ export function CollegeIdVerification({
       }
       return body as VerificationResponse;
     },
+    /** Update cached verification status, refresh affected queries, and show the result message. */
     onSuccess: async (result) => {
       queryClient.setQueryData<ProfileDTO>(["me"], (current) =>
         current
@@ -78,9 +81,11 @@ export function CollegeIdVerification({
       else if (result.status === "NEEDS_REVIEW") toast.info(result.message);
       else toast.error(result.message);
     },
+    /** Show the upload or verification failure returned by the mutation. */
     onError: (error: Error) => toast.error(error.message),
   });
 
+  /** Submit a selected ID image after checking its MIME type and upload size limit. */
   function submitFile(file: File | undefined) {
     if (!file) return;
     if (!ALLOWED_IMAGE_TYPES.has(file.type)) {

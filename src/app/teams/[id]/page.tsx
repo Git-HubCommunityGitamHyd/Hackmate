@@ -30,6 +30,7 @@ import { JoinRequestDialog } from "@/components/team/join-request-dialog";
 import { useTeamDetail, useJoinTeam, useCurrentUser, useToggleBookmark } from "@/hooks/use-api";
 import { api } from "@/hooks/use-api";
 
+/** Load team details and member verification badges with join and bookmark actions. */
 export default function TeamPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
