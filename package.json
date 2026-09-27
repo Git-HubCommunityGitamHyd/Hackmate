@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint .",
-    "test": "node --import tsx --test src/lib/verification/verification.test.ts",
+    "test": "node --import dotenv/config --import tsx --test src/lib/verification/verification.test.ts src/app/api/attendance/attendance.test.ts src/app/api/reviews/reviews.test.ts src/app/api/cancellations/cancellations.test.ts src/components/track-record/track-record.test.ts src/app/my-team/my-team-integration.test.ts",
     "db:push": "tsx scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/lib/db/seed.ts",

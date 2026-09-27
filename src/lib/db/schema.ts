@@ -636,6 +636,120 @@ export const notifications = pgTable(
 );
 
 /* ------------------------------------------------------------------ */
+/* Track-Record: attendance, reviews, cancellation history             */
+/* ------------------------------------------------------------------ */
+
+export type AttendanceStatus = "present" | "late" | "absent";
+
+export const attendance = pgTable(
+  "attendance",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    hackathonId: uuid("hackathon_id")
+      .notNull()
+      .references(() => hackathons.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    markedByUserId: uuid("marked_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: text("status")
+      .$type<AttendanceStatus>()
+      .notNull()
+      .default("present"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("attendance_user_hackathon_uniq").on(t.userId, t.hackathonId),
+    index("attendance_hackathon_idx").on(t.hackathonId),
+    index("attendance_team_idx").on(t.teamId),
+    check(
+      "attendance_status_check",
+      sql`${t.status} IN ('present', 'late', 'absent')`,
+    ),
+  ],
+);
+
+export const performanceReviews = pgTable(
+  "performance_review",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    reviewerId: uuid("reviewer_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    revieweeId: uuid("reviewee_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    hackathonId: uuid("hackathon_id")
+      .notNull()
+      .references(() => hackathons.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    rating: integer("rating").notNull(),
+    comment: text("comment"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("review_reviewer_reviewee_hackathon_uniq").on(
+      t.reviewerId,
+      t.revieweeId,
+      t.hackathonId,
+    ),
+    index("review_reviewee_idx").on(t.revieweeId),
+    check("review_rating_check", sql`${t.rating} >= 1 AND ${t.rating} <= 5`),
+    check("review_no_self_check", sql`${t.reviewerId} <> ${t.revieweeId}`),
+    check(
+      "review_comment_len_check",
+      sql`${t.comment} IS NULL OR length(${t.comment}) <= 1000`,
+    ),
+  ],
+);
+
+export const cancellationHistory = pgTable(
+  "cancellation_history",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    hackathonId: uuid("hackathon_id")
+      .notNull()
+      .references(() => hackathons.id, { onDelete: "cascade" }),
+    hoursBeforeStart: integer("hours_before_start").notNull(),
+    isLastMinute: boolean("is_last_minute").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("cancellation_user_idx").on(t.userId),
+    index("cancellation_hackathon_idx").on(t.hackathonId),
+    check(
+      "cancellation_last_minute_check",
+      sql`NOT ${t.isLastMinute} OR (${t.hoursBeforeStart} >= 0 AND ${t.hoursBeforeStart} <= 48)`,
+    ),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
 /* Types                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -721,3 +835,9 @@ export type RoleTaxonomy = typeof roleTaxonomy.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type Message = typeof messages.$inferSelect;
+export type Attendance = typeof attendance.$inferSelect;
+export type NewAttendance = typeof attendance.$inferInsert;
+export type PerformanceReview = typeof performanceReviews.$inferSelect;
+export type NewPerformanceReview = typeof performanceReviews.$inferInsert;
+export type CancellationHistory = typeof cancellationHistory.$inferSelect;
+export type NewCancellationHistory = typeof cancellationHistory.$inferInsert;

@@ -119,3 +119,32 @@ export const emergencySchema = z.object({
   enabled: z.boolean(),
   hours: z.number().int().min(6).max(72).default(24),
 });
+
+/* ------------------------------------------------------------------ */
+/* Track-Record Validations                                           */
+/* ------------------------------------------------------------------ */
+
+export const attendanceStatusSchema = z.enum(["present", "late", "absent"]);
+
+export const attendancePostSchema = z.object({
+  userId: z.string().uuid("Invalid user ID"),
+  hackathonId: z.string().uuid("Invalid hackathon ID"),
+  status: attendanceStatusSchema,
+});
+
+export const reviewPostSchema = z.object({
+  revieweeId: z.string().uuid("Invalid reviewee ID"),
+  hackathonId: z.string().uuid("Invalid hackathon ID"),
+  rating: z
+    .number()
+    .int("Rating must be an integer")
+    .min(1, "Minimum rating is 1")
+    .max(5, "Maximum rating is 5"),
+  comment: z
+    .string()
+    .max(1000, "Comment cannot exceed 1000 characters")
+    .optional()
+    .or(z.literal("")),
+});
+
+

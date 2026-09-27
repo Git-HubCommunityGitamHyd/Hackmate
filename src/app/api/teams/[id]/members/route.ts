@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { ok, fail, requireUser } from "@/lib/api";
+import { recordCancellationOnLeave } from "@/app/api/cancellations/route";
 
 /**
  * DELETE /api/teams/:id/members — leave team (self) or remove member (admin).
@@ -27,6 +28,7 @@ export async function DELETE(
   if (!membership) return fail("Not a member", 404);
 
   const isSelf = targetUserId === user.id;
+  const leaveTime = new Date();
   const [me] = await db
     .select()
     .from(schema.teamMembers)
@@ -35,6 +37,9 @@ export async function DELETE(
   if (!isSelf && !me?.isAdmin) {
     return fail("Only admins can remove members", 403);
   }
+
+  /* Record cancellation history only for voluntary self-leave */
+  await recordCancellationOnLeave(user.id, targetUserId, id, leaveTime);
 
   await db
     .delete(schema.teamMembers)
