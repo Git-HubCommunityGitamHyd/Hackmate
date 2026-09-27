@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { and, eq, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, ne, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { profileSchema } from "@/lib/validations";
@@ -7,6 +7,8 @@ import { getProfile } from "@/lib/queries/people";
 import type { TeamDetailDTO } from "@/lib/queries/types";
 import { ok, fail, withUser } from "@/lib/api";
 import { PROCESSING_STALE_AFTER_MS } from "@/lib/verification/constants";
+import { deleteCollegeIdImage } from "@/lib/verification/storage";
+import { ROLE_TAXONOMY, SKILLS } from "@/lib/constants";
 
 /** GET /api/users/me — full own profile + my active team. */
 export async function GET() {
@@ -65,85 +67,152 @@ export async function PUT(req: NextRequest) {
       return fail(parsed.error.issues[0]?.message ?? "Invalid profile data", 422);
     }
     const data = parsed.data;
-    // Compare against the stored identity atomically with the profile update.
-    const resetVerification = and(
-      eq(schema.users.idVerified, true),
-      or(
-        sql`${schema.users.name} IS DISTINCT FROM ${data.name}`,
-        sql`${schema.users.collegeName} IS DISTINCT FROM ${data.collegeName || null}`,
-      ),
-    );
+    const updateResult = await db.transaction(async (tx) => {
+      const [current] = await tx
+        .select({
+          idVerified: schema.users.idVerified,
+          name: schema.users.name,
+          collegeName: schema.users.collegeName,
+          imagePath: schema.users.idVerificationImagePath,
+        })
+        .from(schema.users)
+        .where(eq(schema.users.id, user.id))
+        .limit(1)
+        .for("update");
+      if (!current) return { failure: "not-found" as const, imagePath: null };
 
-    await db
-      .update(schema.users)
-      .set({
-        idVerified: sql`CASE WHEN ${resetVerification} THEN false ELSE ${schema.users.idVerified} END`,
-        idVerificationStatus: sql`CASE WHEN ${resetVerification} THEN 'NOT_VERIFIED' ELSE ${schema.users.idVerificationStatus} END`,
-        idVerifiedAt: sql`CASE WHEN ${resetVerification} THEN NULL ELSE ${schema.users.idVerifiedAt} END`,
-        name: data.name,
-        username: data.username || null,
-        bio: data.bio || null,
-        githubUsername: data.githubUsername || null,
-        linkedinUrl: data.linkedinUrl || null,
-        portfolioUrl: data.portfolioUrl || null,
-        collegeName: data.collegeName || null,
-        collegeId: data.collegeId,
-        graduationYear: data.graduationYear ?? null,
-        experienceLevel: data.experienceLevel,
-        commitment: data.commitment,
-        recruitmentStatus: data.recruitmentStatus,
-        onboarded: true,
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.users.id, user.id));
+      let skillRows = await tx.select().from(schema.skills);
+      const existingSkillSlugs = new Set(skillRows.map((skill) => skill.slug));
+      const missingSkills = SKILLS.filter((skill) => !existingSkillSlugs.has(skill.slug));
+      if (missingSkills.length > 0) {
+        await tx.insert(schema.skills).values(missingSkills).onConflictDoNothing();
+        skillRows = await tx.select().from(schema.skills);
+      }
 
-    /* --- Skills junction table (normalized, not arrays) --- */
-    const skillRows = await db.select().from(schema.skills);
-    const skillBySlug = new Map(skillRows.map((s) => [s.slug, s]));
-    const validSkills = data.skills.filter((s) => skillBySlug.has(s.slug));
+      let roleRows = await tx.select().from(schema.roleTaxonomy);
+      const existingRoleSlugs = new Set(roleRows.map((role) => role.slug));
+      const missingRoles = ROLE_TAXONOMY.filter((role) => !existingRoleSlugs.has(role.slug));
+      if (missingRoles.length > 0) {
+        await tx
+          .insert(schema.roleTaxonomy)
+          .values(
+            missingRoles.map((role) => ({
+              slug: role.slug,
+              name: role.name,
+              description: role.description,
+              skillCategories: role.skillCategories,
+              sortOrder: ROLE_TAXONOMY.indexOf(role),
+            })),
+          )
+          .onConflictDoNothing();
+        roleRows = await tx.select().from(schema.roleTaxonomy);
+      }
 
-    await db.delete(schema.userSkills).where(eq(schema.userSkills.userId, user.id));
-    if (validSkills.length > 0) {
-      await db.insert(schema.userSkills).values(
-        validSkills.map((s) => ({
-          userId: user.id,
-          skillId: skillBySlug.get(s.slug)!.id,
-          level: s.level,
-          isPrimary: s.isPrimary,
-        })),
-      );
+      const skillBySlug = new Map(skillRows.map((skill) => [skill.slug, skill]));
+      const roleBySlug = new Map(roleRows.map((role) => [role.slug, role]));
+      if (
+        data.skills.some((skill) => !skillBySlug.has(skill.slug)) ||
+        data.roles.some((role) => !roleBySlug.has(role.slug))
+      ) {
+        return { failure: "invalid-selection" as const, imagePath: null };
+      }
+
+      const resetVerification =
+        current.idVerified &&
+        (current.name !== data.name ||
+          current.collegeName !== (data.collegeName || null));
+
+      await tx
+        .update(schema.users)
+        .set({
+          ...(resetVerification
+            ? {
+                idVerified: false,
+                idVerificationStatus: "NOT_VERIFIED" as const,
+                idVerificationStartedAt: null,
+                idVerifiedAt: null,
+                idVerificationImagePath: null,
+                idVerificationImageHash: null,
+                idVerificationStudentHash: null,
+                idVerificationConfidence: null,
+              }
+            : {}),
+          name: data.name,
+          username: data.username || null,
+          bio: data.bio || null,
+          githubUsername: data.githubUsername || null,
+          linkedinUrl: data.linkedinUrl || null,
+          portfolioUrl: data.portfolioUrl || null,
+          collegeName: data.collegeName || null,
+          collegeId: data.collegeId,
+          graduationYear: data.graduationYear ?? null,
+          experienceLevel: data.experienceLevel,
+          commitment: data.commitment,
+          recruitmentStatus: data.recruitmentStatus,
+          onboarded: true,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.users.id, user.id));
+
+      if (resetVerification) {
+        await tx
+          .delete(schema.idVerificationClaims)
+          .where(eq(schema.idVerificationClaims.userId, user.id));
+      }
+      await tx.delete(schema.userSkills).where(eq(schema.userSkills.userId, user.id));
+      if (data.skills.length > 0) {
+        await tx.insert(schema.userSkills).values(
+          data.skills.map((skill) => ({
+            userId: user.id,
+            skillId: skillBySlug.get(skill.slug)!.id,
+            level: skill.level,
+            isPrimary: skill.isPrimary,
+          })),
+        );
+      }
+
+      await tx.delete(schema.userRoles).where(eq(schema.userRoles.userId, user.id));
+      if (data.roles.length > 0) {
+        await tx.insert(schema.userRoles).values(
+          data.roles.map((role) => ({
+            userId: user.id,
+            roleId: roleBySlug.get(role.slug)!.id,
+            isPrimary: role.isPrimary,
+          })),
+        );
+      }
+
+      await tx
+        .insert(schema.availability)
+        .values({ userId: user.id, ...data.availability })
+        .onConflictDoUpdate({
+          target: schema.availability.userId,
+          set: data.availability,
+        });
+      await tx
+        .insert(schema.compatAnswers)
+        .values({ userId: user.id, ...data.compat })
+        .onConflictDoUpdate({
+          target: schema.compatAnswers.userId,
+          set: data.compat,
+        });
+
+      return {
+        failure: null,
+        imagePath: resetVerification ? current.imagePath : null,
+      };
+    });
+    if (updateResult.failure === "not-found") return fail("Profile not found", 404);
+    if (updateResult.failure === "invalid-selection") {
+      return fail("One or more selected roles or skills are unavailable.", 422);
     }
-
-    /* --- Roles junction table --- */
-    const roleRows = await db.select().from(schema.roleTaxonomy);
-    const roleBySlug = new Map(roleRows.map((r) => [r.slug, r]));
-    const validRoles = data.roles.filter((r) => roleBySlug.has(r.slug));
-    await db.delete(schema.userRoles).where(eq(schema.userRoles.userId, user.id));
-    if (validRoles.length > 0) {
-      await db.insert(schema.userRoles).values(
-        validRoles.map((r) => ({
-          userId: user.id,
-          roleId: roleBySlug.get(r.slug)!.id,
-          isPrimary: r.isPrimary,
-        })),
-      );
+    if (updateResult.imagePath) {
+      try {
+        await deleteCollegeIdImage(updateResult.imagePath);
+      } catch {
+        console.error("[users/me] Previous private document cleanup failed.");
+      }
     }
-
-    /* --- Availability + compatibility --- */
-    await db
-      .insert(schema.availability)
-      .values({ userId: user.id, ...data.availability })
-      .onConflictDoUpdate({
-        target: schema.availability.userId,
-        set: data.availability,
-      });
-    await db
-      .insert(schema.compatAnswers)
-      .values({ userId: user.id, ...data.compat })
-      .onConflictDoUpdate({
-        target: schema.compatAnswers.userId,
-        set: data.compat,
-      });
 
     const profile = await getProfile(user.id);
     return ok(profile);

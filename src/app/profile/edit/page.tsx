@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Save, Dices } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,6 +44,7 @@ interface SkillSel {
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: profile, isLoading } = useMyProfile();
 
   const [form, setForm] = useState({
@@ -131,7 +132,13 @@ export default function EditProfilePage() {
           compat,
         }),
       }),
-    onSuccess: () => {
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["me"] }),
+        ...(profile
+          ? [queryClient.invalidateQueries({ queryKey: ["profile", profile.id] })]
+          : []),
+      ]);
       toast.success("Profile saved — teams can find you now");
       router.push(profile ? `/profile/${profile.id}` : "/");
     },
