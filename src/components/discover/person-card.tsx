@@ -5,6 +5,7 @@ import { Github, Clock, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/shared/user-avatar";
+import { VerifiedBadge } from "@/components/shared/verified-badge";
 import {
   SkillBadge,
   RecruitmentBadge,
@@ -15,6 +16,7 @@ import {
 import { MatchRing } from "@/components/shared/match-ring";
 import type { PersonCardDTO } from "@/lib/queries/types";
 
+/** Render a discovery profile card with skills, verification status, and optional match and action controls. */
 export function PersonCard({
   person,
   showMatch,
@@ -37,6 +39,7 @@ export function PersonCard({
                 <h3 className="font-bold text-base leading-tight hover:text-primary transition-colors">
                   {person.name}
                 </h3>
+                {person.idVerified && <VerifiedBadge compact />}
               </Link>
               {person.emergencyAvailable && <EmergencyBadge />}
             </div>

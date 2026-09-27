@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { SkillBadge, CommitmentBadge } from "@/components/shared/badges";
+import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { GapAnalysisPanel } from "@/components/team/gap-analysis";
 import { TeamChat } from "@/components/team/team-chat";
@@ -96,6 +97,7 @@ export default function MyTeamPage() {
   return <TeamWorkspace team={team} notif={notif} inviteOpen={inviteOpen} setInviteOpen={setInviteOpen} />;
 }
 
+/** Render team members, verification badges, chat, and membership controls for the viewer. */
 function TeamWorkspace({
   team,
   notif,
@@ -294,6 +296,7 @@ function TeamWorkspace({
                           <Link href={`/profile/${m.userId}`} className="font-semibold text-sm hover:text-primary">
                             {m.name}
                           </Link>
+                          {m.idVerified && <VerifiedBadge compact />}
                           {m.isAdmin && (
                             <Badge variant="secondary" className="text-[10px] py-0 gap-0.5">
                               <Crown className="h-2.5 w-2.5" /> lead

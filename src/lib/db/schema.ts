@@ -3,13 +3,16 @@ import {
   text,
   timestamp,
   integer,
+  real,
   boolean,
   jsonb,
   uuid,
   primaryKey,
   index,
   uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 /* ------------------------------------------------------------------ */
@@ -34,8 +37,23 @@ export const users = pgTable(
     githubUsername: text("github_username"),
     githubData: jsonb("github_data").$type<GithubSummary | null>(),
     linkedinUrl: text("linkedin_url"),
+    linkedinData: jsonb("linkedin_data").$type<LinkedInImport | null>(),
     portfolioUrl: text("portfolio_url"),
+    collegeName: text("college_name"),
     collegeId: uuid("college_id").references(() => colleges.id),
+    idVerified: boolean("id_verified").notNull().default(false),
+    idVerificationStatus: text("id_verification_status")
+      .$type<IdVerificationStatus>()
+      .notNull()
+      .default("NOT_VERIFIED"),
+    idVerificationStartedAt: timestamp("id_verification_started_at", {
+      withTimezone: true,
+    }),
+    idVerificationImagePath: text("id_verification_image_path"),
+    idVerificationImageHash: text("id_verification_image_hash"),
+    idVerificationStudentHash: text("id_verification_student_hash"),
+    idVerificationConfidence: real("id_verification_confidence"),
+    idVerifiedAt: timestamp("id_verified_at", { withTimezone: true }),
     graduationYear: integer("graduation_year"),
     experienceLevel: text("experience_level").$type<ExperienceLevel>(),
     commitment: text("commitment").$type<Commitment>(),
@@ -57,6 +75,29 @@ export const users = pgTable(
   (t) => [
     index("user_recruitment_idx").on(t.recruitmentStatus),
     index("user_college_idx").on(t.collegeId),
+    check(
+      "user_id_verified_status_check",
+      sql`${t.idVerified} = (${t.idVerificationStatus} = 'VERIFIED')`,
+    ),
+  ],
+);
+
+export const idVerificationClaims = pgTable(
+  "id_verification_claim",
+  {
+    kind: text("kind").$type<"student" | "image">().notNull(),
+    value: text("value").notNull(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.kind, t.value] }),
+    index("id_verification_claim_user_idx").on(t.userId),
+    check("id_verification_claim_kind_check", sql`${t.kind} IN ('student', 'image')`),
   ],
 );
 
@@ -631,6 +672,13 @@ export type TaskCategory =
   | "pitch"
   | "other";
 
+export type IdVerificationStatus =
+  | "NOT_VERIFIED"
+  | "PROCESSING"
+  | "VERIFIED"
+  | "NEEDS_REVIEW"
+  | "REJECTED";
+
 export interface GithubSummary {
   login: string;
   avatarUrl: string;
@@ -640,6 +688,28 @@ export interface GithubSummary {
   recentRepoNames: string[];
   activeThisYear: boolean;
   fetchedAt: string;
+}
+
+export interface LinkedInImport {
+  headline: string | null;
+  about: string | null;
+  experiences: {
+    title: string | null;
+    company: string | null;
+    location: string | null;
+    startDate: string | null;
+    endDate: string | null;
+    description: string | null;
+  }[];
+  education: {
+    school: string | null;
+    degree: string | null;
+    fieldOfStudy: string | null;
+    startDate: string | null;
+    endDate: string | null;
+    description: string | null;
+  }[];
+  skills: string[];
 }
 
 export type User = typeof users.$inferSelect;

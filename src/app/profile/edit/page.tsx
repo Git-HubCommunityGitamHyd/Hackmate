@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, Save, Dices } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,8 @@ import {
 } from "@/lib/constants";
 import type { SkillCategory } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
+import { LinkedInImportCard } from "@/components/profile/linkedin-import-card";
+import { CollegeIdVerification } from "@/components/profile/college-id-verification";
 
 interface SkillSel {
   slug: string;
@@ -40,8 +42,10 @@ interface SkillSel {
   isPrimary: boolean;
 }
 
+/** Edit the current user's profile, import LinkedIn details, and submit college ID verification. */
 export default function EditProfilePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: profile, isLoading } = useMyProfile();
 
   const [form, setForm] = useState({
@@ -51,6 +55,7 @@ export default function EditProfilePage() {
     githubUsername: "",
     linkedinUrl: "",
     portfolioUrl: "",
+    collegeName: "",
     graduationYear: "",
     experienceLevel: "intermediate",
     commitment: "serious",
@@ -84,6 +89,7 @@ export default function EditProfilePage() {
       githubUsername: profile.githubUsername ?? "",
       linkedinUrl: profile.linkedinUrl ?? "",
       portfolioUrl: profile.portfolioUrl ?? "",
+      collegeName: profile.collegeName ?? "",
       graduationYear: profile.graduationYear ? String(profile.graduationYear) : "",
       experienceLevel: profile.experienceLevel ?? "intermediate",
       commitment: profile.commitment ?? "serious",
@@ -114,20 +120,28 @@ export default function EditProfilePage() {
   }
 
   const save = useMutation({
+    /** Save the current form, skills, roles, availability, and compatibility answers. */
     mutationFn: () =>
       api("/api/users/me", {
         method: "PUT",
         body: JSON.stringify({
           ...form,
           graduationYear: form.graduationYear ? Number(form.graduationYear) : null,
-          collegeId: null,
+          collegeName: form.collegeName,
           skills,
           roles,
           availability: avail,
           compat,
         }),
       }),
-    onSuccess: () => {
+    /** Refresh profile queries and navigate to the saved profile after a successful update. */
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["me"] }),
+        ...(profile
+          ? [queryClient.invalidateQueries({ queryKey: ["profile", profile.id] })]
+          : []),
+      ]);
       toast.success("Profile saved — teams can find you now");
       router.push(profile ? `/profile/${profile.id}` : "/");
     },
@@ -219,6 +233,16 @@ export default function EditProfilePage() {
             <Input id="gradyear" type="number" min={2000} max={2035} value={form.graduationYear} onChange={(e) => setForm({ ...form, graduationYear: e.target.value })} />
           </div>
           <div className="space-y-1.5">
+            <Label htmlFor="college">College / university</Label>
+            <Input
+              id="college"
+              maxLength={160}
+              value={form.collegeName}
+              onChange={(e) => setForm({ ...form, collegeName: e.target.value })}
+              placeholder="Your college or university"
+            />
+          </div>
+          <div className="space-y-1.5">
             <Label htmlFor="linkedin">LinkedIn URL</Label>
             <Input id="linkedin" value={form.linkedinUrl} onChange={(e) => setForm({ ...form, linkedinUrl: e.target.value })} placeholder="https://…" />
           </div>
@@ -228,6 +252,26 @@ export default function EditProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      {profile && <CollegeIdVerification profile={profile} />}
+
+      {profile && (
+        <LinkedInImportCard
+          profileId={profile.id}
+          linkedinUrl={form.linkedinUrl}
+          onLinkedInUrlChange={(linkedinUrl) => setForm((current) => ({ ...current, linkedinUrl }))}
+          onImported={(result) =>
+            setForm((current) => ({
+              ...current,
+              linkedinUrl: result.linkedinUrl ?? current.linkedinUrl,
+              bio:
+                result.bioFilled && !current.bio.trim()
+                  ? result.bio ?? current.bio
+                  : current.bio,
+            }))
+          }
+        />
+      )}
 
       {/* Roles */}
       <Card>

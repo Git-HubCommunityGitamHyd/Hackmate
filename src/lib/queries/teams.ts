@@ -11,6 +11,7 @@ import type { TeamCardDTO, TeamDetailDTO } from "./types";
 /* Shared aggregation helpers                                          */
 /* ------------------------------------------------------------------ */
 
+/** Batch-load members, wanted skills, and needed roles into maps keyed by team ID. */
 async function teamAggregates(teamIds: string[]) {
   if (teamIds.length === 0)
     return { membersByTeam: new Map<string, any[]>(), wantedByTeam: new Map<string, any[]>(), neededByTeam: new Map<string, any[]>() };
@@ -22,6 +23,7 @@ async function teamAggregates(teamIds: string[]) {
         userId: schema.teamMembers.userId,
         name: schema.users.name,
         image: schema.users.image,
+        idVerified: schema.users.idVerified,
         isAdmin: schema.teamMembers.isAdmin,
         roleId: schema.teamMembers.roleId,
         experienceLevel: schema.users.experienceLevel,
@@ -232,6 +234,10 @@ export async function listTeams(
 /* Team detail — with full Composition Intelligence                    */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Load team members, composition analysis, and viewer-specific membership and match details.
+ * Returns null when the team does not exist.
+ */
 export async function getTeamDetail(
   teamId: string,
   viewerId?: string | null,
@@ -441,6 +447,7 @@ export async function getTeamDetail(
       userId: m.userId,
       name: m.name ?? "Anonymous",
       image: m.image,
+      idVerified: m.idVerified,
       isAdmin: m.isAdmin,
       role: (rolesByUser.get(m.userId) ?? [])[0]
         ? {

@@ -35,6 +35,8 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { useCurrentUser, useProfile } from "@/hooks/use-api";
 import { COMMITMENT_LEVELS, EXPERIENCE_LEVELS } from "@/lib/constants";
 import { Pencil, Radar } from "lucide-react";
+import { LinkedInSections } from "@/components/profile/linkedin-sections";
+import { VerifiedBadge } from "@/components/shared/verified-badge";
 
 const BADGE_ICONS: Record<string, typeof Trophy> = {
   "completed-hackathon": CheckCircle2,
@@ -44,6 +46,7 @@ const BADGE_ICONS: Record<string, typeof Trophy> = {
   "worked-together": Users,
 };
 
+/** Load and display a student profile, including verified status and imported LinkedIn details. */
 export default function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { user, isAuthenticated } = useCurrentUser();
@@ -91,6 +94,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
               <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-extrabold tracking-tight">{profile.name}</h1>
+                  {profile.idVerified && <VerifiedBadge compact={false} />}
                   {profile.emergencyAvailable && <EmergencyBadge />}
                 </div>
                 {isOwnProfile && (
@@ -187,6 +191,8 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 ))}
             </CardContent>
           </Card>
+
+          <LinkedInSections data={profile.linkedinData} linkedinUrl={profile.linkedinUrl} />
 
           {/* GitHub verified */}
           {profile.githubData && (

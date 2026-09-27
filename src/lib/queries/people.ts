@@ -18,6 +18,7 @@ export interface PeopleFilters {
   limit?: number;
 }
 
+/** List discoverable people matching the supplied filters with skills, roles, and verification badges. */
 export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO[]> {
   const where: (SQLWrapper | undefined)[] = [];
   if (filters.emergencyOnly) {
@@ -44,7 +45,7 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
   let userRows = await db
     .select({
       u: schema.users,
-      collegeName: schema.colleges.name,
+      collegeName: sql<string | null>`coalesce(${schema.users.collegeName}, ${schema.colleges.name})`,
     })
     .from(schema.users)
     .leftJoin(schema.colleges, eq(schema.users.collegeId, schema.colleges.id))
@@ -135,6 +136,7 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
   let list: PersonCardDTO[] = userRows.map(({ u, collegeName }) => ({
     id: u.id,
     name: u.name ?? "Anonymous",
+    idVerified: u.idVerified,
     image: u.image,
     bio: u.bio,
     collegeName: collegeName ?? null,
@@ -172,12 +174,19 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
 /* Full profile: badges, history, previous-team graph                  */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Load a full profile by user ID, including LinkedIn data and verification status.
+ * Returns null for a missing user and does not apply discovery visibility filters.
+ */
 export async function getProfile(userId: string): Promise<ProfileDTO | null> {
   /* NOTE: fetch the user directly — do NOT reuse people() filters here,
      otherwise members whose status became team_full / not_looking would
      404 on their own profile. */
   const [userRow] = await db
-    .select({ u: schema.users, collegeName: schema.colleges.name })
+    .select({
+      u: schema.users,
+      collegeName: sql<string | null>`coalesce(${schema.users.collegeName}, ${schema.colleges.name})`,
+    })
     .from(schema.users)
     .leftJoin(schema.colleges, eq(schema.users.collegeId, schema.colleges.id))
     .where(eq(schema.users.id, userId))
@@ -288,6 +297,8 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
   return {
     id: u.id,
     name: u.name ?? "Anonymous",
+    idVerified: u.idVerified,
+    idVerificationStatus: u.idVerificationStatus,
     image: u.image,
     bio: u.bio,
     collegeName: userRow.collegeName ?? null,
@@ -305,6 +316,7 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
     email: u.email,
     username: u.username,
     linkedinUrl: u.linkedinUrl,
+    linkedinData: (u.linkedinData as ProfileDTO["linkedinData"]) ?? null,
     portfolioUrl: u.portfolioUrl,
     githubData: (u.githubData as ProfileDTO["githubData"]) ?? null,
     availability: avail

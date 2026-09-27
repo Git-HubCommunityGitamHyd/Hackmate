@@ -12,6 +12,7 @@ export async function GET(
     const profile = await getProfile(id);
     if (!profile) return fail("User not found", 404);
     /* Don't leak private email/links to strangers. */
-    return ok({ ...profile, email: undefined });
+    const { idVerificationStatus: _status, ...publicProfile } = profile;
+    return ok({ ...publicProfile, email: undefined });
   });
 }
