@@ -12,7 +12,12 @@ const MAX_CSV_BYTES = 5 * 1024 * 1024;
  */
 export async function POST(req: Request) {
   return withUser(async (user) => {
-    const form = await req.formData();
+    let form: FormData;
+    try {
+      form = await req.formData();
+    } catch {
+      return fail("The LinkedIn import form is invalid.", 400);
+    }
     const rawUrl = form.get("linkedinUrl");
     const csv = form.get("csv");
     const hasUrl = typeof rawUrl === "string" && rawUrl.trim().length > 0;

@@ -262,6 +262,45 @@ export async function POST(request: NextRequest) {
             : "We couldn't verify this ID. Please upload a clearer photo.",
     });
   } catch (error) {
+    let cleanupImagePath: string | null = null;
+    try {
+      cleanupImagePath = await db.transaction(async (tx) => {
+        const [current] = await tx
+          .select({ imagePath: schema.users.idVerificationImagePath })
+          .from(schema.users)
+          .where(
+            and(
+              eq(schema.users.id, user.id),
+              eq(schema.users.idVerificationStatus, "PROCESSING"),
+              eq(schema.users.idVerificationStartedAt, processingStartedAt),
+            ),
+          )
+          .limit(1)
+          .for("update");
+        if (!current) return null;
+
+        await tx
+          .update(schema.users)
+          .set({
+            idVerified: false,
+            idVerificationStatus: "NOT_VERIFIED",
+            idVerificationStartedAt: null,
+            idVerificationImagePath: null,
+            idVerificationImageHash: null,
+            idVerificationStudentHash: null,
+            idVerificationConfidence: null,
+            idVerifiedAt: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.users.id, user.id));
+        await tx
+          .delete(schema.idVerificationClaims)
+          .where(eq(schema.idVerificationClaims.userId, user.id));
+        return current.imagePath;
+      });
+    } catch {
+      console.error("[verification] Failed to reset the failed verification attempt.");
+    }
     if (newImagePath) {
       try {
         await deleteCollegeIdImage(newImagePath);
@@ -273,24 +312,16 @@ export async function POST(request: NextRequest) {
           await releaseVerificationClaim(claim.kind, claim.value, user.id);
         } catch {
           console.error("[verification] Failed to release a verification claim.");
-        }
+          }
       }
     }
-    await db
-      .update(schema.users)
-      .set({
-        idVerificationStatus:
-          profile.status === "PROCESSING" ? "NOT_VERIFIED" : profile.status,
-        idVerificationStartedAt: null,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(schema.users.id, user.id),
-          eq(schema.users.idVerificationStatus, "PROCESSING"),
-          eq(schema.users.idVerificationStartedAt, processingStartedAt),
-        ),
-      );
+    if (cleanupImagePath && cleanupImagePath !== newImagePath) {
+      try {
+          await deleteCollegeIdImage(cleanupImagePath);
+      } catch {
+          console.error("[verification] Failed to remove the failed private document.");
+      }
+    }
     console.error(
       "[verification] Processing failed:",
       error instanceof Error ? error.message : "Unknown error",

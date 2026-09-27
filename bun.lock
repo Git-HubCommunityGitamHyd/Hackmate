@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "nextjs_tailwind_shadcn_ts",
+      "name": "hackmate",
       "dependencies": {
         "@auth/drizzle-adapter": "^1.11.3",
         "@radix-ui/react-accordion": "^1.2.11",

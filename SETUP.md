@@ -100,16 +100,14 @@ personal details are not stored.
    .venv\Scripts\Activate.ps1
    pip install -r requirements.txt
    ```
-4. Install the `llama-server` binary from the
-   [llama.cpp releases](https://github.com/ggml-org/llama.cpp/releases) for
-   CPU/Apple Silicon inference, or configure a compatible existing Surya 2
-   inference server. Surya also supports a vLLM backend on NVIDIA GPUs.
+4. Install and configure the Surya 2 inference dependencies required by
+   `services/surya-ocr/requirements.txt` for the target host. The OCR service
+   owns inference-backend configuration; this repository does not read
+   `SURYA_INFERENCE_BACKEND` or `SURYA_INFERENCE_URL`.
 5. Set `SURYA_SERVICE_TOKEN` in `.env.local` to a generated random secret and
    set the same value in the OCR service environment. Set
-   `SURYA_SERVICE_URL=http://localhost:8000` in `.env.local`. For local
-   inference, configure `SURYA_INFERENCE_BACKEND=llama.cpp` in the service
-   environment; optionally point `SURYA_INFERENCE_URL` at an existing
-   compatible `/v1` inference endpoint.
+   `SURYA_SERVICE_URL=http://localhost:8000` in `.env.local`. These are the
+   only OCR service variables consumed by the Next.js application.
 6. Run the OCR service in a separate terminal:
    ```powershell
    uvicorn main:app --host 127.0.0.1 --port 8000
@@ -126,10 +124,10 @@ personal details are not stored.
   `docker build -t hackmate-surya services/surya-ocr` or deploy the source
   directly. The service exposes `/ocr` (Bearer-token protected) and `/healthz`;
   use private networking and TLS in production.
-- Provide a persistent Surya 2 inference backend: use vLLM on a supported
-  NVIDIA GPU or llama.cpp on a CPU-capable host, or set
-  `SURYA_INFERENCE_URL` to an existing compatible backend. The service keeps a
-  single `SuryaInferenceManager`/`RecognitionPredictor` instance for reuse.
+- Provide a persistent Surya 2 inference backend compatible with the installed
+  Python dependencies. Backend selection is owned by the OCR service/runtime,
+  not by the Next.js application; do not advertise unsupported
+  `SURYA_INFERENCE_*` variables unless `main.py` is changed to consume them.
 - Set `SURYA_SERVICE_URL` and the same high-entropy `SURYA_SERVICE_TOKEN` in
   the Vercel app and OCR service. Also configure the app's normal
   `AUTH_SECRET`. The endpoint allows up to 60 seconds, subject to the Vercel
@@ -282,9 +280,16 @@ confirm the migration ran and that the Vercel runtime can reach port 26257
 | `bun run dev` | Start the Next.js dev server |
 | `bun run build` / `start` | Production build / serve |
 | `bun run lint` | ESLint |
-| `bun run db:migrate` | Apply `drizzle/*.sql` migrations |
+| `bun run db:migrate` | Apply every pending `drizzle/*.sql` migration via the custom `__migrations` tracker |
 | `bun run db:seed` | Re-seed system taxonomies (truncates first, no demo data) |
 | `bun run db:studio` | Drizzle Studio (browse the database) |
+
+`bun run db:migrate` is the authoritative migration command. The custom
+runner applies the sorted SQL files in `drizzle/` and records filenames in the
+`__migrations` table, so `0002_linkedin_data.sql` and
+`0003_college_id_verification.sql` are included. Do not use
+`drizzle-kit migrate` for deployment; its journal is retained for Drizzle Kit
+development tooling and is not the execution tracker for this project.
 
 ## Database notes
 

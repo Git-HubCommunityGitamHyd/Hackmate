@@ -14,24 +14,52 @@ import { ROLE_TAXONOMY, SKILLS } from "@/lib/constants";
 export async function GET() {
   return withUser(async (user) => {
     const staleBefore = new Date(Date.now() - PROCESSING_STALE_AFTER_MS);
-    await db
-      .update(schema.users)
-      .set({
-        idVerified: false,
-        idVerificationStatus: "NOT_VERIFIED",
-        idVerificationStartedAt: null,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(schema.users.id, user.id),
-          eq(schema.users.idVerificationStatus, "PROCESSING"),
-          or(
-            isNull(schema.users.idVerificationStartedAt),
-            lt(schema.users.idVerificationStartedAt, staleBefore),
+    const staleReset = await db.transaction(async (tx) => {
+      const [stale] = await tx
+        .select({
+          imagePath: schema.users.idVerificationImagePath,
+        })
+        .from(schema.users)
+        .where(
+          and(
+            eq(schema.users.id, user.id),
+            eq(schema.users.idVerificationStatus, "PROCESSING"),
+            or(
+              isNull(schema.users.idVerificationStartedAt),
+              lt(schema.users.idVerificationStartedAt, staleBefore),
+            ),
           ),
-        ),
-      );
+        )
+        .limit(1)
+        .for("update");
+      if (!stale) return null;
+
+      await tx
+        .update(schema.users)
+        .set({
+          idVerified: false,
+          idVerificationStatus: "NOT_VERIFIED",
+          idVerificationStartedAt: null,
+          idVerificationImagePath: null,
+          idVerificationImageHash: null,
+          idVerificationStudentHash: null,
+          idVerificationConfidence: null,
+          idVerifiedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.users.id, user.id));
+      await tx
+        .delete(schema.idVerificationClaims)
+        .where(eq(schema.idVerificationClaims.userId, user.id));
+      return stale.imagePath;
+    });
+    if (staleReset) {
+      try {
+        await deleteCollegeIdImage(staleReset);
+      } catch {
+        console.error("[users/me] Stale private document cleanup failed.");
+      }
+    }
 
     const profile = await getProfile(user.id);
     if (!profile) return fail("Profile not found", 404);
@@ -71,10 +99,15 @@ export async function PUT(req: NextRequest) {
       const [current] = await tx
         .select({
           idVerified: schema.users.idVerified,
+          verificationStatus: schema.users.idVerificationStatus,
           name: schema.users.name,
           collegeName: schema.users.collegeName,
           collegeId: schema.users.collegeId,
           imagePath: schema.users.idVerificationImagePath,
+          imageHash: schema.users.idVerificationImageHash,
+          studentHash: schema.users.idVerificationStudentHash,
+          confidence: schema.users.idVerificationConfidence,
+          verifiedAt: schema.users.idVerifiedAt,
         })
         .from(schema.users)
         .where(eq(schema.users.id, user.id))
@@ -118,11 +151,19 @@ export async function PUT(req: NextRequest) {
         return { failure: "invalid-selection" as const, imagePath: null };
       }
 
+      const identityChanged =
+        current.name !== data.name ||
+        current.collegeName !== (data.collegeName || null) ||
+        (data.collegeId !== undefined && current.collegeId !== data.collegeId);
       const resetVerification =
-        current.idVerified &&
-        (current.name !== data.name ||
-          current.collegeName !== (data.collegeName || null) ||
-          (data.collegeId !== undefined && current.collegeId !== data.collegeId));
+        identityChanged &&
+        (current.idVerified ||
+          current.verificationStatus !== "NOT_VERIFIED" ||
+        current.imagePath !== null ||
+        current.imageHash !== null ||
+        current.studentHash !== null ||
+        current.confidence !== null ||
+        current.verifiedAt !== null);
 
       await tx
         .update(schema.users)
