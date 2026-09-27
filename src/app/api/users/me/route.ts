@@ -122,7 +122,7 @@ export async function PUT(req: NextRequest) {
         current.idVerified &&
         (current.name !== data.name ||
           current.collegeName !== (data.collegeName || null) ||
-+         current.collegeId !== (data.collegeId ?? null));
+          (data.collegeId !== undefined && current.collegeId !== data.collegeId));
 
       await tx
         .update(schema.users)
