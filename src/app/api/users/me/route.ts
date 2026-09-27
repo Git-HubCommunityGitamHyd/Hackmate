@@ -73,6 +73,7 @@ export async function PUT(req: NextRequest) {
           idVerified: schema.users.idVerified,
           name: schema.users.name,
           collegeName: schema.users.collegeName,
+          collegeId: schema.users.collegeId,
           imagePath: schema.users.idVerificationImagePath,
         })
         .from(schema.users)
@@ -120,7 +121,8 @@ export async function PUT(req: NextRequest) {
       const resetVerification =
         current.idVerified &&
         (current.name !== data.name ||
-          current.collegeName !== (data.collegeName || null));
+          current.collegeName !== (data.collegeName || null) ||
++         current.collegeId !== (data.collegeId ?? null));
 
       await tx
         .update(schema.users)
