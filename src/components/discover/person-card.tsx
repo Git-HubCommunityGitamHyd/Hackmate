@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { Github, Clock, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,8 +27,15 @@ export function PersonCard({
   showMatch?: boolean;
   action?: React.ReactNode;
 }) {
+  const reduceMotion = useReducedMotion();
   return (
-    <Card className="group hover:shadow-md hover:border-primary/40 transition-all">
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={reduceMotion ? undefined : { y: -3 }}
+    >
+    <Card className="group hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300">
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
           <Link href={`/profile/${person.id}`} className="shrink-0">
@@ -113,5 +121,6 @@ export function PersonCard({
         </div>
       </CardContent>
     </Card>
+    </motion.div>
   );
 }

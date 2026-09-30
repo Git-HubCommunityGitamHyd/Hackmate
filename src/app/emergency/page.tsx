@@ -119,7 +119,9 @@ export default function EmergencyPage() {
 
           <div className="mt-5 flex items-center gap-3">
             <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Active for</span>
+            <span className="text-sm text-muted-foreground">
+              {active ? "Boost duration (locked while active)" : "Boost duration when activated"}
+            </span>
             <Select value={hours} onValueChange={setHours} disabled={active}>
               <SelectTrigger className="w-32">
                 <SelectValue />

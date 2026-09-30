@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import { Lightbulb, Users, ArrowRight, Lock } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,11 +12,18 @@ import { UserAvatar } from "@/components/shared/user-avatar";
 import type { TeamCardDTO } from "@/lib/queries/types";
 
 export function TeamCard({ team, showMatch }: { team: TeamCardDTO; showMatch?: boolean }) {
+  const reduceMotion = useReducedMotion();
   const spotsLeft = team.targetSize - team.memberCount;
   const full = spotsLeft <= 0 || team.status !== "recruiting";
 
   return (
-    <Card className="group hover:shadow-md hover:border-primary/40 transition-all">
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={reduceMotion ? undefined : { y: -3 }}
+    >
+    <Card className="group hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300">
       <CardContent className="p-5 pb-3">
         <div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -113,5 +121,6 @@ export function TeamCard({ team, showMatch }: { team: TeamCardDTO; showMatch?: b
         </div>
       </CardFooter>
     </Card>
+    </motion.div>
   );
 }

@@ -78,7 +78,15 @@ export default function DiscoverPage() {
                     <Plus className="h-4 w-4 mr-1.5" /> Create a team
                   </Link>
                 </Button>
-                <Button asChild size="sm" variant="outline" className="font-medium text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950">
+                {/* Emergency stays reachable but quiet: outline + icon,
+                    red only on hover. It must not out-shout the primary
+                    actions (Search / Create) on a calm dashboard. */}
+                <Button
+                  asChild
+                  size="sm"
+                  variant="ghost"
+                  className="font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                >
                   <Link href="/emergency">
                     <ShieldAlert className="h-4 w-4 mr-1.5" /> Emergency
                   </Link>

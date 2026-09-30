@@ -95,13 +95,15 @@
   --primary-foreground: oklch(0.16 0.03 160);
   --secondary: oklch(0.28 0.016 160 / 88%);
   --secondary-foreground: oklch(0.955 0.005 160);
-  --muted: oklch(0.255 0.014 160 / 62%);
-  --muted-foreground: oklch(0.69 0.014 160);
+  --muted: oklch(0.26 0.014 160 / 65%);
+  /* 0.69 failed contrast checks on empty states and metadata — lifted to
+     0.75 so secondary text passes WCAG AA on the 0.15 background. */
+  --muted-foreground: oklch(0.75 0.014 160);
   --accent: oklch(0.31 0.04 160 / 72%);
   --accent-foreground: oklch(0.965 0.005 160);
   --destructive: oklch(0.66 0.2 25);
-  --border: oklch(1 0 0 / 13%);
-  --input: oklch(1 0 0 / 18%);
+  --border: oklch(1 0 0 / 18%);
+  --input: oklch(1 0 0 / 22%);
   --ring: oklch(0.865 0.11 162);
   --chart-1: oklch(0.865 0.11 162);
   --chart-2: oklch(0.696 0.17 162.48);

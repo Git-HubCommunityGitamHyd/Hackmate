@@ -151,6 +151,7 @@ export default function NotificationsPage() {
               icon={Inbox}
               title="Nothing yet"
               description="Join requests, invites and deadline reminders will show up here."
+              action={<Button asChild variant="outline"><Link href="/#teams">Browse teams</Link></Button>}
             />
           ) : (
             notifications.map((n) => (

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, Clock, Users, MapPin, Trophy, ArrowRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Calendar, Clock, Users, MapPin, Trophy, ArrowRight, Sparkles } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,9 +26,19 @@ export function HackathonCard({ hackathon }: { hackathon: HackathonCardDTO }) {
         : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300";
 
   const regDays = hackathon.registrationDeadline ? daysUntil(hackathon.registrationDeadline) : null;
+  const reduceMotion = useReducedMotion();
+
+  const noActivity =
+    hackathon.recruitingTeamCount === 0 && hackathon.peopleLookingCount === 0;
 
   return (
-    <Card className="group hover:shadow-md hover:border-primary/40 transition-all overflow-hidden">
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={reduceMotion ? undefined : { y: -4 }}
+    >
+    <Card className="group hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300 overflow-hidden cursor-pointer focus-within:ring-2 focus-within:ring-ring/40">
       <CardContent className="p-5 pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -91,22 +102,34 @@ export function HackathonCard({ hackathon }: { hackathon: HackathonCardDTO }) {
         )}
       </CardContent>
       <CardFooter className="px-5 py-3 border-t bg-muted/30 flex items-center justify-between">
-        <div className="flex items-center gap-4 text-xs">
-          <span className="inline-flex items-center gap-1 font-medium text-foreground">
-            <Users className="h-3.5 w-3.5 text-primary" />
-            {hackathon.recruitingTeamCount} teams recruiting
+        {noActivity ? (
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+            <Sparkles className="h-3.5 w-3.5" />
+            Be the first to build a team here
           </span>
-          <span className="inline-flex items-center gap-1 font-medium text-foreground">
-            <Clock className="h-3.5 w-3.5 text-primary" />
-            {hackathon.peopleLookingCount} people looking
-          </span>
-        </div>
+        ) : (
+          <div className="flex items-center gap-4 text-xs">
+            {hackathon.recruitingTeamCount > 0 && (
+              <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                <Users className="h-3.5 w-3.5 text-primary" />
+                {hackathon.recruitingTeamCount} team{hackathon.recruitingTeamCount === 1 ? "" : "s"} recruiting
+              </span>
+            )}
+            {hackathon.peopleLookingCount > 0 && (
+              <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                <Clock className="h-3.5 w-3.5 text-primary" />
+                {hackathon.peopleLookingCount} looking
+              </span>
+            )}
+          </div>
+        )}
         <Button asChild variant="ghost" size="sm" className="gap-1 group-hover:text-primary">
           <Link href={`/hackathons/${hackathon.slug}`}>
-            Open hub <ArrowRight className="h-3.5 w-3.5" />
+            Open hub <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </Button>
       </CardFooter>
     </Card>
+    </motion.div>
   );
 }

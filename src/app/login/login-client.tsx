@@ -4,32 +4,27 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Github,
   Mail,
   Loader2,
   Zap,
   FlaskConical,
+  ArrowRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/shared/logo";
 import { PixelCanvas } from "@/components/ui/pixel-canvas";
 import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
-import { motion } from "framer-motion";
 import { TextRepel } from "@/components/ui/text-repel";
 import { cn } from "@/lib/utils";
-import { FlutedGlass } from "@/components/ui/fluted-glass";
+
+const EASE = [0.22, 1, 0.36, 1] as const;
 
 function ProjectInfo() {
   const [descriptionRevealed, setDescriptionRevealed] = useState(false);
@@ -123,8 +118,16 @@ function ProjectInfo() {
   );
 }
 
+/* Stagger presets for the sign-in card contents. */
+const stagger = (i: number) => ({
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, ease: EASE, delay: 0.25 + i * 0.07 },
+});
+
 export function LoginClient() {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
 
   const [email, setEmail] = useState("");
   const [sendingMagic, setSendingMagic] = useState(false);
@@ -227,75 +230,82 @@ export function LoginClient() {
             <ProjectInfo />
           </div>
 
-          {/* Sign-in */}
+          {/* Sign-in — OPAQUE BLACK card.
+              Solid black surface (no translucency, no backdrop blur) so the
+              animated pixel background frames the card instead of bleeding
+              through it. A single emerald hairline + deep shadow separates
+              it from the canvas behind. */}
           <div className="w-full max-w-md mx-auto lg:mx-0 lg:pt-2">
             <motion.div
-              initial={{
-                opacity: 0,
-                y: 24,
-                filter: "blur(6px)",
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                filter: "blur(0px)",
-              }}
-              transition={{
-                duration: 0.6,
-                ease: [0.22, 1, 0.36, 1],
-              }}
+              initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.6, ease: EASE }}
             >
-              <FlutedGlass
-                maxTilt={8}
-                background="#04120a"
-                borderRadius={16}
-                minHeight={0}
-                className="w-full"
+              <div
+                role="group"
+                aria-label="Sign in"
+                className="relative w-full bg-black text-foreground rounded-2xl border border-white/10 shadow-[0_24px_70px_-24px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.06)]"
               >
-                <Card className="border-0 bg-transparent shadow-none">
-                  <CardHeader>
-                    <CardTitle>Sign in</CardTitle>
+                {/* Emerald top hairline — the only flourish on an otherwise
+                    flat, opaque surface. */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent"
+                />
 
-                    <CardDescription>
+                <div className="p-7 space-y-6">
+                  <motion.div {...(reduceMotion ? {} : stagger(0))}>
+                    <h2 className="text-xl font-bold tracking-tight text-white">
+                      Sign in
+                    </h2>
+                    <p className="text-sm text-neutral-400 mt-1">
                       Free forever. No credit card. No dark patterns.
-                    </CardDescription>
-                  </CardHeader>
-
-                  <CardContent className="space-y-5">
-                    <Button
-                      variant="outline"
-                      className="w-full h-11 font-semibold"
-                      onClick={() =>
-                        signIn("github", {
-                          callbackUrl: "/",
-                        })
-                      }
-                    >
-                      <Github className="h-4.5 w-4.5 mr-2" />
-                      Continue with GitHub
-                    </Button>
-
-                    <p className="text-xs text-muted-foreground text-center">
-                      Developers: we import your languages, repos and activity to
-                      verify skills automatically.
                     </p>
+                  </motion.div>
 
-                    <div className="flex items-center gap-3">
-                      <Separator className="flex-1" />
+                  <motion.div
+                    className="space-y-5"
+                    {...(reduceMotion ? {} : { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.5, delay: 0.25 } })}
+                  >
+                    <motion.div {...(reduceMotion ? {} : stagger(1))}>
+                      <Button
+                        variant="outline"
+                        className="w-full h-11 font-semibold bg-neutral-950 border-white/15 hover:border-white/30 hover:bg-neutral-900 text-white transition-all"
+                        onClick={() =>
+                          signIn("github", {
+                            callbackUrl: "/",
+                          })
+                        }
+                      >
+                        <Github className="h-4.5 w-4.5 mr-2" />
+                        Continue with GitHub
+                        <ArrowRight className="ml-1.5 h-4 w-4 opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 hidden" />
+                      </Button>
 
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                      <p className="text-xs text-neutral-400 text-center mt-2">
+                        Developers: we import your languages, repos and
+                        activity to verify skills automatically.
+                      </p>
+                    </motion.div>
+
+                    <motion.div
+                      className="flex items-center gap-3"
+                      {...(reduceMotion ? {} : stagger(2))}
+                    >
+                      <Separator className="flex-1 bg-white/10" />
+                      <span className="text-xs text-neutral-400 uppercase tracking-wider">
                         or
                       </span>
+                      <Separator className="flex-1 bg-white/10" />
+                    </motion.div>
 
-                      <Separator className="flex-1" />
-                    </div>
-
-                    <form
+                    <motion.form
                       onSubmit={sendMagicLink}
                       className="space-y-3"
+                      {...(reduceMotion ? {} : stagger(3))}
                     >
                       <div className="space-y-1.5">
-                        <Label htmlFor="email">
+                        <Label htmlFor="email" className="text-neutral-300">
                           Email magic link
                         </Label>
 
@@ -304,15 +314,14 @@ export function LoginClient() {
                           type="email"
                           placeholder="you@college.edu"
                           value={email}
-                          onChange={(e) =>
-                            setEmail(e.target.value)
-                          }
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="h-11 bg-neutral-950 border-white/15 text-white placeholder:text-neutral-600 focus-visible:ring-primary/50 focus-visible:border-primary/60 transition-colors"
                         />
                       </div>
 
                       <Button
                         type="submit"
-                        className="w-full h-11 font-semibold"
+                        className="w-full h-11 font-semibold btn-harsh transition-transform active:scale-[0.98]"
                         disabled={sendingMagic}
                       >
                         {sendingMagic ? (
@@ -324,27 +333,28 @@ export function LoginClient() {
                         Send magic link
                       </Button>
 
-                      <p className="text-xs text-muted-foreground text-center">
-                        For designers, PMs and pitching specialists — no GitHub
-                        needed.
+                      <p className="text-xs text-neutral-400 text-center">
+                        For designers, PMs and pitching specialists — no
+                        GitHub needed.
                       </p>
-                    </form>
+                    </motion.form>
 
                     {hasDemo && (
-                      <>
+                      <motion.div
+                        className="space-y-3"
+                        {...(reduceMotion ? {} : stagger(4))}
+                      >
                         <div className="flex items-center gap-3">
-                          <Separator className="flex-1" />
-
-                          <span className="text-xs text-muted-foreground uppercase tracking-wider">
+                          <Separator className="flex-1 bg-white/10" />
+                          <span className="text-xs text-neutral-400 uppercase tracking-wider">
                             dev
                           </span>
-
-                          <Separator className="flex-1" />
+                          <Separator className="flex-1 bg-white/10" />
                         </div>
 
                         <Button
                           variant="ghost"
-                          className="w-full border border-dashed"
+                          className="w-full border border-dashed border-white/15 hover:border-white/25 hover:bg-neutral-950 text-neutral-300"
                           onClick={demoLogin}
                           disabled={demoLoading}
                         >
@@ -356,30 +366,18 @@ export function LoginClient() {
 
                           Quick dev sign-in — admin (local only)
                         </Button>
-                      </>
+                      </motion.div>
                     )}
-                  </CardContent>
-                </Card>
-              </FlutedGlass>
+                  </motion.div>
+                </div>
+              </div>
             </motion.div>
 
             <p className="text-xs text-muted-foreground text-center mt-2 max-w-xs mx-auto text-balance">
               <motion.span
-                initial={{
-                  opacity: 0,
-                  scale: 0.5,
-                  rotate: -20,
-                }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  rotate: 0,
-                }}
-                transition={{
-                  duration: 0.5,
-                  ease: [0.22, 1, 0.36, 1],
-                  delay: 0.1,
-                }}
+                initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                transition={{ duration: 0.5, ease: EASE, delay: 0.1 }}
                 className="inline-flex"
               >
                 <Zap className="h-3 w-3 text-primary" />
