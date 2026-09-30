@@ -4,6 +4,18 @@ import { getUserRole } from "@/lib/admin";
 
 /** Standard JSON API helpers with auth guard. */
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Route params are user input. A malformed id must produce a clean 404,
+ * never reach Postgres (which would 500 on "invalid input syntax for
+ * type uuid"). Found by the pentest suite; fixed centrally here.
+ */
+export function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
 export function ok<T>(data: T, init?: ResponseInit) {
   return NextResponse.json(data as any, init);
 }
