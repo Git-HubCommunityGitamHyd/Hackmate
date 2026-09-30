@@ -73,3 +73,4 @@ screenshots/
 tool-results/
 worklog.md
 Caddyfile
+package-lock.json
