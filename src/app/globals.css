@@ -89,7 +89,7 @@
   --foreground: oklch(0.955 0.005 160);
   --card: oklch(0.212 0.014 160 / 40%);
   --card-foreground: oklch(0.955 0.005 160);
-  --popover: oklch(0.185 0.014 160 / 94%);
+  --popover: oklch(0.185 0.014 160 / 82%);
   --popover-foreground: oklch(0.955 0.005 160);
   --primary: oklch(0.865 0.11 162); /* light mint green accent */
   --primary-foreground: oklch(0.16 0.03 160);
@@ -153,23 +153,64 @@
     background-attachment: fixed;
   }
 
-  /* ---- Glass surfaces: blur behind every floating panel ----
-     Blur is intentionally light (8px) so the fluted ribs stay faintly
-     visible THROUGH panels — like real fluted glass distorting what's
-     behind it, not an opaque smoked sheet. */
+  /* ---- Glass surfaces: frosted glass is THE material of this app ----
+     Every card is a pane of fluted glass: what sits behind it (the ribbed
+     wall, the pixel canvas) must read as blurred-but-present, the way real
+     frosted glass distorts. Blur 14px keeps the ribs visible as soft
+     streaks instead of erasing them. */
   [data-slot="card"] {
-    backdrop-filter: blur(8px) saturate(140%);
-    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
     border-radius: 2px;
+    position: relative;
+  }
+  /* Specular sheen: light catching the top edge of each glass pane.
+     This is what sells "frosted" over "translucent grey". */
+  [data-slot="card"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: linear-gradient(
+      180deg,
+      oklch(1 0 0 / 0.06) 0%,
+      oklch(1 0 0 / 0.02) 30%,
+      transparent 55%
+    );
+  }
+  :root:not(.dark) [data-slot="card"]::after {
+    background: linear-gradient(
+      180deg,
+      oklch(1 0 0 / 0.5) 0%,
+      oklch(1 0 0 / 0.15) 30%,
+      transparent 55%
+    );
   }
   [data-slot="popover-content"],
   [data-slot="dropdown-menu-content"],
   [data-slot="dialog-content"],
   [data-slot="sheet-content"],
   [data-slot="command"],
-  [data-slot="tooltip-content"] {
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
+  [data-slot="tooltip-content"],
+  [data-slot="alert-dialog-content"] {
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+  }
+
+  /* Tabs ride on glass too — the solid muted pill reads as plastic next
+     to frosted cards. */
+  [data-slot="tabs-list"] {
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    background: color-mix(in oklch, var(--muted) 55%, transparent);
+    box-shadow: inset 0 1px 0 0 oklch(1 0 0 / 0.06);
+  }
+
+  /* Command palette: highlighted items get a hard mint caret so focus is
+     legible by shape, not just background tint. */
+  [data-slot="command-item"][data-selected="true"] {
+    box-shadow: inset 2px 0 0 0 var(--primary);
   }
 
   /* Mint top-edge highlight on cards — like light catching glass */
@@ -254,6 +295,44 @@
       transparent 2px,
       transparent 12px
     );
+  }
+
+  /* Liquid glass — the maximal frosted treatment for hero panels.
+     Deep blur, specular streak, inner hairline and a soft primary halo. */
+  .liquid-glass {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid oklch(1 0 0 / 0.14);
+    border-radius: 2px;
+    background: color-mix(in oklch, var(--card) 78%, transparent);
+    backdrop-filter: blur(22px) saturate(165%);
+    -webkit-backdrop-filter: blur(22px) saturate(165%);
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 0.14),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.05),
+      0 18px 50px -18px oklch(0 0 0 / 0.55);
+  }
+  .liquid-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(115deg, transparent 30%, oklch(1 0 0 / 0.07) 45%, oklch(1 0 0 / 0.02) 55%, transparent 70%),
+      repeating-linear-gradient(
+        90deg,
+        oklch(1 0 0 / 0.04) 0px,
+        oklch(1 0 0 / 0.04) 2px,
+        transparent 2px,
+        transparent 12px
+      );
+  }
+  html:not(.dark) .liquid-glass {
+    border-color: oklch(0.22 0.015 160 / 0.16);
+    background: color-mix(in oklch, var(--card) 85%, transparent);
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 0.7),
+      0 18px 40px -20px oklch(0.22 0.015 160 / 0.25);
   }
 
   /* Navbar active link: hard inset underline, no layout shift */

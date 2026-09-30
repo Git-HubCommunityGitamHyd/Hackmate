@@ -22,6 +22,7 @@ import { Logo } from "@/components/shared/logo";
 import { PixelCanvas } from "@/components/ui/pixel-canvas";
 import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
 import { TextRepel } from "@/components/ui/text-repel";
+import { FlutedGlass } from "@/components/ui/fluted-glass";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -230,21 +231,33 @@ export function LoginClient() {
             <ProjectInfo />
           </div>
 
-          {/* Sign-in — OPAQUE BLACK card.
-              Solid black surface (no translucency, no backdrop blur) so the
-              animated pixel background frames the card instead of bleeding
-              through it. A single emerald hairline + deep shadow separates
-              it from the canvas behind. */}
+          {/* Sign-in — OPAQUE BLACK card, fluted-glass effect intact.
+              Solid #000 surface (no translucency) so the animated pixel
+              background frames the card instead of bleeding through it,
+              while the FlutedGlass wrapper preserves the 3D pointer tilt,
+              vertical fluting and refraction edge the card always had.
+              An emerald hairline + deep shadow separate it from the canvas. */}
           <div className="w-full max-w-md mx-auto lg:mx-0 lg:pt-2">
             <motion.div
               initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ duration: 0.6, ease: EASE }}
             >
+              <FlutedGlass
+                maxTilt={8}
+                background="#000000"
+                borderRadius={16}
+                minHeight={0}
+                className="w-full"
+                style={{
+                  boxShadow:
+                    "0 24px 70px -24px rgba(0,0,0,0.9), inset 0 1px 0 0 rgba(255,255,255,0.06)",
+                }}
+              >
               <div
                 role="group"
                 aria-label="Sign in"
-                className="relative w-full bg-black text-foreground rounded-2xl border border-white/10 shadow-[0_24px_70px_-24px_rgba(0,0,0,0.9),inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                className="relative w-full text-foreground"
               >
                 {/* Emerald top hairline — the only flourish on an otherwise
                     flat, opaque surface. */}
@@ -270,7 +283,7 @@ export function LoginClient() {
                     <motion.div {...(reduceMotion ? {} : stagger(1))}>
                       <Button
                         variant="outline"
-                        className="w-full h-11 font-semibold bg-neutral-950 border-white/15 hover:border-white/30 hover:bg-neutral-900 text-white transition-all"
+                        className="w-full h-11 font-semibold bg-neutral-900 border-white/30 hover:border-white/50 hover:bg-neutral-800 text-white transition-all"
                         onClick={() =>
                           signIn("github", {
                             callbackUrl: "/",
@@ -282,7 +295,7 @@ export function LoginClient() {
                         <ArrowRight className="ml-1.5 h-4 w-4 opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 hidden" />
                       </Button>
 
-                      <p className="text-xs text-neutral-400 text-center mt-2">
+                      <p className="text-[11px] text-neutral-500 text-center mt-2 leading-relaxed">
                         Developers: we import your languages, repos and
                         activity to verify skills automatically.
                       </p>
@@ -333,7 +346,7 @@ export function LoginClient() {
                         Send magic link
                       </Button>
 
-                      <p className="text-xs text-neutral-400 text-center">
+                      <p className="text-[11px] text-neutral-500 text-center leading-relaxed">
                         For designers, PMs and pitching specialists — no
                         GitHub needed.
                       </p>
@@ -371,6 +384,7 @@ export function LoginClient() {
                   </motion.div>
                 </div>
               </div>
+              </FlutedGlass>
             </motion.div>
 
             <p className="text-xs text-muted-foreground text-center mt-2 max-w-xs mx-auto text-balance">

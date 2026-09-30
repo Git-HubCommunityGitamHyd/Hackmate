@@ -27,10 +27,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useNotifications } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
+import { KarmaPill } from "@/components/reputation/karma-pill";
 import { CommandMenu } from "./command-menu";
 
 const NAV_LINKS = [
@@ -56,6 +63,12 @@ const NAV_LINKS = [
  *  5. The mobile menu animates links in with a stagger and closes via an
  *     explicit X, with the same items the desktop menu has.
  *  6. Height shrinks 16px→14px on scroll — subtle, premium, keeps viewport.
+ * Round 2:
+ *  7. The bell opens a glass preview popover — triage the last few
+ *     notifications and pending invites without leaving the page.
+ *  8. The account menu shows live karma, so reputation is always one glance
+ *     away (the number updates after results are recorded).
+ *  9. Skip-to-content link for keyboard users.
  */
 export function Navbar() {
   const pathname = usePathname();
@@ -84,8 +97,13 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* Close the mobile menu on route change. */
-  useEffect(() => setMobileOpen(false), [pathname]);
+  /* Close the mobile menu on route change — render-time state adjustment
+     (the React-docs pattern; avoids setState-in-effect). */
+  const [prevPath, setPrevPath] = useState(pathname);
+  if (prevPath !== pathname) {
+    setPrevPath(pathname);
+    setMobileOpen(false);
+  }
 
   /* Lock body scroll while the mobile menu is open. */
   useEffect(() => {
@@ -120,6 +138,13 @@ export function Navbar() {
           : "bg-background/40 backdrop-blur-sm border-b border-transparent",
       )}
     >
+      {/* Keyboard users land here first — skip the nav entirely. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:rounded-sm focus:border focus:border-primary/50"
+      >
+        Skip to content
+      </a>
       {/* Fluted hairline under the header — vertical rib accent */}
       <div className="flute-edge" aria-hidden="true" />
 
@@ -188,32 +213,79 @@ export function Navbar() {
 
         {status === "authenticated" ? (
           <>
-            {/* Notifications with springy badge */}
-            <Button
-              asChild
-              variant="ghost"
-              size="icon"
-              className="relative"
-              aria-label={`Notifications${badgeCount ? `, ${badgeCount} unread` : ""}`}
-            >
-              <Link href="/notifications">
-                <Bell className={cn("h-5 w-5 transition-transform duration-300", scrolled && "h-[18px] w-[18px]")} />
-                <AnimatePresence>
+            {/* Notifications: glass preview popover + springy badge */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  aria-label={badgeCount > 0 ? `Notifications, ${badgeCount} unread` : "Notifications"}
+                >
+                  <Bell className={cn("h-5 w-5 transition-transform duration-300", scrolled && "h-[18px] w-[18px]")} />
+                  <AnimatePresence>
+                    {badgeCount > 0 && (
+                      <motion.span
+                        key={badgeCount}
+                        initial={reduceMotion ? false : { scale: 0, y: -4 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-destructive text-destructive-foreground text-[10px] font-bold grid place-items-center px-1 rounded-full"
+                      >
+                        {badgeCount}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80 p-0 rounded-sm">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                  <p className="text-sm font-bold">Notifications</p>
                   {badgeCount > 0 && (
-                    <motion.span
-                      key={badgeCount}
-                      initial={reduceMotion ? false : { scale: 0, y: -4 }}
-                      animate={{ scale: 1, y: 0 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                      className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-destructive text-destructive-foreground text-[10px] font-bold grid place-items-center px-1 rounded-full"
-                    >
-                      {badgeCount}
-                    </motion.span>
+                    <Badge variant="destructive" className="text-[10px] font-bold">{badgeCount} new</Badge>
                   )}
-                </AnimatePresence>
-              </Link>
-            </Button>
+                </div>
+                <ScrollArea className="h-72">
+                  <div className="px-2 py-2 space-y-1">
+                    {(notifications?.invites ?? []).slice(0, 3).map((i) => (
+                      <Link
+                        key={`invite-${i.id}`}
+                        href="/notifications"
+                        className="block px-2.5 py-2 rounded-sm hover:bg-muted/60 transition-colors"
+                      >
+                        <p className="text-xs font-semibold line-clamp-2">
+                          <span className="text-primary">Invite</span> · {i.inviterName} wants you on {i.teamName}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {i.hackathonName ?? "Idea-first team"}
+                        </p>
+                      </Link>
+                    ))}
+                    {(notifications?.notifications ?? []).slice(0, 5).map((n) => (
+                      <Link
+                        key={n.id}
+                        href={n.link ?? "/notifications"}
+                        className="block px-2.5 py-2 rounded-sm hover:bg-muted/60 transition-colors"
+                      >
+                        <p className={cn("text-xs line-clamp-2", !n.read && "font-semibold")}>{n.title}</p>
+                        {n.body && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{n.body}</p>}
+                      </Link>
+                    ))}
+                    {badgeCount === 0 && (notifications?.notifications ?? []).length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-8 px-4">
+                        Quiet for now. Invites and team updates land here.
+                      </p>
+                    )}
+                  </div>
+                </ScrollArea>
+                <div className="border-t border-border p-2">
+                  <Button asChild variant="ghost" size="sm" className="w-full text-xs font-bold">
+                    <Link href="/notifications">View all notifications</Link>
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
 
             <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex" aria-label="Saved items">
               <Link href="/saved">
@@ -246,11 +318,14 @@ export function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold truncate">{user?.name ?? "Student"}</span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold truncate">{user?.name ?? "Student"}</span>
+                      {user?.id && <KarmaPill userId={user.id} />}
+                    </div>
                     <span className="text-xs text-muted-foreground truncate">{user?.email}</span>
                     {isAdmin && (
-                      <span className="mt-1 flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-primary">
+                      <span className="mt-0.5 flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-primary">
                         <ShieldCheck className="h-3 w-3" /> Organizer / admin
                       </span>
                     )}
