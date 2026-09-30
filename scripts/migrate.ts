@@ -5,8 +5,8 @@
  *
  * Usage: bun run scripts/migrate.ts
  */
-import { config } from "dotenv";
-config({ override: true });
+import { loadEnv } from "../src/lib/db/load-env";
+loadEnv();
 
 import { readFileSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
@@ -49,6 +49,9 @@ async function main() {
     max: 1,
     ssl: resolveSsl(url),
     prepare: false,
+    /* Postgres "NOTICE" level messages (e.g. "table already exists, skipping")
+       would otherwise print as scary-looking error objects. */
+    onnotice: () => {},
   });
 
   /* Bookkeeping table (idempotent). */
