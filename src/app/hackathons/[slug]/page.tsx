@@ -19,11 +19,12 @@ import {
   ExternalLink,
   TrendingUp,
   Plus,
-  UserCheck,
 } from "lucide-react";
+import { ROLE_TAXONOMY } from "@/lib/constants";
 import { PersonCard } from "@/components/discover/person-card";
 import { TeamCard } from "@/components/discover/team-card";
 import { EmptyState } from "@/components/shared/empty-state";
+import { LookingDialog } from "@/components/hackathons/looking-dialog";
 import { useHackathonHub, useCurrentUser } from "@/hooks/use-api";
 
 export default function HackathonHubPage({
@@ -135,17 +136,7 @@ export default function HackathonHubPage({
                           <Plus className="h-4 w-4 mr-2" /> Create a team for this event
                         </Link>
                       </Button>
-                      <Button
-                        variant="outline"
-                        className="font-medium"
-                        onClick={() =>
-                          fetch(`/api/hackathons/${slug}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) })
-                            .then((r) => (r.ok ? import("sonner").then((m) => m.toast.success("You're now visible to teams for this event")) : null))
-                            .catch(() => {})
-                        }
-                      >
-                        <UserCheck className="h-4 w-4 mr-2" /> I&apos;m looking for a team
-                      </Button>
+                      <LookingDialog hackathonIdOrSlug={slug} hackathonName={hackathon.name} />
                     </>
                   )}
                 </>
@@ -239,15 +230,30 @@ export default function HackathonHubPage({
         <TabsContent value="ideas" className="mt-5">
           <div className="grid gap-4 md:grid-cols-2">
             {peopleLooking
-              .filter((p) => (p as any).ideaBlurb)
+              .filter((p) => p.hackathonProfile?.ideaBlurb)
               .map((p) => (
                 <Card key={p.id}>
                   <CardContent className="p-5">
                     <div className="flex items-center gap-3 mb-3">
-                      <Compass className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-semibold">{p.name} is carrying an idea</span>
+                      <Lightbulb className="h-4 w-4 text-amber-500 shrink-0" />
+                      <span className="text-sm font-semibold">
+                        <Link href={`/profile/${p.id}`} className="hover:text-primary">
+                          {p.name}
+                        </Link>{" "}
+                        is carrying an idea
+                      </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{(p as any).ideaBlurb}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {p.hackathonProfile!.ideaBlurb}
+                    </p>
+                    {p.hackathonProfile?.preferredRoleSlug && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        wants to build as{" "}
+                        <span className="font-medium text-foreground">
+                          {ROLE_TAXONOMY.find((r) => r.slug === p.hackathonProfile?.preferredRoleSlug)?.name ?? p.hackathonProfile.preferredRoleSlug}
+                        </span>
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -257,8 +263,11 @@ export default function HackathonHubPage({
                 <Card key={t.id}>
                   <CardContent className="p-5">
                     <div className="flex items-center gap-3 mb-3">
-                      <Lightbulb className="h-4 w-4 text-amber-500" />
-                      <span className="text-sm font-semibold">{t.name} has skills, wants an idea</span>
+                      <Compass className="h-4 w-4 text-primary shrink-0" />
+                      <span className="text-sm font-semibold">
+                        <Link href={`/teams/${t.id}`} className="hover:text-primary">{t.name}</Link>{" "}
+                        has skills, wants an idea
+                      </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Team of {t.memberCount} with {t.memberNames.slice(0, 3).join(", ")} — bring your idea to them.
@@ -266,12 +275,12 @@ export default function HackathonHubPage({
                   </CardContent>
                 </Card>
               ))}
-            {peopleLooking.filter((p) => (p as any).ideaBlurb).length === 0 &&
+            {peopleLooking.filter((p) => p.hackathonProfile?.ideaBlurb).length === 0 &&
               teamsRecruiting.filter((t) => t.lookingForIdea).length === 0 && (
                 <EmptyState
                   icon={Lightbulb}
                   title="No open ideas posted"
-                  description="Post an idea when creating a team (or mark 'looking for idea') and it shows up here."
+                  description="Use “I'm looking for a team” above and check “carrying an idea”, or mark your team open to ideas."
                 />
               )}
           </div>

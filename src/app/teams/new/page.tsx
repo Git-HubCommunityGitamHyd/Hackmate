@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Rocket, Lock, Lightbulb } from "lucide-react";
+import { Loader2, Rocket, Lock, Lightbulb, Compass } from "lucide-react";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -58,7 +58,10 @@ function NewTeamForm() {
     lookingForIdea: false,
   });
   const [roleSlugs, setRoleSlugs] = useState<string[]>([]);
+  const [rolePriorities, setRolePriorities] = useState<Record<string, "must" | "nice">>({});
   const [skillSlugs, setSkillSlugs] = useState<string[]>([]);
+  /* Idea-first mode: float the idea now, attach the event later. */
+  const [ideaFirst, setIdeaFirst] = useState(false);
 
   /* Default-select the first hackathon once data arrives (render-time fallback). */
   const effectiveHackathonId =
@@ -68,7 +71,13 @@ function NewTeamForm() {
     mutationFn: () =>
       api<TeamDetailDTO>("/api/teams", {
         method: "POST",
-        body: JSON.stringify({ ...form, hackathonId: effectiveHackathonId, roleSlugs, skillSlugs }),
+        body: JSON.stringify({
+          ...form,
+          hackathonId: ideaFirst ? null : effectiveHackathonId || null,
+          roleSlugs,
+          rolePriorities: roleSlugs.map((s) => rolePriorities[s] ?? "must"),
+          skillSlugs,
+        }),
       }),
     onSuccess: (team) => {
       toast.success("Team created! Your workspace is ready.");
@@ -85,7 +94,9 @@ function NewTeamForm() {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!effectiveHackathonId) return toast.error("Pick a hackathon");
+    if (!ideaFirst && !effectiveHackathonId) return toast.error("Pick a hackathon, or switch to idea-first");
+    if (ideaFirst && form.ideaTitle.trim().length < 3)
+      return toast.error("Idea-first teams need an idea title — that's the pitch");
     if (form.name.trim().length < 2) return toast.error("Team name is required");
     if (roleSlugs.length === 0) return toast.error("Pick at least one role you need — this powers your completeness meter");
     create.mutate();
@@ -99,7 +110,8 @@ function NewTeamForm() {
         </h1>
         <p className="text-muted-foreground mt-1 text-balance">
           Post your idea (anonymously if you want), declare the roles you need, and let the
-          composition engine tell you what&apos;s missing.
+          composition engine tell you what&apos;s missing. No event picked yet? Post the idea
+          first and attach the hackathon once the team clicks.
         </p>
       </div>
 
@@ -111,14 +123,36 @@ function NewTeamForm() {
           <CardContent className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Hackathon</Label>
-              <Select value={effectiveHackathonId} onValueChange={(v) => setForm({ ...form, hackathonId: v })}>
+              <Select
+                value={ideaFirst ? "__idea_first__" : effectiveHackathonId}
+                onValueChange={(v) => {
+                  if (v === "__idea_first__") {
+                    setIdeaFirst(true);
+                  } else {
+                    setIdeaFirst(false);
+                    setForm({ ...form, hackathonId: v });
+                  }
+                }}
+              >
                 <SelectTrigger><SelectValue placeholder="Pick an event" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="__idea_first__">
+                    <span className="flex items-center gap-1.5">
+                      <Compass className="h-3.5 w-3.5 text-violet-500" />
+                      Idea-first — decide the event later
+                    </span>
+                  </SelectItem>
                   {(hackathons.data ?? []).map((h) => (
                     <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {ideaFirst && (
+                <p className="text-xs text-violet-500 dark:text-violet-400">
+                  Your team will float in Discover with an “idea-first” tag. Attach an event
+                  any time from your team workspace.
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="team-name">Team name</Label>
@@ -240,6 +274,43 @@ function NewTeamForm() {
                 );
               })}
             </div>
+            {roleSlugs.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  How critical is each role? “Must” roles drive the completeness meter; “nice”
+                  ones only sweeten match scores.
+                </p>
+                {roleSlugs.map((slug) => {
+                  const role = ROLE_TAXONOMY.find((r) => r.slug === slug)!;
+                  const prio = rolePriorities[slug] ?? "must";
+                  return (
+                    <div key={slug} className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2">
+                      <span className="text-sm font-medium">{role.name}</span>
+                      <div className="flex gap-1">
+                        {(["must", "nice"] as const).map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            aria-pressed={prio === p}
+                            onClick={() => setRolePriorities((prev) => ({ ...prev, [slug]: p }))}
+                            className={cn(
+                              "px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-all",
+                              prio === p
+                                ? p === "must"
+                                  ? "bg-primary/15 border-primary/40 text-primary"
+                                  : "bg-sky-500/10 border-sky-500/40 text-sky-600 dark:text-sky-400"
+                                : "border-border text-muted-foreground hover:border-primary/30",
+                            )}
+                          >
+                            {p === "must" ? "Must have" : "Nice to have"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -89,9 +89,15 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
   return (
     <div className="pt-8 pb-4">
       <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2 text-muted-foreground">
-        <Link href={`/hackathons/${team.hackathonSlug}`}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> {team.hackathonName}
-        </Link>
+        {team.hackathonSlug ? (
+          <Link href={`/hackathons/${team.hackathonSlug}`}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> {team.hackathonName}
+          </Link>
+        ) : (
+          <Link href="/#teams">
+            <ArrowLeft className="h-4 w-4 mr-1" /> Idea-first — event not chosen yet
+          </Link>
+        )}
       </Button>
 
       <div className="grid lg:grid-cols-3 gap-6">

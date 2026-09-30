@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { taskSchema } from "@/lib/validations";
-import { ok, fail, requireUser } from "@/lib/api";
+import { ok, fail, isUuid, requireUser } from "@/lib/api";
 
 /** GET /api/teams/:id/tasks — checklist (members only). */
 export async function GET(
@@ -13,6 +13,7 @@ export async function GET(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
   if (!(await isMember(id, user.id))) return fail("Members only", 403);
 
   const rows = await db
@@ -31,6 +32,7 @@ export async function POST(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
   if (!(await isMember(id, user.id))) return fail("Members only", 403);
 
   const body = await req.json();
@@ -66,6 +68,7 @@ export async function PATCH(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
   if (!(await isMember(id, user.id))) return fail("Members only", 403);
 
   const body = await req.json();

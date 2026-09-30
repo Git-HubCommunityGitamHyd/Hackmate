@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { listTeams, getTeamDetail } from "@/lib/queries/teams";
@@ -33,29 +33,48 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid data");
     const data = parsed.data;
 
-    const [hackathon] = await db
-      .select()
-      .from(schema.hackathons)
-      .where(eq(schema.hackathons.id, data.hackathonId))
-      .limit(1);
-    if (!hackathon) return fail("Hackathon not found", 404);
-    if (hackathon.status === "completed") return fail("This hackathon has ended");
+    /* Idea-first teams skip the event; event teams are validated. */
+    if (data.hackathonId) {
+      const [hackathon] = await db
+        .select()
+        .from(schema.hackathons)
+        .where(eq(schema.hackathons.id, data.hackathonId))
+        .limit(1);
+      if (!hackathon) return fail("Hackathon not found", 404);
+      if (hackathon.status === "completed") return fail("This hackathon has ended");
 
-    /* One active team per hackathon per user. */
-    const [existingMembership] = await db
-      .select({ teamId: schema.teamMembers.teamId })
-      .from(schema.teamMembers)
-      .innerJoin(schema.teams, eq(schema.teamMembers.teamId, schema.teams.id))
-      .where(
-        and(
-          eq(schema.teamMembers.userId, user.id),
-          eq(schema.teams.hackathonId, data.hackathonId),
-          eq(schema.teams.status, "recruiting"),
-        ),
-      )
-      .limit(1);
-    if (existingMembership)
-      return fail("You're already on a team for this hackathon", 409);
+      /* One active team per hackathon per user. */
+      const [existingMembership] = await db
+        .select({ teamId: schema.teamMembers.teamId })
+        .from(schema.teamMembers)
+        .innerJoin(schema.teams, eq(schema.teamMembers.teamId, schema.teams.id))
+        .where(
+          and(
+            eq(schema.teamMembers.userId, user.id),
+            eq(schema.teams.hackathonId, data.hackathonId),
+            eq(schema.teams.status, "recruiting"),
+          ),
+        )
+        .limit(1);
+      if (existingMembership)
+        return fail("You're already on a team for this hackathon", 409);
+    } else {
+      /* One active idea-first team per user. */
+      const [existingIdeaTeam] = await db
+        .select({ teamId: schema.teamMembers.teamId })
+        .from(schema.teamMembers)
+        .innerJoin(schema.teams, eq(schema.teamMembers.teamId, schema.teams.id))
+        .where(
+          and(
+            eq(schema.teamMembers.userId, user.id),
+            isNull(schema.teams.hackathonId),
+            eq(schema.teams.status, "recruiting"),
+          ),
+        )
+        .limit(1);
+      if (existingIdeaTeam)
+        return fail("You already have an idea-first team looking for members", 409);
+    }
 
     /* Resolve roles + skills from the taxonomy. */
     const roleRows = await db
@@ -81,7 +100,7 @@ export async function POST(req: NextRequest) {
     const [team] = await db
       .insert(schema.teams)
       .values({
-        hackathonId: data.hackathonId,
+        hackathonId: data.hackathonId ?? null,
         name: data.name,
         ideaTitle: data.ideaTitle || null,
         ideaDomain: data.ideaDomain || null,
@@ -103,7 +122,13 @@ export async function POST(req: NextRequest) {
     if (selectedRoles.length > 0) {
       await db
         .insert(schema.teamRolesNeeded)
-        .values(selectedRoles.map((r) => ({ teamId: team.id, roleId: r!.id, priority: "must" as const })));
+        .values(
+          selectedRoles.map((r, i) => ({
+            teamId: team.id,
+            roleId: r!.id,
+            priority: data.rolePriorities?.[i] === "nice" ? ("nice" as const) : ("must" as const),
+          })),
+        );
     }
     if (selectedSkills.length > 0) {
       await db

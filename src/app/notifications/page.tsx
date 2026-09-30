@@ -89,7 +89,7 @@ export default function NotificationsPage() {
                     {i.inviterName} invited you to join <span className="text-primary">{i.teamName}</span>
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {i.hackathonName} · {new Date(i.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                    {i.hackathonName ?? "Idea-first team"} · {new Date(i.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                   </p>
                   {i.message && <p className="text-sm text-muted-foreground mt-1.5 italic">&ldquo;{i.message}&rdquo;</p>}
                 </div>

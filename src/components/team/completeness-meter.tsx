@@ -57,7 +57,7 @@ export function CompletenessMeter({
                 {c.roleName}
               </span>
               {c.priority === "must" && c.coverage === "none" && (
-                <Badge variant="outline" className="text-[10px] py-0 text-red-600 border-red-200 dark:border-red-900">
+                <Badge variant="outline" className="text-[10px] py-0 text-red-500 dark:text-red-300 border-red-500/40 bg-red-500/10">
                   must-have
                 </Badge>
               )}

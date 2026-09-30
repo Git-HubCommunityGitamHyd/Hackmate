@@ -55,11 +55,26 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
 
   let userIds = userRows.map((r) => r.u.id);
 
-  /* Hackathon-profile filter */
+  /* Hackathon-profile filter — also surfaces the per-event signal
+   * (role, motivation, idea) so hub pages can render why someone is looking. */
+  const hackathonProfileByUser = new Map<
+    string,
+    { preferredRoleSlug: string | null; motivation: string | null; hasIdea: boolean; ideaBlurb: string | null }
+  >();
   if (filters.hackathonId && userIds.length > 0) {
     const profileRows = await db
-      .select({ userId: schema.hackathonProfiles.userId })
+      .select({
+        userId: schema.hackathonProfiles.userId,
+        motivation: schema.hackathonProfiles.motivation,
+        hasIdea: schema.hackathonProfiles.hasIdea,
+        ideaBlurb: schema.hackathonProfiles.ideaBlurb,
+        preferredRoleSlug: schema.roleTaxonomy.slug,
+      })
       .from(schema.hackathonProfiles)
+      .leftJoin(
+        schema.roleTaxonomy,
+        eq(schema.hackathonProfiles.preferredRoleId, schema.roleTaxonomy.id),
+      )
       .where(
         and(
           eq(schema.hackathonProfiles.hackathonId, filters.hackathonId),
@@ -67,8 +82,15 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
           inArray(schema.hackathonProfiles.userId, userIds),
         ),
       );
-    const activeIds = new Set(profileRows.map((p) => p.userId));
-    userRows = userRows.filter((r) => activeIds.has(r.u.id));
+    for (const p of profileRows) {
+      hackathonProfileByUser.set(p.userId, {
+        preferredRoleSlug: p.preferredRoleSlug ?? null,
+        motivation: p.motivation ?? null,
+        hasIdea: p.hasIdea,
+        ideaBlurb: p.ideaBlurb ?? null,
+      });
+    }
+    userRows = userRows.filter((r) => hackathonProfileByUser.has(r.u.id));
     userIds = userRows.map((r) => r.u.id);
   }
 
@@ -151,6 +173,7 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
       .map((s) => ({ id: s.skillId, slug: s.slug, name: s.name, category: s.category as SkillCategory, level: s.level })),
     roles: (rolesByUser.get(u.id) ?? []).map((r) => ({ id: r.slug, slug: r.slug, name: r.name, isPrimary: r.isPrimary })),
     hoursPerWeek: availByUser.get(u.id)?.hoursPerWeek ?? 20,
+    hackathonProfile: hackathonProfileByUser.get(u.id),
   }));
 
   /* Skill/category filters (post-filter after batch fetch — keeps it simple + correct) */

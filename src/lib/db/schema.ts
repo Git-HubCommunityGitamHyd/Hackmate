@@ -339,8 +339,8 @@ export const teams = pgTable(
   "team",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    /* Nullable: idea-first teams are posted before an event is chosen. */
     hackathonId: uuid("hackathon_id")
-      .notNull()
       .references(() => hackathons.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     ideaTitle: text("idea_title"),

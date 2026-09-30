@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { messageSchema } from "@/lib/validations";
 import { triggerTeamMessage } from "@/lib/pusher-server";
-import { ok, fail, requireUser } from "@/lib/api";
+import { ok, fail, isUuid, requireUser } from "@/lib/api";
 import { createHmac } from "crypto";
 
 /** GET /api/teams/:id/chat — message history (members only). */
@@ -15,6 +15,7 @@ export async function GET(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
 
   if (!(await isTeamMember(id, user.id))) return fail("Only team members can read chat", 403);
 
@@ -53,6 +54,7 @@ export async function POST(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
 
   if (!(await isTeamMember(id, user.id))) return fail("Only team members can chat", 403);
 
@@ -89,6 +91,7 @@ export async function PUT(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
 
   if (!(await isTeamMember(id, user.id))) return fail("Not a team member", 403);
 

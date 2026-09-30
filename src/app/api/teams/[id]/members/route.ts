@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
-import { ok, fail, requireUser } from "@/lib/api";
+import { ok, fail, isUuid, requireUser } from "@/lib/api";
 
 /**
  * DELETE /api/teams/:id/members — leave team (self) or remove member (admin).
@@ -15,6 +15,7 @@ export async function DELETE(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
 
   const body = await req.json().catch(() => ({}));
   const targetUserId = (body.userId as string) ?? user.id;

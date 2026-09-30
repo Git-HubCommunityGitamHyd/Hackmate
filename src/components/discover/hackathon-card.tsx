@@ -6,6 +6,7 @@ import { Calendar, Clock, Users, MapPin, Trophy, ArrowRight, Sparkles } from "lu
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { BookmarkButton } from "@/components/shared/bookmark-button";
 import type { HackathonCardDTO } from "@/lib/queries/types";
 
 function fmtDate(iso: string) {
@@ -64,14 +65,17 @@ export function HackathonCard({ hackathon }: { hackathon: HackathonCardDTO }) {
               {hackathon.tagline}
             </p>
           </div>
-          {hackathon.prizePool && (
-            <div className="shrink-0 text-right">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Trophy className="h-3 w-3" /> Prize
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            {hackathon.prizePool && (
+              <div className="text-right">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Trophy className="h-3 w-3" /> Prize
+                </div>
+                <div className="font-bold text-sm">{hackathon.prizePool}</div>
               </div>
-              <div className="font-bold text-sm">{hackathon.prizePool}</div>
-            </div>
-          )}
+            )}
+            <BookmarkButton targetType="hackathon" targetId={hackathon.id} />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-4 text-xs text-muted-foreground">

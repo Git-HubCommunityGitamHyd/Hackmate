@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Lightbulb, Users, ArrowRight, Lock } from "lucide-react";
+import { Lightbulb, Users, ArrowRight, Lock, Compass } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,11 @@ export function TeamCard({ team, showMatch }: { team: TeamCardDTO; showMatch?: b
                   {spotsLeft} spot{spotsLeft > 1 ? "s" : ""} left
                 </Badge>
               )}
+              {!team.hackathonId && (
+                <Badge variant="outline" className="text-[11px] bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/30">
+                  <Compass className="h-3 w-3 mr-0.5" /> idea-first
+                </Badge>
+              )}
               {team.lookingForIdea && (
                 <Badge variant="outline" className="text-[11px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30">
                   <Lightbulb className="h-3 w-3 mr-0.5" /> open to ideas
@@ -48,12 +53,18 @@ export function TeamCard({ team, showMatch }: { team: TeamCardDTO; showMatch?: b
                 {team.name}
               </h3>
             </Link>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              for{" "}
-              <Link href={`/hackathons/${team.hackathonSlug}`} className="hover:text-primary font-medium">
-                {team.hackathonName}
-              </Link>
-            </p>
+            {team.hackathonName ? (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                for{" "}
+                <Link href={`/hackathons/${team.hackathonSlug}`} className="hover:text-primary font-medium">
+                  {team.hackathonName}
+                </Link>
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                event not chosen yet — the idea leads, the hackathon follows
+              </p>
+            )}
 
             {team.ideaAnonymous ? (
               <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1.5">

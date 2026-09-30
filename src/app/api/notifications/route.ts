@@ -24,7 +24,7 @@ export async function GET() {
         })
         .from(schema.invites)
         .innerJoin(schema.teams, eq(schema.invites.teamId, schema.teams.id))
-        .innerJoin(schema.hackathons, eq(schema.teams.hackathonId, schema.hackathons.id))
+        .leftJoin(schema.hackathons, eq(schema.teams.hackathonId, schema.hackathons.id))
         .innerJoin(schema.users, eq(schema.invites.inviterId, schema.users.id))
         .where(and(eq(schema.invites.userId, user.id), eq(schema.invites.status, "pending"))),
       db
@@ -36,7 +36,7 @@ export async function GET() {
         })
         .from(schema.joinRequests)
         .innerJoin(schema.teams, eq(schema.joinRequests.teamId, schema.teams.id))
-        .innerJoin(schema.hackathons, eq(schema.teams.hackathonId, schema.hackathons.id))
+        .leftJoin(schema.hackathons, eq(schema.teams.hackathonId, schema.hackathons.id))
         .where(and(eq(schema.joinRequests.userId, user.id), eq(schema.joinRequests.status, "pending"))),
       db
         .select({ teamId: schema.teamMembers.teamId, isAdmin: schema.teamMembers.isAdmin })
