@@ -7,6 +7,7 @@ import { listTeams } from "@/lib/queries/teams";
 import { people } from "@/lib/queries/people";
 import { parseSearchQuery, toStructuredFilters } from "@/lib/matching/search-parser";
 import { ok, withPublic, requireUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 /**
  * GET /api/search?q=… — natural-language search across everything.
@@ -16,6 +17,9 @@ import { ok, withPublic, requireUser } from "@/lib/api";
  * via junction tables for skills/roles.
  */
 export async function GET(req: NextRequest) {
+  const rl = rateLimit(req, { key: "search", limit: 20, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   return withPublic(async () => {
     const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
     if (q.length === 0) {

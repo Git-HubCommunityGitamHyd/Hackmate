@@ -42,8 +42,12 @@ export async function withUser<T>(
     if (result instanceof NextResponse) return result;
     return ok(result);
   } catch (err: any) {
+    /* Full detail goes to the server log only. The client gets a generic
+       message: thrown errors here are internal invariants ("AUTH_SECRET is
+       not configured", driver errors, …) — leaking them exposes schema,
+       file paths and env state. */
     console.error("[api:error]", err);
-    return fail(err?.message ?? "Internal server error", 500);
+    return fail("Internal server error", 500);
   }
 }
 
@@ -54,7 +58,7 @@ export async function withPublic<T>(handler: () => Promise<T>) {
     return ok(result);
   } catch (err: any) {
     console.error("[api:error]", err);
-    return fail(err?.message ?? "Internal server error", 500);
+    return fail("Internal server error", 500);
   }
 }
 
