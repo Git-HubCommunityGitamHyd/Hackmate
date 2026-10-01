@@ -27,7 +27,8 @@ const envUrl = process.env.DATABASE_URL;
 
 if (!envUrl) {
   throw new Error(
-    "DATABASE_URL is not set. Copy .env.example to .env.local and configure it.",
+    "DATABASE_URL is not set. Run  bun run setup  to generate .env.local " +
+      "with local defaults, or copy .env.example to .env.local and configure it.",
   );
 }
 /* Narrowed to `string` once so closures below see the non-optional type. */

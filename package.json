@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "node --import tsx --test src/lib/verification/verification.test.ts",
     "db:push": "tsx scripts/migrate.ts",
+    "setup": "tsx scripts/setup-env.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/lib/db/seed.ts",
     "db:seed:demo": "tsx scripts/seed-demo.ts",
