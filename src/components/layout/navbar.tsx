@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
@@ -36,8 +36,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useNotifications } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
-import { Logo } from "@/components/shared/logo";
 import { KarmaPill } from "@/components/reputation/karma-pill";
+import { SplineObject } from "@/components/ui/spline-object";
 import { CommandMenu } from "./command-menu";
 
 const NAV_LINKS = [
@@ -47,28 +47,22 @@ const NAV_LINKS = [
 ];
 
 /**
- * Header, rebuilt.
+ * Header, round 3 — floating ink dock.
  *
- * What changed vs the old navbar, feature-for-feature (nothing removed):
- *  1. Scroll-aware elevation — transparent at the top of the page, gains a
- *     frosted background + hairline border once content scrolls under it,
- *     so page content never collides with sticky nav text.
- *  2. The active tab is an animated sliding pill (framer-motion layoutId)
- *     instead of a static underline — the moving affordance makes "where
- *     am I" legible at a glance.
- *  3. A ⌘K command palette trigger sits in the header (jump to any page,
- *     toggle theme, sign out) — keyboard-first UX for a dev audience.
- *  4. The notification badge pops with a spring when its count changes,
- *     instead of silently appearing.
- *  5. The mobile menu animates links in with a stagger and closes via an
- *     explicit X, with the same items the desktop menu has.
- *  6. Height shrinks 16px→14px on scroll — subtle, premium, keeps viewport.
- * Round 2:
- *  7. The bell opens a glass preview popover — triage the last few
- *     notifications and pending invites without leaving the page.
- *  8. The account menu shows live karma, so reputation is always one glance
- *     away (the number updates after results are recorded).
- *  9. Skip-to-content link for keyboard users.
+ * The old full-width sticky bar is gone. What ships now:
+ *  - A detached floating dock (rounded, frosted, minimally embossed:
+ *    one light top line, one dark bottom line, deep float shadow) that
+ *    hovers a few pixels below the viewport edge and never touches the
+ *    sides — "floating and minimal embossed", per the design brief.
+ *  - The brand emblem is a live Spline 3D object (lazy-loaded, with a
+ *    breathing ink-orb fallback when offline), animated by the Spline
+ *    runtime; the wordmark stays a plain Link.
+ *  - The dock entrance (drop + settle) and the nav-link stagger run on
+ *    anime.js, not framer-motion, keeping the animation stack mixed on
+ *    purpose: anime for one-shot entrances, framer for stateful UI.
+ * Everything else from round 2 is kept: sliding active pill, ⌘K palette,
+ * notification preview popover, karma in the account menu, springy
+ * badge, skip link, animated mobile menu, scroll shrink.
  */
 export function Navbar() {
   const pathname = usePathname();
@@ -81,7 +75,41 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const reduceMotion = useReducedMotion();
 
-  /* Scroll elevation — one listener, passive, rAF-throttled. */
+  const dockRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+
+  /* Anime.js one-shot entrance: dock drops in, links stagger. */
+  useEffect(() => {
+    if (reduceMotion) return;
+    let cancelled = false;
+    (async () => {
+      const { animate, stagger } = await import("animejs");
+      if (cancelled) return;
+      if (dockRef.current) {
+        animate(dockRef.current, {
+          translateY: [-18, 0],
+          opacity: [0, 1],
+          duration: 620,
+          ease: "out(3)",
+        });
+      }
+      const links = navRef.current?.querySelectorAll("[data-nav-link]");
+      if (links && links.length > 0) {
+        animate(Array.from(links), {
+          opacity: [0, 1],
+          translateX: [10, 0],
+          duration: 480,
+          delay: stagger(70, { start: 180 }),
+          ease: "out(3)",
+        });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [reduceMotion]);
+
+  /* Scroll elevation — dock tightens slightly. */
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
@@ -97,8 +125,7 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* Close the mobile menu on route change — render-time state adjustment
-     (the React-docs pattern; avoids setState-in-effect). */
+  /* Close the mobile menu on route change. */
   const [prevPath, setPrevPath] = useState(pathname);
   if (prevPath !== pathname) {
     setPrevPath(pathname);
@@ -130,47 +157,43 @@ export function Navbar() {
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300",
-        scrolled
-          ? "bg-background/85 backdrop-blur-xl border-b border-border supports-[backdrop-filter]:bg-background/65 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.45)]"
-          : "bg-background/40 backdrop-blur-sm border-b border-transparent",
-      )}
-    >
+    <header className="sticky top-0 z-50 w-full px-3 pt-3 sm:px-5 sm:pt-4">
       {/* Keyboard users land here first — skip the nav entirely. */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:rounded-sm focus:border focus:border-primary/50"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:rounded-full focus:border focus:border-primary/50"
       >
         Skip to content
       </a>
-      {/* Fluted hairline under the header — vertical rib accent */}
-      <div className="flute-edge" aria-hidden="true" />
 
+      {/* The floating embossed dock */}
       <div
+        ref={dockRef}
         className={cn(
-          "max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-3 transition-[height] duration-300",
-          scrolled ? "h-14" : "h-16",
+          "emboss-dock ink-edge mx-auto flex w-full max-w-5xl items-center gap-3 rounded-full px-3 sm:px-4",
+          "transition-[height,padding,box-shadow] duration-300",
+          scrolled ? "h-12" : "h-14",
         )}
+        style={{ borderRadius: 999 }}
       >
-        {/* Brand */}
+        {/* Brand: Spline 3D emblem + wordmark */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 shrink-0 group"
+          className="flex shrink-0 items-center gap-2 group"
           aria-label="HackMate home"
         >
-          <span className="transition-transform duration-300 group-hover:rotate-[8deg] group-hover:scale-105">
-            <Logo className="h-8 w-8" />
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-105 group-hover:rotate-[8deg]">
+            <SplineObject width={36} height={36} className="rounded-full" />
           </span>
-          <span className="font-extrabold text-lg tracking-tight hidden sm:inline">
+          <span className="hidden font-extrabold tracking-tight sm:inline">
             Hack<span className="text-primary">Mate</span>
           </span>
         </Link>
 
         {/* Desktop nav with animated active pill */}
         <nav
-          className="hidden md:flex items-center gap-1 ml-4 h-full"
+          ref={navRef}
+          className="hidden items-center gap-1 ml-2 md:flex"
           aria-label="Primary"
         >
           {navLinks.map((link) => {
@@ -179,9 +202,10 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
+                data-nav-link
                 data-active={active}
                 className={cn(
-                  "relative px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] transition-colors",
+                  "relative rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] transition-colors",
                   active
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground",
@@ -191,12 +215,12 @@ export function Navbar() {
                 {active && !reduceMotion && (
                   <motion.span
                     layoutId="nav-active-pill"
-                    className="absolute inset-0 -z-10 rounded-sm bg-primary/10 ring-1 ring-primary/25"
+                    className="absolute inset-0 -z-10 rounded-full bg-primary/10 ring-1 ring-primary/25"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
                 )}
                 {active && reduceMotion && (
-                  <span className="absolute inset-0 -z-10 rounded-sm bg-primary/10 ring-1 ring-primary/25" />
+                  <span className="absolute inset-0 -z-10 rounded-full bg-primary/10 ring-1 ring-primary/25" />
                 )}
                 {link.label}
               </Link>
@@ -219,7 +243,7 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative"
+                  className="relative rounded-full"
                   aria-label={badgeCount > 0 ? `Notifications, ${badgeCount} unread` : "Notifications"}
                 >
                   <Bell className={cn("h-5 w-5 transition-transform duration-300", scrolled && "h-[18px] w-[18px]")} />
@@ -239,7 +263,7 @@ export function Navbar() {
                   </AnimatePresence>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-80 p-0 rounded-sm">
+              <PopoverContent align="end" className="w-80 rounded-[6px] p-0">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                   <p className="text-sm font-bold">Notifications</p>
                   {badgeCount > 0 && (
@@ -252,7 +276,7 @@ export function Navbar() {
                       <Link
                         key={`invite-${i.id}`}
                         href="/notifications"
-                        className="block px-2.5 py-2 rounded-sm hover:bg-muted/60 transition-colors"
+                        className="block px-2.5 py-2 rounded-[4px] hover:bg-muted/60 transition-colors"
                       >
                         <p className="text-xs font-semibold line-clamp-2">
                           <span className="text-primary">Invite</span> · {i.inviterName} wants you on {i.teamName}
@@ -266,7 +290,7 @@ export function Navbar() {
                       <Link
                         key={n.id}
                         href={n.link ?? "/notifications"}
-                        className="block px-2.5 py-2 rounded-sm hover:bg-muted/60 transition-colors"
+                        className="block px-2.5 py-2 rounded-[4px] hover:bg-muted/60 transition-colors"
                       >
                         <p className={cn("text-xs line-clamp-2", !n.read && "font-semibold")}>{n.title}</p>
                         {n.body && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{n.body}</p>}
@@ -287,14 +311,14 @@ export function Navbar() {
               </PopoverContent>
             </Popover>
 
-            <Button asChild variant="ghost" size="icon" className="hidden sm:inline-flex" aria-label="Saved items">
+            <Button asChild variant="ghost" size="icon" className="hidden rounded-full sm:inline-flex" aria-label="Saved items">
               <Link href="/saved">
                 <Bookmark className="h-5 w-5" />
               </Link>
             </Button>
 
             {isAdmin && (
-              <Button asChild variant="outline" size="sm" className="hidden lg:inline-flex font-semibold">
+              <Button asChild variant="outline" size="sm" className="hidden rounded-full font-semibold lg:inline-flex">
                 <Link href="/hackathons/new">
                   <Trophy className="h-4 w-4 mr-1.5" /> Post hackathon
                 </Link>
@@ -305,12 +329,12 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="border border-border hover:border-primary/60 hover:shadow-[0_0_0_3px_color-mix(in_oklch,var(--primary)_18%,transparent)] transition-all p-0.5 rounded-full"
+                  className="rounded-full border border-border p-0.5 transition-all hover:border-primary/60 hover:shadow-[0_0_0_3px_color-mix(in_oklch,var(--primary)_18%,transparent)]"
                   aria-label="Account menu"
                 >
                   <Avatar className="h-8 w-8">
                     {user?.image && <AvatarImage src={user.image} alt={user.name ?? "avatar"} />}
-                    <AvatarFallback className="bg-primary/15 text-primary font-semibold text-sm">
+                    <AvatarFallback className="bg-primary/15 font-semibold text-primary text-sm">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -378,7 +402,7 @@ export function Navbar() {
             </DropdownMenu>
           </>
         ) : (
-          <Button asChild size="sm" className="font-bold">
+          <Button asChild size="sm" className="rounded-full font-bold">
             <Link href="/login">Sign in</Link>
           </Button>
         )}
@@ -387,7 +411,7 @@ export function Navbar() {
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden"
+          className="rounded-full md:hidden"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((v) => !v)}
@@ -396,7 +420,7 @@ export function Navbar() {
         </Button>
       </div>
 
-      {/* Mobile menu — slide-down panel with staggered links */}
+      {/* Mobile menu — floating slide-down panel, staggered links */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.nav
@@ -404,7 +428,7 @@ export function Navbar() {
             animate={reduceMotion ? { opacity: 1 } : { height: "auto", opacity: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="md:hidden overflow-hidden border-t border-border bg-background/95 backdrop-blur-xl"
+            className="emboss-dock mx-auto mt-2 max-w-5xl overflow-hidden rounded-[14px] md:hidden"
             aria-label="Mobile"
           >
             <div className="px-4 py-4 flex flex-col gap-1">
@@ -419,9 +443,9 @@ export function Navbar() {
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex items-center justify-between px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] rounded-sm transition-colors",
+                      "flex items-center justify-between rounded-full px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] transition-colors",
                       isActive(link.href)
-                        ? "text-primary bg-primary/10"
+                        ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
                     )}
                   >
@@ -433,7 +457,7 @@ export function Navbar() {
 
               {status === "authenticated" && (
                 <>
-                  <div className="h-px bg-border my-2" />
+                  <div className="my-2 h-px bg-border" />
                   <motion.div
                     initial={reduceMotion ? false : { opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -442,7 +466,7 @@ export function Navbar() {
                     <Link
                       href="/notifications"
                       onClick={() => setMobileOpen(false)}
-                      className="px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-sm flex items-center gap-2"
+                      className="flex items-center gap-2 rounded-full px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground hover:bg-muted/60"
                     >
                       <Bell className="h-4 w-4" /> Notifications
                       {badgeCount > 0 && <Badge variant="destructive" className="ml-auto">{badgeCount}</Badge>}
@@ -457,7 +481,7 @@ export function Navbar() {
                       <Link
                         href="/hackathons/new"
                         onClick={() => setMobileOpen(false)}
-                        className="px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] text-primary/80 hover:text-primary hover:bg-muted/60 rounded-sm flex items-center gap-2"
+                        className="flex items-center gap-2 rounded-full px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] text-primary/80 hover:text-primary hover:bg-muted/60"
                       >
                         <Trophy className="h-4 w-4" /> Post hackathon
                       </Link>
@@ -471,7 +495,7 @@ export function Navbar() {
                     <Link
                       href="/emergency"
                       onClick={() => setMobileOpen(false)}
-                      className="px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-sm flex items-center gap-2"
+                      className="flex items-center gap-2 rounded-full px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground hover:bg-muted/60"
                     >
                       <ShieldAlert className="h-4 w-4" /> Emergency mode
                     </Link>

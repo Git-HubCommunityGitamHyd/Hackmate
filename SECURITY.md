@@ -40,9 +40,19 @@ Every response ships with:
 
 ### Rate limiting (`lib/rate-limit.ts`)
 - Per-IP fixed-window limiter (x-forwarded-for aware, lazy GC, capped key set)
-  applied to the public directory, search and the dev sign-in route; returns
-  429 with Retry-After. Single-instance deployments are covered out of the box;
-  the module documents a drop-in swap to Upstash Redis for serverless.
+  applied to the public directory, search, the dev sign-in route and the
+  GitHub-contributions proxy; returns 429 with Retry-After. Single-instance
+  deployments are covered out of the box; the module documents a drop-in
+  swap to Upstash Redis for serverless.
+
+### GitHub contributions proxy (`/api/github-contributions`)
+- New with the profile contribution calendar. Username is validated against
+  `^[a-zA-Z0-9-]{1,39}$` (400 otherwise — injection and traversal payloads
+  included), rate-limited 30/min/IP, 6-hour in-memory cache per username,
+  8s upstream timeout, and upstream errors surface as a clean 502 with no
+  internal detail. The upstream (default
+  `github-contributions-api.jogruber.de/v4`) is swappable via
+  `GITHUB_CONTRIB_API`.
 
 ### Error hygiene
 - `withUser`/`withPublic`/`withAdmin` catch all thrown errors, log the full

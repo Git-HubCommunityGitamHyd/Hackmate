@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Github, Clock, MapPin, Compass, Lightbulb } from "lucide-react";
+import { Github, Clock, MapPin, Compass, Lightbulb, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
+import { CardPeek, PeekRow } from "@/components/shared/card-peek";
 import {
   SkillBadge,
   RecruitmentBadge,
@@ -37,7 +38,34 @@ export function PersonCard({
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       whileHover={reduceMotion ? undefined : { y: -3 }}
     >
-    <Card className="group hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300">
+    <Card className="group relative hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300">
+      {/* Peep window — hover the card to peek at its components. */}
+      <CardPeek label="peek · person">
+        {person.topSkills.length > 0 && (
+          <PeekRow icon={<Zap className="text-primary" />}>
+            {person.topSkills
+              .slice(0, 3)
+              .map((s) => `${s.name} L${s.level ?? "?"}`)
+              .join(" · ")}
+          </PeekRow>
+        )}
+        {person.roles.length > 0 && (
+          <PeekRow icon={<Compass />}>
+            {person.roles
+              .slice(0, 2)
+              .map((r) => r.name)
+              .join(" · ")}
+          </PeekRow>
+        )}
+        <PeekRow icon={<Clock />}>
+          {person.hoursPerWeek ? `${person.hoursPerWeek}h/week · ` : ""}
+          {(person.commitment ?? "commitment unset").replace(/_/g, " ")}
+        </PeekRow>
+        {person.collegeName && (
+          <PeekRow icon={<MapPin />}>{person.collegeName}</PeekRow>
+        )}
+      </CardPeek>
+
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
           <Link href={`/profile/${person.id}`} className="shrink-0">
@@ -114,7 +142,7 @@ export function PersonCard({
                   </p>
                 )}
                 {person.hackathonProfile.ideaBlurb && (
-                  <p className="text-xs text-amber-700 dark:text-amber-400 mt-1 flex items-start gap-1.5">
+                  <p className="text-xs text-primary/90 mt-1 flex items-start gap-1.5">
                     <Lightbulb className="h-3.5 w-3.5 shrink-0 mt-px" />
                     <span className="line-clamp-2">{person.hackathonProfile.ideaBlurb}</span>
                   </p>

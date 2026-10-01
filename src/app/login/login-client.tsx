@@ -7,11 +7,11 @@ import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   Github,
+  Linkedin,
   Mail,
   Loader2,
   Zap,
   FlaskConical,
-  ArrowRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { PixelCanvas } from "@/components/ui/pixel-canvas";
 import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
 import { TextRepel } from "@/components/ui/text-repel";
 import { FlutedGlass } from "@/components/ui/fluted-glass";
+import { InkBrush } from "@/components/ui/ink-brush";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -69,10 +70,15 @@ function ProjectInfo() {
           />
         </h2>
 
+        {/* Ink brush stroke — animated with anime.js on mount. The single
+            vermilion flourish of the ink-wash page. */}
+        <InkBrush className="mt-1 mb-1 -rotate-1" width={220} height={12} />
+
         <div className="relative text-muted-foreground mt-4 max-w-xl leading-relaxed min-h-[8rem] rounded-2xl">
-          {/* Enlarged glass/blur background only */}
+          {/* Neutral frosted slab behind the copy (pure black ink, no tint —
+              the old dark-green slab read as a color error on this page). */}
           <div
-            className="pointer-events-none absolute -inset-6 z-0 rounded-3xl bg-[#04120a]/70 backdrop-blur-md"
+            className="pointer-events-none absolute -inset-6 z-0 rounded-3xl bg-black/60 backdrop-blur-md"
             style={{
               maskImage:
                 "linear-gradient(to right, transparent, black 10%, black 90%, transparent), linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)",
@@ -197,17 +203,15 @@ export function LoginClient() {
 
   return (
     <div className="relative pt-10 pb-12 overflow-hidden">
+      {/* Ink-wash cursor canvas: pure black ground, grayscale ink pixels
+          that brighten toward paper-white under the cursor. The vermilion
+          is reserved for edges and accents, never the field. */}
       <PixelCanvas
         className="fixed inset-0 z-0"
-        variant="glow"
+        variant="trail"
         gap={11}
         speed={0.03}
-        colors={[
-          "#052e12",
-          "#0d5c2a",
-          "#16a34a",
-          "#4ade80",
-        ]}
+        colors={["#131313", "#2a2a2a", "#595959", "#d9d6d1"]}
       />
 
       <div className="relative z-10">
@@ -225,9 +229,12 @@ export function LoginClient() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 lg:items-start max-w-6xl mx-auto">
+        {/* The sign-in card column and the hero copy column center
+            against each other, so the text sits at the vertical middle of
+            the card's side. */}
+        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 lg:items-center max-w-6xl mx-auto">
           {/* Desktop: project info column */}
-          <div className="hidden lg:block">
+          <div className="hidden lg:flex flex-col justify-center">
             <ProjectInfo />
           </div>
 
@@ -236,8 +243,9 @@ export function LoginClient() {
               background frames the card instead of bleeding through it,
               while the FlutedGlass wrapper preserves the 3D pointer tilt,
               vertical fluting and refraction edge the card always had.
-              An emerald hairline + deep shadow separate it from the canvas. */}
-          <div className="w-full max-w-md mx-auto lg:mx-0 lg:pt-2">
+              The ink-edge class adds the mouse-reactive vermilion hairline
+              on top of the deep shadow. */}
+          <div className="w-full max-w-md mx-auto lg:mx-0">
             <motion.div
               initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -248,7 +256,7 @@ export function LoginClient() {
                 background="#000000"
                 borderRadius={16}
                 minHeight={0}
-                className="w-full"
+                className="ink-edge w-full"
                 style={{
                   boxShadow:
                     "0 24px 70px -24px rgba(0,0,0,0.9), inset 0 1px 0 0 rgba(255,255,255,0.06)",
@@ -259,11 +267,11 @@ export function LoginClient() {
                 aria-label="Sign in"
                 className="relative w-full text-foreground"
               >
-                {/* Emerald top hairline — the only flourish on an otherwise
-                    flat, opaque surface. */}
+                {/* Paper-white top hairline — quiet light catching the top
+                    edge of the opaque black pane. */}
                 <div
                   aria-hidden="true"
-                  className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent"
+                  className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
                 />
 
                 <div className="p-7 space-y-6">
@@ -292,7 +300,6 @@ export function LoginClient() {
                       >
                         <Github className="h-4.5 w-4.5 mr-2" />
                         Continue with GitHub
-                        <ArrowRight className="ml-1.5 h-4 w-4 opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0 hidden" />
                       </Button>
 
                       <p className="text-[11px] text-neutral-500 text-center mt-2 leading-relaxed">
@@ -346,9 +353,16 @@ export function LoginClient() {
                         Send magic link
                       </Button>
 
-                      <p className="text-[11px] text-neutral-500 text-center leading-relaxed">
+                      {/* LinkedIn copy — non-developer track. */}
+                      <p className="text-[11px] text-neutral-500 text-center leading-relaxed mt-1">
+                        <span className="inline-flex items-center gap-1 text-neutral-400">
+                          <Linkedin className="h-3 w-3" /> LinkedIn-ready
+                        </span>
+                        <br />
                         For designers, PMs and pitching specialists — no
-                        GitHub needed.
+                        GitHub needed. After you sign in, paste your LinkedIn
+                        profile URL once and we fill your headline, experience
+                        and education for you.
                       </p>
                     </motion.form>
 

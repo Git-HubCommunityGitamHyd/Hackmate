@@ -44,9 +44,11 @@
 }
 
 /* ================================================================== */
-/* HARSH FLUTED GLASS                                                  */
-/* Dark-first glassmorphism with vertical fluted (ribbed) texture,     */
-/* hairline borders, near-zero corner radii and cool mint accents.     */
+/* INK WASH FROSTED GLASS (sumi-e)                                     */
+/* Black-first glassmorphism with vertical fluted (ribbed) texture,    */
+/* hairline borders, near-zero corner radii and a single vermilion     */
+/* seal accent. Minimalist maximalism: pure black canvas, maximal      */
+/* glass effects, minimal color.                                       */
 /* ================================================================== */
 
 :root {
@@ -85,39 +87,39 @@
 }
 
 .dark {
-  --background: oklch(0.15 0.012 160);
-  --foreground: oklch(0.955 0.005 160);
-  --card: oklch(0.212 0.014 160 / 40%);
-  --card-foreground: oklch(0.955 0.005 160);
-  --popover: oklch(0.185 0.014 160 / 82%);
-  --popover-foreground: oklch(0.955 0.005 160);
-  --primary: oklch(0.865 0.11 162); /* light mint green accent */
-  --primary-foreground: oklch(0.16 0.03 160);
-  --secondary: oklch(0.28 0.016 160 / 88%);
-  --secondary-foreground: oklch(0.955 0.005 160);
-  --muted: oklch(0.26 0.014 160 / 65%);
-  /* 0.69 failed contrast checks on empty states and metadata — lifted to
-     0.75 so secondary text passes WCAG AA on the 0.15 background. */
-  --muted-foreground: oklch(0.75 0.014 160);
-  --accent: oklch(0.31 0.04 160 / 72%);
-  --accent-foreground: oklch(0.965 0.005 160);
-  --destructive: oklch(0.66 0.2 25);
-  --border: oklch(1 0 0 / 18%);
-  --input: oklch(1 0 0 / 22%);
-  --ring: oklch(0.865 0.11 162);
-  --chart-1: oklch(0.865 0.11 162);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.185 0.012 160);
-  --sidebar-foreground: oklch(0.955 0.005 160);
-  --sidebar-primary: oklch(0.865 0.11 162);
-  --sidebar-primary-foreground: oklch(0.16 0.03 160);
-  --sidebar-accent: oklch(0.28 0.016 160);
-  --sidebar-accent-foreground: oklch(0.955 0.005 160);
+  /* Ink wash: near-black canvas, warm paper text, vermilion seal accent. */
+  --background: oklch(0.095 0.003 90);
+  --foreground: oklch(0.94 0.004 90);
+  --card: oklch(0.165 0.003 90 / 42%);
+  --card-foreground: oklch(0.94 0.004 90);
+  --popover: oklch(0.13 0.003 90 / 84%);
+  --popover-foreground: oklch(0.94 0.004 90);
+  --primary: oklch(0.64 0.19 28); /* vermilion ink-stamp red */
+  --primary-foreground: oklch(0.12 0.02 28);
+  --secondary: oklch(0.24 0.004 90 / 88%);
+  --secondary-foreground: oklch(0.94 0.004 90);
+  --muted: oklch(0.22 0.003 90 / 65%);
+  /* Secondary text lifted for AA contrast on the 0.095 ink canvas. */
+  --muted-foreground: oklch(0.72 0.005 90);
+  --accent: oklch(0.26 0.01 28 / 60%);
+  --accent-foreground: oklch(0.96 0.003 90);
+  --destructive: oklch(0.62 0.19 25);
+  --border: oklch(1 0 0 / 13%);
+  --input: oklch(1 0 0 / 17%);
+  --ring: oklch(0.64 0.19 28);
+  --chart-1: oklch(0.64 0.19 28);
+  --chart-2: oklch(0.72 0.005 90);
+  --chart-3: oklch(0.5 0.005 90);
+  --chart-4: oklch(0.36 0.005 90);
+  --chart-5: oklch(0.82 0.10 28);
+  --sidebar: oklch(0.115 0.003 90);
+  --sidebar-foreground: oklch(0.94 0.004 90);
+  --sidebar-primary: oklch(0.64 0.19 28);
+  --sidebar-primary-foreground: oklch(0.12 0.02 28);
+  --sidebar-accent: oklch(0.24 0.004 90);
+  --sidebar-accent-foreground: oklch(0.94 0.004 90);
   --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.865 0.11 162);
+  --sidebar-ring: oklch(0.64 0.19 28);
 }
 
 @layer base {
@@ -141,12 +143,13 @@
   }
   .dark body {
     background-image:
-      radial-gradient(1100px 520px at 88% -6%, oklch(0.5 0.08 160 / 0.17), transparent 62%),
-      radial-gradient(760px 420px at -8% 108%, oklch(0.42 0.06 160 / 0.12), transparent 55%),
+      /* single vermilion ink bloom top-right, everything else neutral */
+      radial-gradient(1100px 520px at 88% -6%, oklch(0.5 0.09 28 / 0.10), transparent 62%),
+      radial-gradient(760px 420px at -8% 108%, oklch(0.32 0.006 90 / 0.10), transparent 55%),
       repeating-linear-gradient(
         90deg,
-        oklch(1 0 0 / 0.032) 0px,
-        oklch(1 0 0 / 0.032) 1px,
+        oklch(1 0 0 / 0.026) 0px,
+        oklch(1 0 0 / 0.026) 1px,
         transparent 1px,
         transparent 11px
       );
@@ -352,4 +355,148 @@
       0 0 0 1px color-mix(in oklch, var(--primary) 35%, transparent),
       0 4px 18px -6px color-mix(in oklch, var(--primary) 45%, transparent);
   }
+
+  /* ==================================================================
+     INK WASH EXTRAS
+     ================================================================== */
+
+  /* ---- Ink edge: accented hairline that follows the mouse ----
+     The InkEdgeProvider (one global listener) writes --ink-mx/--ink-my
+     on the hovered surface; this pseudo paints a 1px vermilion ring with
+     a soft glow only where the pointer is. Touch devices never hover,
+     so they simply never see it. */
+  .ink-edge {
+    position: relative;
+  }
+  .ink-edge::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    pointer-events: none;
+    z-index: 4;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    background:
+      radial-gradient(
+        260px circle at var(--ink-mx, 50%) var(--ink-my, 50%),
+        color-mix(in oklch, var(--primary) 95%, transparent),
+        color-mix(in oklch, var(--primary) 45%, transparent) 50%,
+        transparent 78%
+      );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+  .ink-edge:hover::after,
+  .ink-edge:focus-within::after {
+    opacity: 1;
+  }
+
+  /* Cards paint their sheen on ::after already, so the ink ring rides
+     ::before instead — same effect, no pseudo-element collision.
+     (fluted-panel / liquid-glass are the reverse: ribs on ::before,
+     ring on ::after via .ink-edge applied to them.) */
+  [data-slot="card"] {
+    position: relative;
+  }
+  [data-slot="card"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    pointer-events: none;
+    z-index: 4;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    background:
+      radial-gradient(
+        260px circle at var(--ink-mx, 50%) var(--ink-my, 50%),
+        color-mix(in oklch, var(--primary) 95%, transparent),
+        color-mix(in oklch, var(--primary) 45%, transparent) 50%,
+        transparent 78%
+      );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+  /* Interior ink wash: a faint vermilion bloom that follows the pointer
+     across the card surface, on top of the permanent specular sheen. */
+  [data-slot="card"]::after {
+    background:
+      radial-gradient(
+        340px circle at var(--ink-mx, 50%) var(--ink-my, 50%),
+        color-mix(in oklch, var(--primary) 14%, transparent),
+        transparent 72%
+      ),
+      linear-gradient(
+        180deg,
+        oklch(1 0 0 / 0.06) 0%,
+        oklch(1 0 0 / 0.02) 30%,
+        transparent 55%
+      );
+  }
+  [data-slot="card"]:hover::before,
+  [data-slot="card"]:focus-within::before {
+    opacity: 1;
+  }
+
+  /* ---- Floating embossed dock (header) ----
+     Minimal embossing: one light line on top, one dark line at the
+     bottom, a faint core bevel and a deep float shadow. */
+  .emboss-dock {
+    background: color-mix(in oklch, var(--background) 74%, transparent);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    border: 1px solid oklch(1 0 0 / 0.10);
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 0.14),
+      inset 0 -1px 0 0 oklch(0 0 0 / 0.65),
+      inset 0 0 0 1px oklch(0 0 0 / 0.28),
+      0 18px 44px -16px oklch(0 0 0 / 0.85);
+  }
+  :root:not(.dark) .emboss-dock {
+    background: color-mix(in oklch, var(--background) 80%, transparent);
+    border-color: oklch(0.22 0.015 160 / 0.16);
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 0.8),
+      inset 0 -1px 0 0 oklch(0.22 0.015 160 / 0.18),
+      0 18px 40px -18px oklch(0.22 0.015 160 / 0.28);
+  }
+
+  /* ---- Peep window: the tiny hover preview inside cards ---- */
+  .peep-window {
+    background: color-mix(in oklch, var(--popover) 92%, transparent);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid oklch(1 0 0 / 0.12);
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 0.10),
+      0 12px 34px -12px oklch(0 0 0 / 0.85);
+  }
+  :root:not(.dark) .peep-window {
+    background: color-mix(in oklch, var(--popover) 94%, transparent);
+    border-color: oklch(0.22 0.015 160 / 0.18);
+  }
+}
+
+/* Keyframes for the Spline fallback orb (kept out of @layer so they win). */
+@keyframes ink-orb-breathe {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.08); filter: brightness(1.18); }
+}
+@keyframes ink-orb-spin {
+  to { transform: rotate(1turn); }
 }

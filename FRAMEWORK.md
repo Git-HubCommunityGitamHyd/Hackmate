@@ -8,7 +8,8 @@
 | UI runtime | React 19 | Server Components + client islands |
 | Language | TypeScript 5 (strict) | Build fails on type errors |
 | Styling | Tailwind CSS 4 + `tw-animate-css` | shadcn/ui-style component library in `src/components/ui` |
-| Animation | framer-motion 12 | Kinetic text reveal, text repel, pixel canvas, fluted glass |
+| Animation | framer-motion 12 + anime.js 4.5 | Kinetic text reveal, text repel, pixel canvas, fluted glass (framer); one-shot entrances, ink brush stroke, peek-window pops (anime.js) |
+| 3D | Spline (@splinetool/runtime 2) | Live 3D emblem in the floating header; lazy-loaded, ink-orb fallback offline, scene URL overridable via `NEXT_PUBLIC_SPLINE_SCENE_URL` |
 | Auth | Auth.js v5 (`next-auth@5` beta) | GitHub OAuth + email magic links, database sessions via Drizzle adapter |
 | Database | Drizzle ORM 0.45 + Postgres / CockroachDB | Works with local Postgres 14+ or CockroachDB Serverless (free tier) |
 | Validation | Zod 4 | Every mutation body validated before it touches the DB |
@@ -57,7 +58,10 @@ scripts/                db create/migrate/seed, demo seed, embedded-postgres boo
 `/api/search`, `/api/matches`, `/api/hackathons`, `/api/hackathons/[idOrSlug]`,
 `/api/teams`, `/api/teams/[id]` (+ members, requests, invites, tasks, chat, result),
 `/api/bookmarks`, `/api/notifications`, `/api/reputation`, `/api/emergency`,
-`/api/profile/linkedin-import`, `/api/verification`, `/api/verification/document`, `/api/cron`.
+`/api/profile/linkedin-import`, `/api/verification`, `/api/verification/document`,
+`/api/github-contributions` (rate-limited, 6h-cached proxy feeding the profile
+contribution calendar; upstream configurable via `GITHUB_CONTRIB_API`),
+`/api/cron`.
 
 ### Domain engines
 
@@ -65,6 +69,29 @@ scripts/                db create/migrate/seed, demo seed, embedded-postgres boo
 - **Team Composition Intelligence** — `lib/matching/composition.ts` produces text coverage/gap analysis ("strong ML and frontend coverage, no backend/cloud member") surfaced in team detail and My Team.
 - **Reputation** — post-hackathon results feed karma, badges and track record (`lib/reputation.ts`, tested in `reputation.test.ts`).
 - **Verification** — college ID image -> OCR extraction -> claim matching -> decision, with a manual admin fallback and a private Blob store for the documents.
+
+### Design language: Ink Wash (sumi-e) minimalist maximalism
+
+Pure-black canvas, warm paper-white text, frosted/fluted glass everywhere,
+and a single vermilion seal-red accent (`--primary`). Interactive surfaces
+paint an accented edge highlight that follows the mouse:
+
+- `InkEdgeProvider` (layout-level) runs one delegated rAF-throttled
+  `pointermove` listener and writes `--ink-mx/--ink-my` on the hovered
+  surface (cards, `.fluted-panel`, `.liquid-glass`, `.ink-edge`).
+- `globals.css` renders a 2px vermilion ring (masked radial gradient) plus
+  a faint interior ink wash on hover — no per-component JS.
+- Discover cards also carry a `CardPeek` hover window: a small glass panel
+  that pops in (anime.js) showing the card's components — members, open
+  roles, missing skills, dates, prize — without leaving the grid.
+- The header is a detached floating pill dock (`.emboss-dock`): frosted,
+  minimally embossed (light top edge, dark bottom edge, deep float shadow),
+  with the Spline 3D emblem as the brand mark.
+- The login page is the hero/landing page (unauthenticated visitors are
+  redirected there by `src/proxy.ts`): opaque black fluted-glass sign-in
+  card with mouse-reactive ink edge, anime.js ink brush stroke under the
+  headline, grayscale ink pixel canvas, and LinkedIn copy for the
+designers/PMs sign-in track.
 
 ## Development commands
 

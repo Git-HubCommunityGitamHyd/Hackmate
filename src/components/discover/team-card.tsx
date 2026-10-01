@@ -2,13 +2,23 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Lightbulb, Users, ArrowRight, Lock, Compass } from "lucide-react";
+import {
+  Lightbulb,
+  Users,
+  ArrowRight,
+  Lock,
+  Compass,
+  Target,
+  Wrench,
+  CheckCircle2,
+} from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MatchRing } from "@/components/shared/match-ring";
 import { CommitmentBadge } from "@/components/shared/badges";
 import { UserAvatar } from "@/components/shared/user-avatar";
+import { CardPeek, PeekRow } from "@/components/shared/card-peek";
 import type { TeamCardDTO } from "@/lib/queries/types";
 
 export function TeamCard({ team, showMatch }: { team: TeamCardDTO; showMatch?: boolean }) {
@@ -23,7 +33,28 @@ export function TeamCard({ team, showMatch }: { team: TeamCardDTO; showMatch?: b
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       whileHover={reduceMotion ? undefined : { y: -3 }}
     >
-    <Card className="group hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300">
+    <Card className="group relative hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300">
+      {/* Peep window — hover the card to peek at its components. */}
+      <CardPeek label="peek · team">
+        <PeekRow icon={<Users />}>
+          {team.memberNames.slice(0, 3).join(", ")}
+          {team.memberCount > 3 ? ` +${team.memberCount - 3} more` : ""}
+        </PeekRow>
+        {team.openRoles.length > 0 && (
+          <PeekRow icon={<Target className="text-primary" />}>
+            needs {team.openRoles.slice(0, 3).join(" · ")}
+          </PeekRow>
+        )}
+        {team.missingSkills.length > 0 && (
+          <PeekRow icon={<Wrench />}>
+            missing {team.missingSkills.slice(0, 3).join(" · ")}
+          </PeekRow>
+        )}
+        <PeekRow icon={<CheckCircle2 className="text-primary" />}>
+          {team.completeness}% complete · {team.memberCount}/{team.targetSize} members
+        </PeekRow>
+      </CardPeek>
+
       <CardContent className="p-5 pb-3">
         <div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -31,17 +62,17 @@ export function TeamCard({ team, showMatch }: { team: TeamCardDTO; showMatch?: b
               {full ? (
                 <Badge variant="outline" className="text-[11px] text-zinc-500">full</Badge>
               ) : (
-                <Badge variant="outline" className="text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800">
+                <Badge variant="outline" className="text-[11px] font-semibold border-primary/40 bg-primary/10 text-primary">
                   {spotsLeft} spot{spotsLeft > 1 ? "s" : ""} left
                 </Badge>
               )}
               {!team.hackathonId && (
-                <Badge variant="outline" className="text-[11px] bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/30">
+                <Badge variant="outline" className="text-[11px] bg-primary/5 text-primary border-primary/30">
                   <Compass className="h-3 w-3 mr-0.5" /> idea-first
                 </Badge>
               )}
               {team.lookingForIdea && (
-                <Badge variant="outline" className="text-[11px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30">
+                <Badge variant="outline" className="text-[11px] bg-secondary/60 text-foreground/80 border-border">
                   <Lightbulb className="h-3 w-3 mr-0.5" /> open to ideas
                 </Badge>
               )}

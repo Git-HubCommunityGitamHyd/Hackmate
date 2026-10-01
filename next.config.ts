@@ -15,7 +15,9 @@ const isDev = process.env.NODE_ENV === "development";
 
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  // 'wasm-unsafe-eval' is for the Spline 3D runtime (WebAssembly module
+  // compilation) in production; dev keeps full 'unsafe-eval' for Turbopack.
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
   `style-src 'self' 'unsafe-inline'`,
   `img-src 'self' data: blob: https:`,
   `font-src 'self' data:`,

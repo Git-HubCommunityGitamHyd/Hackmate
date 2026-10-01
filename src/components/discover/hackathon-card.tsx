@@ -2,11 +2,21 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { Calendar, Clock, Users, MapPin, Trophy, ArrowRight, Sparkles } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  Users,
+  MapPin,
+  Trophy,
+  ArrowRight,
+  Sparkles,
+  Layers,
+} from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
+import { CardPeek, PeekRow } from "@/components/shared/card-peek";
 import type { HackathonCardDTO } from "@/lib/queries/types";
 
 function fmtDate(iso: string) {
@@ -21,10 +31,10 @@ function daysUntil(iso: string) {
 export function HackathonCard({ hackathon }: { hackathon: HackathonCardDTO }) {
   const statusColor =
     hackathon.status === "ongoing"
-      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+      ? "border-primary/40 bg-primary/10 text-primary"
       : hackathon.status === "completed"
-        ? "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-        : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300";
+        ? "text-zinc-500 border-border bg-secondary/40"
+        : "border-foreground/30 bg-secondary/60 text-foreground/90";
 
   const regDays = hackathon.registrationDeadline ? daysUntil(hackathon.registrationDeadline) : null;
   const reduceMotion = useReducedMotion();
@@ -39,7 +49,28 @@ export function HackathonCard({ hackathon }: { hackathon: HackathonCardDTO }) {
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       whileHover={reduceMotion ? undefined : { y: -4 }}
     >
-    <Card className="group hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300 overflow-hidden cursor-pointer focus-within:ring-2 focus-within:ring-ring/40">
+    <Card className="group relative hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300 overflow-hidden cursor-pointer focus-within:ring-2 focus-within:ring-ring/40">
+      {/* Peep window — hover the card to peek at its components. */}
+      <CardPeek label="peek · hackathon">
+        <PeekRow icon={<Calendar />}>
+          {fmtDate(hackathon.startsAt)} – {fmtDate(hackathon.endsAt)} · {hackathon.mode}
+        </PeekRow>
+        <PeekRow icon={<Users />}>
+          teams of {hackathon.teamSizeMin}–{hackathon.teamSizeMax}
+          {hackathon.location ? ` · ${hackathon.location}` : ""}
+        </PeekRow>
+        {hackathon.themes.length > 0 && (
+          <PeekRow icon={<Layers className="text-primary" />}>
+            {hackathon.themes.slice(0, 3).join(" · ")}
+          </PeekRow>
+        )}
+        {hackathon.prizePool && (
+          <PeekRow icon={<Trophy className="text-primary" />}>
+            prize {hackathon.prizePool}
+          </PeekRow>
+        )}
+      </CardPeek>
+
       <CardContent className="p-5 pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

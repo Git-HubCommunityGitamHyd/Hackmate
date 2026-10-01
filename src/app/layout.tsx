@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Navbar } from "@/components/layout/navbar";
 import { SiteFooter } from "@/components/layout/footer";
+import { InkEdgeProvider } from "@/components/shared/ink-edge";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,11 +43,16 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
         <Providers>
-          <Navbar />
-          <main id="main-content" className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pb-16">
-            {children}
-          </main>
-          <SiteFooter />
+          {/* InkEdgeProvider: one global pointer listener feeding the
+              mouse-reactive vermilion edge highlights on every glass
+              surface (cards, panels, the sign-in card). */}
+          <InkEdgeProvider>
+            <Navbar />
+            <main id="main-content" className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pb-16">
+              {children}
+            </main>
+            <SiteFooter />
+          </InkEdgeProvider>
         </Providers>
       </body>
     </html>
