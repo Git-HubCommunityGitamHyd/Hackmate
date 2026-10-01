@@ -1,7 +1,9 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { Award, CalendarCheck, CheckCircle2, Crown, Hammer, HeartHandshake, Medal, ShieldCheck, Trophy, Users, type LucideIcon } from "lucide-react";
 import {
   COMMITMENT_LEVELS,
   RECRUITMENT_STATUSES,
@@ -9,6 +11,44 @@ import {
   SKILL_CATEGORY_META,
 } from "@/lib/constants";
 import type { SkillCategory } from "@/lib/db/schema";
+
+const BADGE_ICONS: Record<string, LucideIcon> = {
+  "check-circle": CheckCircle2,
+  hammer: Hammer,
+  trophy: Trophy,
+  medal: Medal,
+  crown: Crown,
+  "calendar-check": CalendarCheck,
+  "shield-check": ShieldCheck,
+  "heart-handshake": HeartHandshake,
+  users: Users,
+  award: Award,
+};
+
+export function ReputationBadge({
+  name,
+  description,
+  icon,
+}: {
+  name: string;
+  description?: string | null;
+  icon?: string | null;
+}) {
+  const Icon = BADGE_ICONS[icon ?? ""] ?? Award;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span tabIndex={0} aria-label={name}>
+          <Badge variant="outline" className="gap-1.5 border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+            <Icon aria-hidden="true" className="h-3.5 w-3.5" />
+            {name}
+          </Badge>
+        </span>
+      </TooltipTrigger>
+      {description && <TooltipContent>{description}</TooltipContent>}
+    </Tooltip>
+  );
+}
 
 export function SkillBadge({
   name,

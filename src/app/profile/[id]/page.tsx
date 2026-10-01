@@ -12,7 +12,11 @@ import {
   Medal,
   Award,
   CheckCircle2,
+  CalendarCheck,
   Hammer,
+  Crown,
+  HeartHandshake,
+  ShieldCheck,
   Users,
   ExternalLink,
   Sparkles,
@@ -44,6 +48,12 @@ const BADGE_ICONS: Record<string, typeof Trophy> = {
   finalist: Medal,
   winner: Trophy,
   "worked-together": Users,
+  "first-win": Trophy,
+  "hat-trick": Medal,
+  "serial-winner": Crown,
+  regular: CalendarCheck,
+  veteran: ShieldCheck,
+  "great-teammate": HeartHandshake,
 };
 
 /** Load and display a student profile, including verified status and imported LinkedIn details. */

@@ -163,4 +163,10 @@ export const BADGE_SEED = [
   { slug: "finalist", name: "Finalist", description: "Reached the final round", icon: "medal", category: "achievement" as const },
   { slug: "winner", name: "Winner", description: "Won the hackathon", icon: "trophy", category: "achievement" as const },
   { slug: "worked-together", name: "Worked Together", description: "Teammates who shipped together", icon: "users", category: "social" as const },
+  { slug: "first-win", name: "First Win", description: "Won a hackathon", icon: "trophy", category: "achievement" as const },
+  { slug: "hat-trick", name: "Hat Trick", description: "Reached the podium three times", icon: "medal", category: "achievement" as const },
+  { slug: "serial-winner", name: "Serial Winner", description: "Reached the podium five times", icon: "crown", category: "achievement" as const },
+  { slug: "regular", name: "Regular", description: "Attended five hackathons", icon: "calendar-check", category: "participation" as const },
+  { slug: "veteran", name: "Veteran", description: "Attended ten hackathons", icon: "shield-check", category: "participation" as const },
+  { slug: "great-teammate", name: "Great Teammate", description: "Averaged at least 4.5 stars across five reviews", icon: "heart-handshake", category: "social" as const },
 ];

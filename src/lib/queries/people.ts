@@ -199,6 +199,7 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
       .select({
         slug: schema.badges.slug,
         name: schema.badges.name,
+        description: schema.badges.description,
         icon: schema.badges.icon,
         category: schema.badges.category,
         hackathonName: schema.hackathons.name,
@@ -347,6 +348,7 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
     badges: badgeRows.map((b) => ({
       slug: b.slug,
       name: b.name,
+      description: b.description,
       icon: b.icon,
       category: b.category,
       hackathonName: b.hackathonName ?? null,
