@@ -45,6 +45,27 @@ Prerequisites:
 - A local Postgres 14+ instance, or a free CockroachDB Serverless cluster
   (the app code is identical for both)
 
+### Windows shortcut (one command)
+
+Windows PowerShell 5.1 does not support `&&`, and `#` is not a comment in
+cmd.exe — so do not paste multi-command bash blocks. Instead, open PowerShell
+inside the extracted `hackmate` folder and run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\first-run.ps1
+```
+
+With a local Postgres password:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\first-run.ps1 -PgPassword "mypassword"
+```
+
+`first-run.ps1` auto-detects bun (or falls back to npm), installs
+dependencies, creates `.env.local`, creates the database, migrates, seeds,
+and starts the dev server. It stops at the first failure with a specific fix
+suggestion (e.g. starting the Postgres service).
+
 ### Step 1: Start your local PostgreSQL server
 
 Ensure PostgreSQL 14+ is running in the background. If it ever stops on
