@@ -38,6 +38,7 @@ import { Pencil, Radar } from "lucide-react";
 import { LinkedInSections } from "@/components/profile/linkedin-sections";
 import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { KarmaPill } from "@/components/reputation/karma-pill";
+import { FindEqualButton } from "@/components/profile/find-equal-button";
 
 const BADGE_ICONS: Record<string, typeof Trophy> = {
   "completed-hackathon": CheckCircle2,
@@ -106,6 +107,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                     </Link>
                   </Button>
                 )}
+                {!isOwnProfile && isAuthenticated && <FindEqualButton userId={profile.id} />}
               </div>
               <div className="flex items-center gap-3 flex-wrap text-sm text-muted-foreground mt-1">
                 {profile.collegeName && (
