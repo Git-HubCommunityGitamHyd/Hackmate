@@ -37,6 +37,7 @@ import { COMMITMENT_LEVELS, EXPERIENCE_LEVELS } from "@/lib/constants";
 import { Pencil, Radar } from "lucide-react";
 import { LinkedInSections } from "@/components/profile/linkedin-sections";
 import { VerifiedBadge } from "@/components/shared/verified-badge";
+import { KarmaPill } from "@/components/reputation/karma-pill";
 
 const BADGE_ICONS: Record<string, typeof Trophy> = {
   "completed-hackathon": CheckCircle2,
@@ -95,6 +96,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-2xl font-extrabold tracking-tight">{profile.name}</h1>
                   {profile.idVerified && <VerifiedBadge compact={false} />}
+                  <KarmaPill userId={profile.id} />
                   {profile.emergencyAvailable && <EmergencyBadge />}
                 </div>
                 {isOwnProfile && (
