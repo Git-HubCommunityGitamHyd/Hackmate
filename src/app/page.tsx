@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,11 +23,35 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { useCurrentUser, useHackathons, useTeams, usePeople, useSearch } from "@/hooks/use-api";
 import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
 
+const DISCOVER_TABS = ["hackathons", "teams", "people"] as const;
+type DiscoverTab = (typeof DISCOVER_TABS)[number];
+
+function isDiscoverTab(value: string | null): value is DiscoverTab {
+  return (DISCOVER_TABS as readonly string[]).includes(value ?? "");
+}
+
 export default function DiscoverPage() {
+  return (
+    <Suspense>
+      <DiscoverContent />
+    </Suspense>
+  );
+}
+
+function DiscoverContent() {
   const { user, isAuthenticated } = useCurrentUser();
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
-  const [tab, setTab] = useState("hackathons");
+  const [tab, setTab] = useState<DiscoverTab>("hackathons");
+
+  /* Deep-linkable tabs: /?tab=teams (set by the /teams redirect) opens
+     Discover with that tab pre-selected. Syncs again if the param changes
+     while mounted (e.g. navbar navigation) without remounting the page. */
+  const tabParam = searchParams.get("tab");
+  useEffect(() => {
+    if (isDiscoverTab(tabParam)) setTab(tabParam);
+  }, [tabParam]);
 
   const isSearching = submittedQuery.trim().length >= 2;
   const search = useSearch(isSearching ? submittedQuery : "");
@@ -109,7 +134,7 @@ export default function DiscoverPage() {
       </section>
 
       {/* Tabs */}
-      <Tabs value={effectiveTab} onValueChange={setTab}>
+      <Tabs value={effectiveTab} onValueChange={(v) => setTab(v as DiscoverTab)}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <TabsList className="h-11 bg-muted">
             <TabsTrigger value="hackathons" className="gap-1.5 px-4 data-[state=active]:bg-background">

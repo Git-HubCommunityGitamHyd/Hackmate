@@ -9,18 +9,28 @@ import { adminEmails, isAdminEmail } from "@/lib/admin";
 /**
  * DEV-ONLY quick sign-in — enabled only when ALLOW_DEMO_LOGIN=true.
  *
+ * Accepts both ALLOW_DEMO_LOGIN and NEXT_PUBLIC_ALLOW_DEMO_LOGIN so the
+ * server flag and the client-side button gate never disagree: the login
+ * card renders the button from NEXT_PUBLIC_ALLOW_DEMO_LOGIN, and this
+ * route previously checked only ALLOW_DEMO_LOGIN — a .env carrying just
+ * the public var showed a button that 404'd on click.
+ *
  * No demo personas anymore: this signs you in as YOUR OWN dev account —
  * the first email listed in ADMIN_EMAILS (or dev@hackmate.local when unset).
  * The account is created on the fly if missing and is always promoted to
  * admin locally, so you can test posting hackathons without OAuth/Resend
  * credentials.
  *
- * In production this env var is unset → route is disabled (404).
+ * In production both env vars are unset → route is disabled (404).
  */
 const DEV_FALLBACK_EMAIL = "dev@hackmate.local";
 
 export async function POST(req: Request) {
-  if (process.env.ALLOW_DEMO_LOGIN !== "true") {
+  const demoEnabled =
+    process.env.ALLOW_DEMO_LOGIN === "true" ||
+    process.env.NEXT_PUBLIC_ALLOW_DEMO_LOGIN === "true";
+
+  if (!demoEnabled) {
     return NextResponse.json({ error: "Dev quick sign-in is disabled" }, { status: 404 });
   }
 
