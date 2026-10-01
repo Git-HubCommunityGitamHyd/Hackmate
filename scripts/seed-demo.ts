@@ -6,8 +6,8 @@
  *
  * Run: bun run db:seed:demo
  */
-import { config } from "dotenv";
-config({ override: true });
+import { loadEnv } from "../src/lib/db/load-env";
+loadEnv();
 
 import { sql } from "drizzle-orm";
 
@@ -27,6 +27,15 @@ async function main() {
       team_member, team, hackathon_profile, hackathon,
       compat_answers, availability, user_role, user_skill
     cascade
+  `);
+
+  /* The user table is deliberately NOT truncated (that would also wipe the
+     dev account and its session). But a previous demo run leaves its 8 demo
+     people behind, and re-inserting them violates user_email_unique. Delete
+     exactly the demo personas (they all use the reserved @example.edu domain);
+     sessions/accounts cascade with them, the dev account survives. */
+  await db.execute(sql`
+    delete from "user" where email like '%@example.edu'
   `);
 
   /* ---------- Look up taxonomies by slug ---------- */
@@ -234,42 +243,51 @@ async function main() {
     await db.insert(schema.compatAnswers).values({ userId: row.id, ...p.compat });
   }
 
-  /* ---------- Promote the dev account into a real profile ---------- */
-  const [dev] = await db
+  /* ---------- The dev account (created on the fly if missing) ----------
+     The demo login route creates dev@hackmate.local on first sign-in, but a
+     fresh machine running db:seed:demo has never signed in yet — the old code
+     silently skipped promotion and then crashed on dev!.id below. Create it
+     here so the seed is self-contained. */
+  let [dev] = await db
     .select()
     .from(schema.users)
     .where(sql`email = 'dev@hackmate.local'`);
-  if (dev) {
-    await db
-      .update(schema.users)
-      .set({
-        name: "Dev Sharma",
-        username: "devsharma",
-        bio: "Local dev account. Building HackMate itself.",
-        experienceLevel: "intermediate",
-        commitment: "aiming_to_win",
-        recruitmentStatus: "partially_formed",
-        onboarded: true,
-        githubUsername: "devsharma",
-      })
-      .where(sql`id = ${dev.id}`);
-    await db
-      .insert(schema.userSkills)
-      .values([
-        { userId: dev.id, skillId: skillId("nextjs"), level: 4, isPrimary: true },
-        { userId: dev.id, skillId: skillId("typescript"), level: 4, isPrimary: false },
-        { userId: dev.id, skillId: skillId("postgresql"), level: 3, isPrimary: false },
-        { userId: dev.id, skillId: skillId("tailwind"), level: 4, isPrimary: false },
-      ])
-      .onConflictDoNothing();
-    await db
-      .insert(schema.userRoles)
-      .values([
-        { userId: dev.id, roleId: roleId("frontend"), isPrimary: true },
-        { userId: dev.id, roleId: roleId("backend"), isPrimary: false },
-      ])
-      .onConflictDoNothing();
+  if (!dev) {
+    console.log("· creating the dev account (dev@hackmate.local)…");
+    [dev] = await db
+      .insert(schema.users)
+      .values({ email: "dev@hackmate.local", name: "Dev Sharma" })
+      .returning();
   }
+  await db
+    .update(schema.users)
+    .set({
+      name: "Dev Sharma",
+      username: "devsharma",
+      bio: "Local dev account. Building HackMate itself.",
+      experienceLevel: "intermediate",
+      commitment: "aiming_to_win",
+      recruitmentStatus: "partially_formed",
+      onboarded: true,
+      githubUsername: "devsharma",
+    })
+    .where(sql`id = ${dev.id}`);
+  await db
+    .insert(schema.userSkills)
+    .values([
+      { userId: dev.id, skillId: skillId("nextjs"), level: 4, isPrimary: true },
+      { userId: dev.id, skillId: skillId("typescript"), level: 4, isPrimary: false },
+      { userId: dev.id, skillId: skillId("postgresql"), level: 3, isPrimary: false },
+      { userId: dev.id, skillId: skillId("tailwind"), level: 4, isPrimary: false },
+    ])
+    .onConflictDoNothing();
+  await db
+    .insert(schema.userRoles)
+    .values([
+      { userId: dev.id, roleId: roleId("frontend"), isPrimary: true },
+      { userId: dev.id, roleId: roleId("backend"), isPrimary: false },
+    ])
+    .onConflictDoNothing();
 
   /* ---------- Hackathons ---------- */
   console.log("· seeding hackathons…");
