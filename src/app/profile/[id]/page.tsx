@@ -101,13 +101,15 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                   {profile.emergencyAvailable && <EmergencyBadge />}
                 </div>
                 {isOwnProfile && (
-                  <Button asChild size="sm" variant="outline" className="font-medium">
-                    <Link href="/profile/edit">
-                      <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit profile
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button asChild size="sm" variant="outline" className="font-medium">
+                      <Link href="/profile/edit">
+                        <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit profile
+                      </Link>
+                    </Button>
+                    {user?.id && <FindEqualButton userId={user.id} />}
+                  </div>
                 )}
-                {!isOwnProfile && isAuthenticated && <FindEqualButton userId={profile.id} />}
               </div>
               <div className="flex items-center gap-3 flex-wrap text-sm text-muted-foreground mt-1">
                 {profile.collegeName && (
