@@ -17,7 +17,9 @@ import { cn } from "@/lib/utils";
  * the cursor like a lamp on a moveable arm instead of snapping to it.
  *
  * This replaces the old pixel-trail canvas on the login page: same role
- * (a living black ground behind the frosted card), zero noise.
+ * (a living ground behind the frosted card), zero noise. v3 parks the
+ * light where the diagonal key sweep is brightest — the top-left —
+ * so the resting pose already reads as one lit scene.
  *
  * prefers-reduced-motion: the light parks at a fixed editorial position
  * and never chases the pointer.
@@ -33,14 +35,14 @@ export function RayLight({ className }: { className?: string }) {
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
-    /* Static studio light for reduced motion — upper right, the same
-       place the page's ambient bloom lives. */
-    el.style.setProperty("--ray-x", "62vw");
-    el.style.setProperty("--ray-y", "30vh");
+    /* Static studio light for reduced motion — parked where the key
+       light lives, upper left. */
+    el.style.setProperty("--ray-x", "30vw");
+    el.style.setProperty("--ray-y", "26vh");
     if (reduced) return;
 
-    let targetX = window.innerWidth * 0.62;
-    let targetY = window.innerHeight * 0.3;
+    let targetX = window.innerWidth * 0.3;
+    let targetY = window.innerHeight * 0.26;
     let x = targetX;
     let y = targetY;
     let raf = 0;

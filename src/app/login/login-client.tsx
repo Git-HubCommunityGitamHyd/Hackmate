@@ -75,10 +75,10 @@ function ProjectInfo() {
         <InkBrush className="mt-1 mb-1 -rotate-1" width={220} height={12} />
 
         <div className="relative text-muted-foreground mt-4 max-w-xl leading-relaxed min-h-[8rem] rounded-lg">
-          {/* Neutral frosted slab behind the copy (pure black ink, no tint —
-              the old dark-green slab read as a color error on this page). */}
+          {/* Neutral frosted slab behind the copy — translucent now so
+              the diagonal key sweep bleeds through it too. */}
           <div
-            className="pointer-events-none absolute -inset-6 z-0 rounded-lg bg-black/60 backdrop-blur-md"
+            className="pointer-events-none absolute -inset-6 z-0 rounded-lg bg-black/40 backdrop-blur-md"
             style={{
               maskImage:
                 "linear-gradient(to right, transparent, black 10%, black 90%, transparent), linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)",
@@ -163,8 +163,8 @@ function useCardLight(
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
-    let targetX = window.innerWidth * 0.62;
-    let targetY = window.innerHeight * 0.3;
+    let targetX = window.innerWidth * 0.3;
+    let targetY = window.innerHeight * 0.26;
     let x = targetX;
     let y = targetY;
     let raf = 0;
@@ -338,9 +338,11 @@ export function LoginClient() {
             <ProjectInfo />
           </div>
 
-          {/* Sign-in — FROSTED GLASS card on the ray-traced black field.
-              Translucent pane (the studio light bleeds through it),
-              fluting + refraction + pointer tilt intact via FlutedGlass.
+          {/* Sign-in — FROSTED GLASS card on the ray-traced field. The
+              pane is genuinely translucent (42% alpha) with a deep blur,
+              so the diagonal key sweep visibly BLEEDS THROUGH it — that
+              is what makes it read as frosted instead of a dark panel.
+              Fluting + refraction + pointer tilt intact via FlutedGlass.
               The ray-tracing rig sits on the wrapper: .ray-cast swings
               the drop shadow away from the light, .ray-specular (inside)
               is the streak the light throws across the pane, and the
@@ -356,14 +358,20 @@ export function LoginClient() {
             >
               <FlutedGlass
                 maxTilt={7}
-                background="rgba(9, 11, 10, 0.52)"
+                background="rgba(10, 12, 11, 0.42)"
                 borderRadius={16}
                 minHeight={0}
-                blur={18}
+                blur={24}
                 className="ink-edge w-full"
                 style={{
-                  /* The wrapper (.ray-cast) owns the shadow now. */
-                  boxShadow: "none",
+                  /* The wrapper (.ray-cast) owns the drop shadow; the
+                     pane itself carries only its EDGE LIGHTING — a bright
+                     two-step hairline where the key light strikes the
+                     top-left of the thick glass, a shaded line on the
+                     far edge. This is what reads as a lit, frosted,
+                     bevelled pane. */
+                  boxShadow:
+                    "inset 1px 1px 0 0 rgba(255, 255, 255, 0.24), inset 2px 2px 0 0 rgba(255, 255, 255, 0.08), inset -1px -1px 0 0 rgba(0, 0, 0, 0.5)",
                 }}
               >
               <div
@@ -414,7 +422,7 @@ export function LoginClient() {
                         Continue with GitHub
                       </Button>
 
-                      <p className="text-[11px] text-neutral-500 text-center mt-2 leading-relaxed">
+                      <p className="text-[11px] text-neutral-400 text-center mt-2 leading-relaxed">
                         Developers: we import your languages, repos and
                         activity to verify skills automatically.
                       </p>
@@ -447,7 +455,7 @@ export function LoginClient() {
                           placeholder="you@college.edu"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-11 bg-neutral-950 border-white/15 text-white placeholder:text-neutral-600 focus-visible:ring-primary/50 focus-visible:border-primary/60 transition-colors dark:shadow-[inset_0_2px_6px_-2px_rgb(0_0_0/0.6),inset_0_-1px_0_0_rgb(255_255_255/0.06)]"
+                          className="h-11 bg-neutral-950 border-white/15 text-white placeholder:text-neutral-600 focus-visible:ring-primary/50 focus-visible:border-primary/60 transition-colors dark:shadow-[inset_1px_1px_0_0_rgb(255_255_255/0.08),inset_-1px_-1px_0_0_rgb(0_0_0/0.5),2px_3px_8px_-5px_rgb(0_0_0/0.75)]"
                         />
                       </div>
 
@@ -466,8 +474,8 @@ export function LoginClient() {
                       </Button>
 
                       {/* LinkedIn copy — non-developer track. */}
-                      <p className="text-[11px] text-neutral-500 text-center leading-relaxed mt-1">
-                        <span className="inline-flex items-center gap-1 text-neutral-400">
+                      <p className="text-[11px] text-neutral-400 text-center leading-relaxed mt-1">
+                        <span className="inline-flex items-center gap-1 text-neutral-300">
                           <Linkedin className="h-3 w-3" /> LinkedIn-ready
                         </span>
                         <br />

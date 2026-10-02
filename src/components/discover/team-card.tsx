@@ -33,7 +33,7 @@ export function TeamCard({ team, showMatch }: { team: TeamCardDTO; showMatch?: b
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       whileHover={reduceMotion ? undefined : { y: -3 }}
     >
-    <Card className="group relative hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300">
+    <Card className="group relative hover:border-primary/40 transition-all duration-300">
       {/* Peep window — hover the card to peek at its components. */}
       <CardPeek label="peek · team">
         <PeekRow icon={<Users />}>

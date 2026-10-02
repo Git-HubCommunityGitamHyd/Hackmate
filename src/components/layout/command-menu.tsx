@@ -187,7 +187,7 @@ export function CommandMenu() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="debossed hidden md:flex items-center gap-2 rounded-lg border border-border/70 bg-muted/40 hover:bg-muted/70 transition-colors px-3 h-8 text-xs text-muted-foreground hover:text-foreground"
+        className="embossed hidden md:flex items-center gap-2 rounded-lg border border-border/70 bg-muted/40 hover:bg-muted/70 transition-colors px-3 h-8 text-xs text-muted-foreground hover:text-foreground"
         aria-label="Open command menu (Control K)"
       >
         <Search className="h-3.5 w-3.5" />

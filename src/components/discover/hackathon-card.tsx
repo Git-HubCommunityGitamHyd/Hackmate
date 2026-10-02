@@ -49,7 +49,7 @@ export function HackathonCard({ hackathon }: { hackathon: HackathonCardDTO }) {
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       whileHover={reduceMotion ? undefined : { y: -4 }}
     >
-    <Card className="group relative hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10 transition-all duration-300 overflow-hidden cursor-pointer focus-within:ring-2 focus-within:ring-ring/40">
+    <Card className="group relative hover:border-primary/40 transition-all duration-300 overflow-hidden cursor-pointer focus-within:ring-2 focus-within:ring-ring/40">
       {/* Peep window — hover the card to peek at its components. */}
       <CardPeek label="peek · hackathon">
         <PeekRow icon={<Calendar />}>

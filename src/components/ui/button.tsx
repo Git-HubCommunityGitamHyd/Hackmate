@@ -19,12 +19,15 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        /* Debossed well — pressed INTO the surface behind it (inset top
-           shadow + bottom catch-light via the .debossed utility in
-           globals.css). The frosted translucency comes from bg-muted/40
-           over whatever glass the parent carries. */
+        /* Embossed relief — raised OFF the surface behind it (lit
+           top-left edge + shaded bottom-right edge + small penumbra via
+           the .embossed utility in globals.css). Frosted translucency
+           comes from bg-muted/40 over whatever glass the parent
+           carries. "debossed" stays as a legacy alias. */
+        embossed:
+          "embossed border border-border/60 bg-muted/40 text-muted-foreground shadow-none hover:text-foreground hover:bg-muted/70 dark:bg-white/[0.045] dark:border-white/10 dark:hover:bg-white/[0.08]",
         debossed:
-          "debossed border border-border/60 bg-muted/40 text-muted-foreground shadow-none hover:text-foreground hover:bg-muted/70 dark:bg-white/[0.045] dark:border-white/10 dark:hover:bg-white/[0.08]",
+          "embossed border border-border/60 bg-muted/40 text-muted-foreground shadow-none hover:text-foreground hover:bg-muted/70 dark:bg-white/[0.045] dark:border-white/10 dark:hover:bg-white/[0.08]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

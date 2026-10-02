@@ -47,21 +47,21 @@ const NAV_LINKS = [
 ];
 
 /**
- * Header, round 4 — floating ink dock with DEBOSSED controls.
+ * Header, round 5 — floating ink dock with EMBOSSED controls.
  *
- * The dock still floats (frosted slab, one shared radius), but every
- * control in it is now pressed INTO that slab — the debossed half of
- * the lighting system:
- *  - Nav links are debossed wells with the text sitting inside the
- *    well (shadow creeps in from the top, catch-light on the bottom
- *    lip). The active link presses deeper and glows jade inside.
+ * The dock is a raised frosted slab (one shared radius), and every
+ * control in it is raised too — the embossed half of the lighting
+ * system, every term agreeing with the single top-left key light:
+ *  - Nav links are raised frosted pills with the text sitting on them
+ *    (lit top-left edge, shaded bottom-right edge, small penumbra).
+ *    The active link sits highest and glows jade underneath it.
  *  - Icon buttons, the search trigger and the sign-in CTA are the
- *    same debossed wells (Button variant="debossed" / .btn-deboss).
+ *    same raised pills (Button variant="embossed" / .embossed).
  *  - The brand emblem is the HackMate logo mark (/public/logo.svg) —
  *    the same single file that drives the favicon.
  *  - The dock entrance (drop + settle) and the nav-link stagger run
  *    on anime.js; stateful UI (badges, mobile menu) stays framer.
- * Everything else kept from round 3: ⌘K palette, notification preview
+ * Everything else kept from round 4: ⌘K palette, notification preview
  * popover, karma in the account menu, springy badge, skip link,
  * animated mobile menu, scroll shrink.
  */
@@ -190,10 +190,10 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop nav — every link is a debossed well with its text
-            sitting inside it; the active link presses deeper and glows
-            jade. Transitions carry a soft overshoot so the press reads
-            as physical (the Spline-style spring feel). */}
+        {/* Desktop nav — every link is a raised frosted pill with its
+            text sitting on it; the active link sits highest and glows
+            jade underneath. Transitions carry a soft overshoot so the
+            lift reads as physical (the Spline-style spring feel). */}
         <nav
           ref={navRef}
           className="hidden items-center gap-1.5 ml-2 md:flex"
@@ -235,7 +235,7 @@ export function Navbar() {
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="debossed"
+                  variant="embossed"
                   size="icon"
                   className="relative rounded-lg"
                   aria-label={badgeCount > 0 ? `Notifications, ${badgeCount} unread` : "Notifications"}
@@ -305,14 +305,14 @@ export function Navbar() {
               </PopoverContent>
             </Popover>
 
-            <Button asChild variant="debossed" size="icon" className="hidden rounded-lg sm:inline-flex" aria-label="Saved items">
+            <Button asChild variant="embossed" size="icon" className="hidden rounded-lg sm:inline-flex" aria-label="Saved items">
               <Link href="/saved">
                 <Bookmark className="h-5 w-5" />
               </Link>
             </Button>
 
             {isAdmin && (
-              <Button asChild variant="debossed" size="sm" className="hidden rounded-lg font-semibold lg:inline-flex">
+              <Button asChild variant="embossed" size="sm" className="hidden rounded-lg font-semibold lg:inline-flex">
                 <Link href="/hackathons/new">
                   <Trophy className="h-4 w-4 mr-1.5" /> Post hackathon
                 </Link>
@@ -396,14 +396,14 @@ export function Navbar() {
             </DropdownMenu>
           </>
         ) : (
-          <Button asChild size="sm" className="debossed shadow-none rounded-lg font-bold">
+          <Button asChild size="sm" className="embossed shadow-none rounded-lg font-bold">
             <Link href="/login">Sign in</Link>
           </Button>
         )}
 
         {/* Mobile trigger */}
         <Button
-          variant="debossed"
+          variant="embossed"
           size="icon"
           className="rounded-lg md:hidden"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
