@@ -112,7 +112,11 @@ export async function POST(
       if (other.userId !== m.userId) push("worked-together", m.userId, other.userId);
     }
   }
-  if (awards.length > 0) await db.insert(schema.userBadges).values(awards);
+  /* onConflictDoNothing: user_badge has a (user_id, badge_id) unique
+     index, so a second hackathon with the same teammates would collide
+     on "worked-together" — the badge simply already exists. */
+  if (awards.length > 0)
+    await db.insert(schema.userBadges).values(awards).onConflictDoNothing();
 
   /* 4. Close the team, refresh karma caches, notify members. */
   await db.update(schema.teams).set({ status: "full" }).where(eq(schema.teams.id, id));
@@ -192,17 +196,21 @@ export async function POST(
           : placement
             ? `placed ${placement}`
             : "submitted";
-  await db.insert(schema.notifications).values(
-    members
-      .filter((m) => m.userId !== user.id)
-      .map((m) => ({
-        userId: m.userId,
-        type: "team_update" as const,
-        title: `Result recorded for "${detail.name}"`,
-        body: `${data.projectName} — ${placementLabel}. Badges and karma updated on your profile.`,
-        link: "/my-team",
-      })),
-  );
+  /* Solo teams filter down to zero rows — Drizzle's values([]) throws
+     "must be called with at least one value", which used to 500 the
+     whole result recording for one-person teams. Guard the insert. */
+  const notifRows = members
+    .filter((m) => m.userId !== user.id)
+    .map((m) => ({
+      userId: m.userId,
+      type: "team_update" as const,
+      title: `Result recorded for "${detail.name}"`,
+      body: `${data.projectName} — ${placementLabel}. Badges and karma updated on your profile.`,
+      link: "/my-team",
+    }));
+  if (notifRows.length > 0) {
+    await db.insert(schema.notifications).values(notifRows);
+  }
 
   return ok(
     {

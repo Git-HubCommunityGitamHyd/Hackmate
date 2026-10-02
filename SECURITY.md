@@ -44,6 +44,11 @@ Every response ships with:
   GitHub-contributions proxy; returns 429 with Retry-After. Single-instance
   deployments are covered out of the box; the module documents a drop-in
   swap to Upstash Redis for serverless.
+- **Track-record endpoints** (merged from the team, now hardened):
+  `POST /api/attendance` 30/min/IP, `POST /api/reviews` 20/min/IP (reviews
+  are the cheapest reputation-brigading vector), GET endpoints 60/min/IP,
+  and `GET /api/find-equal` 12/min/IP because it runs the match engine and
+  fans out profile queries (see the query-amplifier note below).
 
 ### GitHub contributions proxy (`/api/github-contributions`)
 - New with the profile contribution calendar. Username is validated against
@@ -53,6 +58,26 @@ Every response ships with:
   internal detail. The upstream (default
   `github-contributions-api.jogruber.de/v4`) is swappable via
   `GITHUB_CONTRIB_API`.
+
+### Track-record endpoints (attendance / reviews / cancellations / find-equal)
+- Merged from teammate PRs and then hardened to the same bar as the rest
+  of the API:
+  - **Auth on everything except find-equal** (which only exposes public
+    directory data): `requireUser()` with 401s, verified by the suite.
+  - **IDOR guards**: attendance/reviews/cancellations for another user are
+    readable ONLY by active teammates (shared non-disbanded team),
+    verified with stranger/self probes returning 403/200.
+  - **Business-rule guards**: self-marking attendance and self-reviews are
+    rejected (400); reviews only allowed after the hackathon starts; both
+    reviewer and reviewee must share an active team for that hackathon.
+  - **UUID validation on query strings**: `?userId=not-a-uuid` returns 404
+    instead of the raw Postgres "invalid input syntax" 500 the endpoints
+    shipped with (a real finding — fixed in the HTTP edge of all three).
+  - **Error sanitization**: entrypoints wrap the (unit-testable) core logic
+    in try/catch and return a generic 500, matching `withUser` semantics.
+  - **Query-amplifier cap in find-equal**: each scored candidate costs one
+    `getProfile` call (~7 queries); unbounded, one request could fire 700+
+    queries. Scoring is now capped at the 24 karma-nearest candidates.
 
 ### Error hygiene
 - `withUser`/`withPublic`/`withAdmin` catch all thrown errors, log the full
@@ -80,26 +105,39 @@ Automated suite in `scripts/pentest/`:
 - `vlm-audit.py` — visual audit of rendered pages.
 - `report.json` — machine-readable results.
 
-**Latest run: 37 pass, 0 fail, 1 warning.**
+**Latest run: 61 pass, 0 fail, 1 warning.**
 
 Highlights of what the suite verified:
-- Unauthenticated calls to bookmarks, notifications, matches and team member
-  removal all return 401.
+- Unauthenticated calls to bookmarks, notifications, matches, attendance,
+  reviews and cancellations all return 401.
 - All five security headers present.
 - SQL injection payloads (`' OR '1'='1`, `1; DROP TABLE users--`,
   `'); SELECT pg_sleep(5)--`) do not crash or delay the app; path traversal and
   template injection probes are inert.
 - Idea-first team names are not reflected as HTML (XSS).
-- Search rate limit trips (429 observed).
-- Malformed and unknown UUIDs produce 4xx, never 500.
+- Search and find-equal rate limits trip (429 observed).
+- Malformed and unknown UUIDs produce 4xx, never 500 — including on the
+  new track-record endpoints (`?userId=not-a-uuid` etc.).
 - Method enforcement (PUT on attendance, PATCH on reviews rejected).
 - Directory responses contain no email/PII and respect row caps.
+- Track-record IDOR: a stranger's attendance/reviews/cancellations are
+  403, your own are 200; self-review and self-attendance are 400;
+  reviews with rating 99 are 422; find-equal validates and rate-limits.
 
 Findings found and fixed during testing:
 1. Malformed UUIDs reached Postgres and caused 500s -> fixed centrally via `isUuid`.
 2. Internal error details could reach clients -> replaced with generic 500 + server-side logging.
 3. Search and the public directory had no rate limit -> limiter added.
 4. Demo login flag mismatch made the route 404 while the button showed -> fixed; the remaining warning is intentional: `ALLOW_DEMO_LOGIN` must stay unset in production.
+5. **Merged teammate code shipped three raw-500 holes**: `?userId=<garbage>` on
+   attendance/reviews/cancellations hit Postgres directly (invalid-uuid 500),
+   none of the three had rate limits, and find-equal could fan out 700+ profile
+   queries per request -> UUID guards + rate limits + scoring cap added; all
+   covered by new pentest section 9 (61 checks total).
+6. **Solo-team result recording 500'd** (`values() must be called with at least
+   one value` — Drizzle insert of an empty notification list) -> insert guarded;
+   also made badge re-awarding idempotent (`onConflictDoNothing`) under the new
+   `(user_id, badge_id)` unique index so repeat teammates can't 500 the route.
 
 ## 3. Remaining recommendations
 - Keep `ALLOW_DEMO_LOGIN` / `NEXT_PUBLIC_ALLOW_DEMO_LOGIN` unset in production (the dev seed script is the only place they are used).

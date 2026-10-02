@@ -166,15 +166,14 @@ export function Navbar() {
         Skip to content
       </a>
 
-      {/* The floating embossed dock */}
+      {/* The floating dock — embossed on the outside, one shared radius */}
       <div
         ref={dockRef}
         className={cn(
-          "emboss-dock ink-edge mx-auto flex w-full max-w-5xl items-center gap-3 rounded-full px-3 sm:px-4",
+          "emboss-dock ink-edge mx-auto flex w-full max-w-5xl items-center gap-3 rounded-lg px-3 sm:px-4",
           "transition-[height,padding,box-shadow] duration-300",
           scrolled ? "h-12" : "h-14",
         )}
-        style={{ borderRadius: 999 }}
       >
         {/* Brand: Spline 3D emblem + wordmark */}
         <Link
@@ -205,7 +204,7 @@ export function Navbar() {
                 data-nav-link
                 data-active={active}
                 className={cn(
-                  "relative rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] transition-colors",
+                  "relative rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] transition-colors",
                   active
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground",
@@ -215,12 +214,12 @@ export function Navbar() {
                 {active && !reduceMotion && (
                   <motion.span
                     layoutId="nav-active-pill"
-                    className="absolute inset-0 -z-10 rounded-full bg-primary/10 ring-1 ring-primary/25"
+                    className="absolute inset-0 -z-10 rounded-lg bg-primary/10 ring-1 ring-primary/25"
                     transition={{ type: "spring", stiffness: 380, damping: 32 }}
                   />
                 )}
                 {active && reduceMotion && (
-                  <span className="absolute inset-0 -z-10 rounded-full bg-primary/10 ring-1 ring-primary/25" />
+                  <span className="absolute inset-0 -z-10 rounded-lg bg-primary/10 ring-1 ring-primary/25" />
                 )}
                 {link.label}
               </Link>
@@ -243,7 +242,7 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="relative rounded-full"
+                  className="relative rounded-lg"
                   aria-label={badgeCount > 0 ? `Notifications, ${badgeCount} unread` : "Notifications"}
                 >
                   <Bell className={cn("h-5 w-5 transition-transform duration-300", scrolled && "h-[18px] w-[18px]")} />
@@ -263,7 +262,7 @@ export function Navbar() {
                   </AnimatePresence>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-80 rounded-[6px] p-0">
+              <PopoverContent align="end" className="w-80 rounded-lg p-0">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                   <p className="text-sm font-bold">Notifications</p>
                   {badgeCount > 0 && (
@@ -276,7 +275,7 @@ export function Navbar() {
                       <Link
                         key={`invite-${i.id}`}
                         href="/notifications"
-                        className="block px-2.5 py-2 rounded-[4px] hover:bg-muted/60 transition-colors"
+                        className="block px-2.5 py-2 rounded-lg hover:bg-muted/60 transition-colors"
                       >
                         <p className="text-xs font-semibold line-clamp-2">
                           <span className="text-primary">Invite</span> · {i.inviterName} wants you on {i.teamName}
@@ -290,7 +289,7 @@ export function Navbar() {
                       <Link
                         key={n.id}
                         href={n.link ?? "/notifications"}
-                        className="block px-2.5 py-2 rounded-[4px] hover:bg-muted/60 transition-colors"
+                        className="block px-2.5 py-2 rounded-lg hover:bg-muted/60 transition-colors"
                       >
                         <p className={cn("text-xs line-clamp-2", !n.read && "font-semibold")}>{n.title}</p>
                         {n.body && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{n.body}</p>}
@@ -311,14 +310,14 @@ export function Navbar() {
               </PopoverContent>
             </Popover>
 
-            <Button asChild variant="ghost" size="icon" className="hidden rounded-full sm:inline-flex" aria-label="Saved items">
+            <Button asChild variant="ghost" size="icon" className="hidden rounded-lg sm:inline-flex" aria-label="Saved items">
               <Link href="/saved">
                 <Bookmark className="h-5 w-5" />
               </Link>
             </Button>
 
             {isAdmin && (
-              <Button asChild variant="outline" size="sm" className="hidden rounded-full font-semibold lg:inline-flex">
+              <Button asChild variant="outline" size="sm" className="hidden rounded-lg font-semibold lg:inline-flex">
                 <Link href="/hackathons/new">
                   <Trophy className="h-4 w-4 mr-1.5" /> Post hackathon
                 </Link>
@@ -402,7 +401,7 @@ export function Navbar() {
             </DropdownMenu>
           </>
         ) : (
-          <Button asChild size="sm" className="rounded-full font-bold">
+          <Button asChild size="sm" className="rounded-lg font-bold">
             <Link href="/login">Sign in</Link>
           </Button>
         )}
@@ -411,7 +410,7 @@ export function Navbar() {
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full md:hidden"
+          className="rounded-lg md:hidden"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((v) => !v)}
@@ -428,7 +427,7 @@ export function Navbar() {
             animate={reduceMotion ? { opacity: 1 } : { height: "auto", opacity: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="emboss-dock mx-auto mt-2 max-w-5xl overflow-hidden rounded-[14px] md:hidden"
+            className="emboss-dock mx-auto mt-2 max-w-5xl overflow-hidden rounded-lg md:hidden"
             aria-label="Mobile"
           >
             <div className="px-4 py-4 flex flex-col gap-1">
@@ -443,7 +442,7 @@ export function Navbar() {
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex items-center justify-between rounded-full px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] transition-colors",
+                      "flex items-center justify-between rounded-lg px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] transition-colors",
                       isActive(link.href)
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/60",

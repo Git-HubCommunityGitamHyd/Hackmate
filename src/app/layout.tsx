@@ -44,7 +44,7 @@ export default function RootLayout({
       >
         <Providers>
           {/* InkEdgeProvider: one global pointer listener feeding the
-              mouse-reactive vermilion edge highlights on every glass
+              mouse-reactive jade edge highlights on every glass
               surface (cards, panels, the sign-in card). */}
           <InkEdgeProvider>
             <Navbar />

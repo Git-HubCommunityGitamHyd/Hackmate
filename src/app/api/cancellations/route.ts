@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
-import { ok, fail, requireUser, type SessionUser } from "@/lib/api";
+import { ok, fail, isUuid, requireUser, type SessionUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000;
 
@@ -19,9 +20,12 @@ export function calculateCancellationTiming(startsAt: Date, leaveTime: Date) {
   return { diffMs, hoursBeforeStart, isLastMinute };
 }
 
-/** Dependencies for recording a cancellation on member leave */
+/** Dependencies for recording a cancellation on member leave.
+ *  hackathonId is nullable: idea-first teams (posted before choosing
+ *  an event) have no hackathon, and the inner join below simply won't
+ *  match them — no event, no cancellation timing. */
 export interface RecordCancellationDeps {
-  getTeamWithHackathon: (teamId: string) => Promise<{ hackathonId: string; startsAt: Date } | null>;
+  getTeamWithHackathon: (teamId: string) => Promise<{ hackathonId: string | null; startsAt: Date } | null>;
   insertCancellation: (data: {
     userId: string;
     teamId: string;
@@ -69,6 +73,12 @@ export async function recordCancellationOnLeave(
   const team = await deps.getTeamWithHackathon(teamId);
   if (!team) {
     return { created: false, reason: "team_not_found" as const };
+  }
+  /* Idea-first team with no event attached yet — nothing to time a
+     cancellation against (the join already filters these; this guard
+     keeps the contract explicit for the test doubles). */
+  if (!team.hackathonId) {
+    return { created: false, reason: "no_hackathon" as const };
   }
 
   const { hoursBeforeStart, isLastMinute } = calculateCancellationTiming(team.startsAt, leaveTime);
@@ -214,15 +224,26 @@ export async function getCancellations(
 
 /**
  * GET /api/cancellations?userId=...
- * Next.js App Router entrypoint.
+ * Next.js App Router entrypoint. Rate-limited, UUID-guarded and
+ * error-sanitized like every other route.
  */
 export async function GET(req: NextRequest) {
+  const rl = rateLimit(req, { key: "cancellations-get", limit: 60, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
   const caller = await requireUser();
   if (!caller) return fail("Unauthorized", 401);
   const targetUserId = req.nextUrl.searchParams.get("userId") || caller.id;
-  const result = await getCancellations(caller, targetUserId);
-  if ("error" in result) {
-    return fail(result.error, result.status);
+  /* Malformed ids must 404 here — a bad uuid would otherwise surface as a
+     Postgres "invalid input syntax" 500 (found by the pentest suite). */
+  if (!isUuid(targetUserId)) return fail("User not found", 404);
+  try {
+    const result = await getCancellations(caller, targetUserId);
+    if ("error" in result) {
+      return fail(result.error, result.status);
+    }
+    return ok(result.data);
+  } catch (err) {
+    console.error("[api:error]", err);
+    return fail("Internal server error", 500);
   }
-  return ok(result.data);
 }

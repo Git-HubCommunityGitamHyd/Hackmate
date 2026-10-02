@@ -86,7 +86,7 @@ export function CommandMenu() {
       <CommandDialog
         open={open}
         onOpenChange={setOpen}
-        className="rounded-none"
+        className="rounded-lg"
       >
         <CommandInput placeholder="Jump to a page or run an action…" />
         <CommandList>
@@ -187,12 +187,12 @@ export function CommandMenu() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden md:flex items-center gap-2 rounded-none border border-border/70 bg-muted/40 hover:bg-muted/70 transition-colors px-3 h-8 text-xs text-muted-foreground hover:text-foreground"
+        className="debossed hidden md:flex items-center gap-2 rounded-lg border border-border/70 bg-muted/40 hover:bg-muted/70 transition-colors px-3 h-8 text-xs text-muted-foreground hover:text-foreground"
         aria-label="Open command menu (Control K)"
       >
         <Search className="h-3.5 w-3.5" />
         <span className="font-medium">Search</span>
-        <kbd className="ml-1 pointer-events-none inline-flex h-5 select-none items-center gap-1 border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+        <kbd className="ml-1 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-sm border bg-background px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
           <span className="text-[9px]">Ctrl</span>K
         </kbd>
       </button>

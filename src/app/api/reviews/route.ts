@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
-import { ok, fail, requireUser, type SessionUser } from "@/lib/api";
+import { ok, fail, isUuid, requireUser, type SessionUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { reviewPostSchema } from "@/lib/validations";
 import type { PerformanceReview } from "@/lib/db/schema";
 
@@ -242,16 +243,24 @@ export async function getReviews(
 
 /**
  * POST /api/reviews
- * Next.js App Router entrypoint.
+ * Next.js App Router entrypoint. Rate-limited and error-sanitized so a
+ * driver failure can never leak an internal stack to the client.
  */
 export async function POST(req: NextRequest) {
-  const caller = await requireUser();
-  const body = await req.json().catch(() => ({}));
-  const result = await recordReview(caller, body);
-  if ("error" in result) {
-    return fail(result.error, result.status);
+  const rl = rateLimit(req, { key: "reviews-post", limit: 20, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+  try {
+    const caller = await requireUser();
+    const body = await req.json().catch(() => ({}));
+    const result = await recordReview(caller, body);
+    if ("error" in result) {
+      return fail(result.error, result.status);
+    }
+    return ok(result.data);
+  } catch (err) {
+    console.error("[api:error]", err);
+    return fail("Internal server error", 500);
   }
-  return ok(result.data);
 }
 
 /**
@@ -259,12 +268,22 @@ export async function POST(req: NextRequest) {
  * Next.js App Router entrypoint.
  */
 export async function GET(req: NextRequest) {
+  const rl = rateLimit(req, { key: "reviews-get", limit: 60, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
   const caller = await requireUser();
   if (!caller) return fail("Unauthorized", 401);
   const targetUserId = req.nextUrl.searchParams.get("userId") || caller.id;
-  const result = await getReviews(caller, targetUserId);
-  if ("error" in result) {
-    return fail(result.error, result.status);
+  /* Malformed ids must 404 here — a bad uuid would otherwise surface as a
+     Postgres "invalid input syntax" 500 (found by the pentest suite). */
+  if (!isUuid(targetUserId)) return fail("User not found", 404);
+  try {
+    const result = await getReviews(caller, targetUserId);
+    if ("error" in result) {
+      return fail(result.error, result.status);
+    }
+    return ok(result.data);
+  } catch (err) {
+    console.error("[api:error]", err);
+    return fail("Internal server error", 500);
   }
-  return ok(result.data);
 }

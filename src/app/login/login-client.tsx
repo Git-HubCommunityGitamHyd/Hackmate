@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/shared/logo";
-import { PixelCanvas } from "@/components/ui/pixel-canvas";
+import { RayLight } from "@/components/ui/ray-light";
 import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
 import { TextRepel } from "@/components/ui/text-repel";
 import { FlutedGlass } from "@/components/ui/fluted-glass";
@@ -71,14 +71,14 @@ function ProjectInfo() {
         </h2>
 
         {/* Ink brush stroke — animated with anime.js on mount. The single
-            vermilion flourish of the ink-wash page. */}
+            jade flourish of the ink-wash page. */}
         <InkBrush className="mt-1 mb-1 -rotate-1" width={220} height={12} />
 
-        <div className="relative text-muted-foreground mt-4 max-w-xl leading-relaxed min-h-[8rem] rounded-2xl">
+        <div className="relative text-muted-foreground mt-4 max-w-xl leading-relaxed min-h-[8rem] rounded-lg">
           {/* Neutral frosted slab behind the copy (pure black ink, no tint —
               the old dark-green slab read as a color error on this page). */}
           <div
-            className="pointer-events-none absolute -inset-6 z-0 rounded-3xl bg-black/60 backdrop-blur-md"
+            className="pointer-events-none absolute -inset-6 z-0 rounded-lg bg-black/60 backdrop-blur-md"
             style={{
               maskImage:
                 "linear-gradient(to right, transparent, black 10%, black 90%, transparent), linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)",
@@ -203,16 +203,11 @@ export function LoginClient() {
 
   return (
     <div className="relative pt-10 pb-12 overflow-hidden">
-      {/* Ink-wash cursor canvas: pure black ground, grayscale ink pixels
-          that brighten toward paper-white under the cursor. The vermilion
-          is reserved for edges and accents, never the field. */}
-      <PixelCanvas
-        className="fixed inset-0 z-0"
-        variant="trail"
-        gap={11}
-        speed={0.03}
-        colors={["#131313", "#2a2a2a", "#595959", "#d9d6d1"]}
-      />
+      {/* Ray-traced cursor light on a pure black ground: one smooth
+          studio light (specular + ambient + a whisper of jade edge)
+          gliding after the pointer. No pixels, no noise — the field
+          stays matte black, the jade lives on the edges. */}
+      <RayLight className="fixed inset-0 z-0" />
 
       <div className="relative z-10">
         {/* Mobile: brand + sign-in first */}
@@ -239,12 +234,13 @@ export function LoginClient() {
           </div>
 
           {/* Sign-in — OPAQUE BLACK card, fluted-glass effect intact.
-              Solid #000 surface (no translucency) so the animated pixel
-              background frames the card instead of bleeding through it,
-              while the FlutedGlass wrapper preserves the 3D pointer tilt,
+              Solid #000 surface (no translucency) so the ray-traced light
+              field frames the card instead of bleeding through it, while
+              the FlutedGlass wrapper preserves the 3D pointer tilt,
               vertical fluting and refraction edge the card always had.
-              The ink-edge class adds the mouse-reactive vermilion hairline
-              on top of the deep shadow. */}
+              The ink-edge class adds the mouse-reactive jade hairline
+              on top of the deep shadow. Radius is 16px — the one radius
+              every corner in the app now shares. */}
           <div className="w-full max-w-md mx-auto lg:mx-0">
             <motion.div
               initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
@@ -335,7 +331,7 @@ export function LoginClient() {
                           placeholder="you@college.edu"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-11 bg-neutral-950 border-white/15 text-white placeholder:text-neutral-600 focus-visible:ring-primary/50 focus-visible:border-primary/60 transition-colors"
+                          className="h-11 bg-neutral-950 border-white/15 text-white placeholder:text-neutral-600 focus-visible:ring-primary/50 focus-visible:border-primary/60 transition-colors dark:shadow-[inset_0_2px_6px_-2px_rgb(0_0_0/0.6),inset_0_-1px_0_0_rgb(255_255_255/0.06)]"
                         />
                       </div>
 

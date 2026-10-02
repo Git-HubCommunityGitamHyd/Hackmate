@@ -75,7 +75,7 @@ export function CardPeek({
       ref={windowRef}
       aria-hidden="true"
       className={cn(
-        "peep-window pointer-events-none absolute top-2 z-[5] w-52 rounded-[4px] p-2.5",
+        "peep-window pointer-events-none absolute top-2 z-[5] w-52 rounded-lg p-2.5",
         "transition-[opacity,transform] duration-200 ease-out",
         align === "right" ? "right-2 origin-top-right" : "left-2 origin-top-left",
         open

@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
-import { ok, fail, requireUser, type SessionUser } from "@/lib/api";
+import { ok, fail, isUuid, requireUser, type SessionUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { attendancePostSchema } from "@/lib/validations";
 import type { Attendance, AttendanceStatus } from "@/lib/db/schema";
 
@@ -202,16 +203,26 @@ export async function getAttendance(
 
 /**
  * POST /api/attendance
- * Next.js App Router entrypoint.
+ * Next.js App Router entrypoint. Rate-limited and error-sanitized: the
+ * testable core logic stays pure (see recordAttendance above), while the
+ * HTTP edge gets the same hardening every other route has — a malformed
+ * payload or a driver error can never leak an internal stack.
  */
 export async function POST(req: NextRequest) {
-  const caller = await requireUser();
-  const body = await req.json().catch(() => ({}));
-  const result = await recordAttendance(caller, body);
-  if ("error" in result) {
-    return fail(result.error, result.status);
+  const rl = rateLimit(req, { key: "attendance-post", limit: 30, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+  try {
+    const caller = await requireUser();
+    const body = await req.json().catch(() => ({}));
+    const result = await recordAttendance(caller, body);
+    if ("error" in result) {
+      return fail(result.error, result.status);
+    }
+    return ok(result.data);
+  } catch (err) {
+    console.error("[api:error]", err);
+    return fail("Internal server error", 500);
   }
-  return ok(result.data);
 }
 
 /**
@@ -219,12 +230,22 @@ export async function POST(req: NextRequest) {
  * Next.js App Router entrypoint.
  */
 export async function GET(req: NextRequest) {
+  const rl = rateLimit(req, { key: "attendance-get", limit: 60, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
   const caller = await requireUser();
   if (!caller) return fail("Unauthorized", 401);
   const targetUserId = req.nextUrl.searchParams.get("userId") || caller.id;
-  const result = await getAttendance(caller, targetUserId);
-  if ("error" in result) {
-    return fail(result.error, result.status);
+  /* Malformed ids must 404 here — a bad uuid would otherwise surface as a
+     Postgres "invalid input syntax" 500 (found by the pentest suite). */
+  if (!isUuid(targetUserId)) return fail("User not found", 404);
+  try {
+    const result = await getAttendance(caller, targetUserId);
+    if ("error" in result) {
+      return fail(result.error, result.status);
+    }
+    return ok(result.data);
+  } catch (err) {
+    console.error("[api:error]", err);
+    return fail("Internal server error", 500);
   }
-  return ok(result.data);
 }

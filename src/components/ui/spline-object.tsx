@@ -117,7 +117,7 @@ export function SplineObject({
         className={cn(
           "absolute inset-0 rounded-[inherit] transition-opacity",
           state === "loading" ? "opacity-100" : "opacity-0",
-          "bg-[conic-gradient(from_0deg,transparent,oklch(0.64_0.19_28/0.5),transparent_30%)]",
+          "bg-[conic-gradient(from_0deg,transparent,oklch(0.71_0.15_158/0.5),transparent_30%)]",
         )}
         style={{ animation: "ink-orb-spin 1.2s linear infinite" }}
       />
