@@ -155,7 +155,7 @@ export interface ProfileDTO extends PersonCardDTO {
     openToIdeaSwaps: boolean;
   } | null;
   skills: SkillDTO[];
-  badges: { slug: string; name: string; icon: string; category: string; hackathonName: string | null }[];
+  badges: { slug: string; name: string; description: string | null; icon: string; category: string; hackathonName: string | null }[];
   history: {
     hackathonName: string;
     hackathonId: string;
