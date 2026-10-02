@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -132,6 +132,106 @@ const stagger = (i: number) => ({
   transition: { duration: 0.5, ease: EASE, delay: 0.25 + i * 0.07 },
 });
 
+/**
+ * useCardLight — the ray-tracing rig for the sign-in card.
+ *
+ * One invisible studio light (the same one RayLight paints on the
+ * black field) is tracked in viewport space. Every frame this hook
+ * computes, from the light's position relative to the CARD:
+ *
+ *   - the cast shadow direction: the shadow always falls AWAY from
+ *     the light, so the card's drop shadow swings around it like a
+ *     real occluder (--cast-x / --cast-y on the wrapper)
+ *   - the specular streak: where the light strikes the frosted pane,
+ *     clamped so the streak keeps sliding along the glass even when
+ *     the light has moved off-card (--spec-x / --spec-y in %)
+ *
+ * Both are written as CSS variables and consumed by .ray-cast /
+ * .ray-specular in globals.css — no React re-renders, just paint.
+ * prefers-reduced-motion parks everything at the resting position.
+ */
+function useCardLight(
+  castRef: React.RefObject<HTMLDivElement | null>,
+  specRef: React.RefObject<HTMLDivElement | null>,
+) {
+  useEffect(() => {
+    const castEl = castRef.current;
+    const specEl = specRef.current;
+    if (!castEl) return;
+
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    let targetX = window.innerWidth * 0.62;
+    let targetY = window.innerHeight * 0.3;
+    let x = targetX;
+    let y = targetY;
+    let raf = 0;
+    let running = true;
+
+    /* Resting pose: light at its editorial parking spot. */
+    apply(targetX, targetY);
+    if (reduced) return;
+
+    const onMove = (event: PointerEvent) => {
+      /* Touch never moves the studio light. */
+      if (event.pointerType === "touch") return;
+      targetX = event.clientX;
+      targetY = event.clientY;
+    };
+
+    function apply(lx: number, ly: number) {
+      if (!castEl) return;
+      const rect = castEl.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+
+      /* Cast shadow: direction from light -> card centre, saturating
+         at 34px of offset; biased downward because light comes from
+         above the "floor". */
+      const dx = cx - lx;
+      const dy = cy - ly;
+      const dist = Math.hypot(dx, dy) || 1;
+      const k = Math.min(dist / 26, 34);
+      castEl.style.setProperty("--cast-x", `${((dx / dist) * k).toFixed(1)}px`);
+      castEl.style.setProperty(
+        "--cast-y",
+        `${((dy / dist) * k * 0.55 + 12).toFixed(1)}px`,
+      );
+
+      /* Specular streak: light position as % of the card box,
+         clamped to [-30%, 130%] so it slides along the pane. */
+      if (specEl) {
+        const sx = Math.max(-30, Math.min(130, ((lx - rect.left) / rect.width) * 100));
+        const sy = Math.max(-30, Math.min(130, ((ly - rect.top) / rect.height) * 100));
+        specEl.style.setProperty("--spec-x", `${sx.toFixed(1)}%`);
+        specEl.style.setProperty("--spec-y", `${sy.toFixed(1)}%`);
+      }
+    }
+
+    const tick = () => {
+      if (!running) return;
+      /* Same critically-damped glide as RayLight so the card's shadow
+         and the field's light move as ONE source. */
+      x += (targetX - x) * 0.085;
+      y += (targetY - y) * 0.085;
+      apply(x, y);
+      raf = requestAnimationFrame(tick);
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    raf = requestAnimationFrame(tick);
+
+    return () => {
+      running = false;
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", onMove);
+    };
+  }, [castRef, specRef]);
+}
+
 export function LoginClient() {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
@@ -142,6 +242,11 @@ export function LoginClient() {
 
   const hasDemo =
     process.env.NEXT_PUBLIC_ALLOW_DEMO_LOGIN === "true";
+
+  /* The ray-tracing rig: cast shadow + specular streak on the card. */
+  const castRef = useRef<HTMLDivElement>(null);
+  const specRef = useRef<HTMLDivElement>(null);
+  useCardLight(castRef, specRef);
 
   async function sendMagicLink(e: React.FormEvent) {
     e.preventDefault();
@@ -233,29 +338,32 @@ export function LoginClient() {
             <ProjectInfo />
           </div>
 
-          {/* Sign-in — OPAQUE BLACK card, fluted-glass effect intact.
-              Solid #000 surface (no translucency) so the ray-traced light
-              field frames the card instead of bleeding through it, while
-              the FlutedGlass wrapper preserves the 3D pointer tilt,
-              vertical fluting and refraction edge the card always had.
-              The ink-edge class adds the mouse-reactive jade hairline
-              on top of the deep shadow. Radius is 16px — the one radius
-              every corner in the app now shares. */}
+          {/* Sign-in — FROSTED GLASS card on the ray-traced black field.
+              Translucent pane (the studio light bleeds through it),
+              fluting + refraction + pointer tilt intact via FlutedGlass.
+              The ray-tracing rig sits on the wrapper: .ray-cast swings
+              the drop shadow away from the light, .ray-specular (inside)
+              is the streak the light throws across the pane, and the
+              ink-edge class adds the mouse-reactive jade hairline on
+              top. Radius is 16px — the one radius every corner shares. */}
           <div className="w-full max-w-md mx-auto lg:mx-0">
             <motion.div
+              ref={castRef}
+              className="ray-cast rounded-lg"
               initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ duration: 0.6, ease: EASE }}
             >
               <FlutedGlass
-                maxTilt={8}
-                background="#000000"
+                maxTilt={7}
+                background="rgba(9, 11, 10, 0.52)"
                 borderRadius={16}
                 minHeight={0}
+                blur={18}
                 className="ink-edge w-full"
                 style={{
-                  boxShadow:
-                    "0 24px 70px -24px rgba(0,0,0,0.9), inset 0 1px 0 0 rgba(255,255,255,0.06)",
+                  /* The wrapper (.ray-cast) owns the shadow now. */
+                  boxShadow: "none",
                 }}
               >
               <div
@@ -263,8 +371,16 @@ export function LoginClient() {
                 aria-label="Sign in"
                 className="relative w-full text-foreground"
               >
+                {/* Specular streak — where the studio light strikes the
+                    frosted pane; --spec-x/--spec-y come from useCardLight. */}
+                <div
+                  ref={specRef}
+                  aria-hidden="true"
+                  className="ray-specular pointer-events-none absolute inset-0 z-[5] rounded-[16px]"
+                />
+
                 {/* Paper-white top hairline — quiet light catching the top
-                    edge of the opaque black pane. */}
+                    edge of the frosted pane. */}
                 <div
                   aria-hidden="true"
                   className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"

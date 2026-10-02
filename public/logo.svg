@@ -1,29 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 30 30" style="enable-background:new 0 0 30 30;" xml:space="preserve">
-<defs>
-  <style type="text/css">
-    .st194{fill:#2D2D2D;stroke:#FFFFFF;stroke-width:0.6317;stroke-miterlimit:10;}
-    .st23{fill:#FFFFFF;}
+<!-- HackMate logo mark — debossed ink-glass tile + jade bolt.
+     ONE file drives the header, footer, login page AND the favicon
+     (layout.tsx points metadata.icons here). To swap in your own logo,
+     just replace this file — see LOGO.md at the repo root. -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <!-- Tile body: darker at the top (pressed-in shadow), lifted at the bottom -->
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0c0b"/>
+      <stop offset="0.55" stop-color="#121714"/>
+      <stop offset="1" stop-color="#1a201c"/>
+    </linearGradient>
+    <!-- Jade rim: dim at the top, catch-light at the bottom lip (debossed) -->
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1eb56a" stop-opacity="0.28"/>
+      <stop offset="0.7" stop-color="#2ee27e" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#57f0a1" stop-opacity="0.9"/>
+    </linearGradient>
+    <!-- Bolt: jade body, brighter toward the top-left where light strikes -->
+    <linearGradient id="bolt" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#6bf5ae"/>
+      <stop offset="0.45" stop-color="#2ee27e"/>
+      <stop offset="1" stop-color="#0f9e58"/>
+    </linearGradient>
+    <!-- Soft jade bloom behind the bolt -->
+    <radialGradient id="bloom" cx="0.5" cy="0.45" r="0.55">
+      <stop offset="0" stop-color="#2ee27e" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#2ee27e" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Ambient occlusion: shadow creeping in from the top inner edge -->
+    <linearGradient id="ao" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#000000" stop-opacity="0.55"/>
+      <stop offset="0.28" stop-color="#000000" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Catch-light on the bottom inner lip -->
+    <linearGradient id="lip" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="0.14" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
 
-    .z-breathe {
-      animation: breathe 2.5s ease-in-out infinite;
-    }
+  <!-- Debossed glass tile -->
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#tile)"/>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="none" stroke="url(#rim)" stroke-width="2"/>
+  <rect x="4" y="4" width="56" height="56" rx="13" fill="url(#ao)"/>
+  <rect x="4" y="4" width="56" height="56" rx="13" fill="url(#lip)"/>
 
-    @keyframes breathe {
-      0%, 100% { opacity: 0.7; }
-      50% { opacity: 1; }
-    }
-  </style>
-</defs>
-
-<g>
-  <path class="st194" d="M24.51,28.51H5.49c-2.21,0-4-1.79-4-4V5.49c0-2.21,1.79-4,4-4h19.03c2.21,0,4,1.79,4,4v19.03
-    C28.51,26.72,26.72,28.51,24.51,28.51z"/>
-  <g class="z-breathe">
-    <path class="st23" d="M15.47,7.1l-1.3,1.85c-0.2,0.29-0.54,0.47-0.9,0.47h-7.1V7.09C6.16,7.1,15.47,7.1,15.47,7.1z"/>
-    <polygon class="st23" points="24.3,7.1 13.14,22.91 5.7,22.91 16.86,7.1"/>
-    <path class="st23" d="M14.53,22.91l1.31-1.86c0.2-0.29,0.54-0.47,0.9-0.47h7.09v2.33H14.53z"/>
+  <!-- Jade bloom + bolt -->
+  <rect x="8" y="8" width="48" height="48" rx="10" fill="url(#bloom)"/>
+  <g transform="translate(11.5,9) scale(1.72)">
+    <polygon points="13,2 3,14 10,14 9,22 19,10 12,10" fill="url(#bolt)"/>
+    <!-- hard little specular on the bolt's top edge -->
+    <polygon points="13,2 3,14 5.2,14 14.2,2.8" fill="#ffffff" opacity="0.35"/>
   </g>
-</g>
 </svg>

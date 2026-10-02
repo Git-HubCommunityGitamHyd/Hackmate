@@ -37,7 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNotifications } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
 import { KarmaPill } from "@/components/reputation/karma-pill";
-import { SplineObject } from "@/components/ui/spline-object";
+import { Logo } from "@/components/shared/logo";
 import { CommandMenu } from "./command-menu";
 
 const NAV_LINKS = [
@@ -47,22 +47,23 @@ const NAV_LINKS = [
 ];
 
 /**
- * Header, round 3 — floating ink dock.
+ * Header, round 4 — floating ink dock with DEBOSSED controls.
  *
- * The old full-width sticky bar is gone. What ships now:
- *  - A detached floating dock (rounded, frosted, minimally embossed:
- *    one light top line, one dark bottom line, deep float shadow) that
- *    hovers a few pixels below the viewport edge and never touches the
- *    sides — "floating and minimal embossed", per the design brief.
- *  - The brand emblem is a live Spline 3D object (lazy-loaded, with a
- *    breathing ink-orb fallback when offline), animated by the Spline
- *    runtime; the wordmark stays a plain Link.
- *  - The dock entrance (drop + settle) and the nav-link stagger run on
- *    anime.js, not framer-motion, keeping the animation stack mixed on
- *    purpose: anime for one-shot entrances, framer for stateful UI.
- * Everything else from round 2 is kept: sliding active pill, ⌘K palette,
- * notification preview popover, karma in the account menu, springy
- * badge, skip link, animated mobile menu, scroll shrink.
+ * The dock still floats (frosted slab, one shared radius), but every
+ * control in it is now pressed INTO that slab — the debossed half of
+ * the lighting system:
+ *  - Nav links are debossed wells with the text sitting inside the
+ *    well (shadow creeps in from the top, catch-light on the bottom
+ *    lip). The active link presses deeper and glows jade inside.
+ *  - Icon buttons, the search trigger and the sign-in CTA are the
+ *    same debossed wells (Button variant="debossed" / .btn-deboss).
+ *  - The brand emblem is the HackMate logo mark (/public/logo.svg) —
+ *    the same single file that drives the favicon.
+ *  - The dock entrance (drop + settle) and the nav-link stagger run
+ *    on anime.js; stateful UI (badges, mobile menu) stays framer.
+ * Everything else kept from round 3: ⌘K palette, notification preview
+ * popover, karma in the account menu, springy badge, skip link,
+ * animated mobile menu, scroll shrink.
  */
 export function Navbar() {
   const pathname = usePathname();
@@ -175,24 +176,27 @@ export function Navbar() {
           scrolled ? "h-12" : "h-14",
         )}
       >
-        {/* Brand: Spline 3D emblem + wordmark */}
+        {/* Brand: logo mark (the one file that is also the favicon) + wordmark */}
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2 group"
           aria-label="HackMate home"
         >
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-105 group-hover:rotate-[8deg]">
-            <SplineObject width={36} height={36} className="rounded-full" />
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-105 group-hover:-rotate-3">
+            <Logo className="h-9 w-9" alt="" />
           </span>
           <span className="hidden font-extrabold tracking-tight sm:inline">
             Hack<span className="text-primary">Mate</span>
           </span>
         </Link>
 
-        {/* Desktop nav with animated active pill */}
+        {/* Desktop nav — every link is a debossed well with its text
+            sitting inside it; the active link presses deeper and glows
+            jade. Transitions carry a soft overshoot so the press reads
+            as physical (the Spline-style spring feel). */}
         <nav
           ref={navRef}
-          className="hidden items-center gap-1 ml-2 md:flex"
+          className="hidden items-center gap-1.5 ml-2 md:flex"
           aria-label="Primary"
         >
           {navLinks.map((link) => {
@@ -203,24 +207,15 @@ export function Navbar() {
                 href={link.href}
                 data-nav-link
                 data-active={active}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative rounded-lg px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] transition-colors",
+                  "nav-well rounded-lg px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.14em] transition-all duration-300",
                   active
-                    ? "text-primary"
+                    ? "nav-well-active text-primary"
                     : "text-muted-foreground hover:text-foreground",
                   link.href === "/admin" && !active && "text-primary/70 hover:text-primary",
                 )}
               >
-                {active && !reduceMotion && (
-                  <motion.span
-                    layoutId="nav-active-pill"
-                    className="absolute inset-0 -z-10 rounded-lg bg-primary/10 ring-1 ring-primary/25"
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                  />
-                )}
-                {active && reduceMotion && (
-                  <span className="absolute inset-0 -z-10 rounded-lg bg-primary/10 ring-1 ring-primary/25" />
-                )}
                 {link.label}
               </Link>
             );
@@ -240,7 +235,7 @@ export function Navbar() {
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="ghost"
+                  variant="debossed"
                   size="icon"
                   className="relative rounded-lg"
                   aria-label={badgeCount > 0 ? `Notifications, ${badgeCount} unread` : "Notifications"}
@@ -310,14 +305,14 @@ export function Navbar() {
               </PopoverContent>
             </Popover>
 
-            <Button asChild variant="ghost" size="icon" className="hidden rounded-lg sm:inline-flex" aria-label="Saved items">
+            <Button asChild variant="debossed" size="icon" className="hidden rounded-lg sm:inline-flex" aria-label="Saved items">
               <Link href="/saved">
                 <Bookmark className="h-5 w-5" />
               </Link>
             </Button>
 
             {isAdmin && (
-              <Button asChild variant="outline" size="sm" className="hidden rounded-lg font-semibold lg:inline-flex">
+              <Button asChild variant="debossed" size="sm" className="hidden rounded-lg font-semibold lg:inline-flex">
                 <Link href="/hackathons/new">
                   <Trophy className="h-4 w-4 mr-1.5" /> Post hackathon
                 </Link>
@@ -401,14 +396,14 @@ export function Navbar() {
             </DropdownMenu>
           </>
         ) : (
-          <Button asChild size="sm" className="rounded-lg font-bold">
+          <Button asChild size="sm" className="debossed shadow-none rounded-lg font-bold">
             <Link href="/login">Sign in</Link>
           </Button>
         )}
 
         {/* Mobile trigger */}
         <Button
-          variant="ghost"
+          variant="debossed"
           size="icon"
           className="rounded-lg md:hidden"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -442,10 +437,10 @@ export function Navbar() {
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
                     className={cn(
-                      "flex items-center justify-between rounded-lg px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] transition-colors",
+                      "nav-well flex items-center justify-between rounded-lg px-3 py-3 text-sm font-bold uppercase tracking-[0.14em] transition-all duration-300",
                       isActive(link.href)
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+                        ? "nav-well-active text-primary"
+                        : "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     {link.label}

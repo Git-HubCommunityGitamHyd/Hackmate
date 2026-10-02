@@ -6,23 +6,31 @@ import { cn } from "@/lib/utils";
 /**
  * SplineObject — lazy, error-tolerant Spline 3D embed.
  *
- * Used for the header emblem and any future 3D moment. Design goals:
+ * The stock Spline "robot" scene is GONE from the project. The component
+ * now ships with NO default scene: without NEXT_PUBLIC_SPLINE_SCENE_URL
+ * it renders the animated breathing ink-orb (pure CSS, zero network,
+ * matches the ink-wash theme) and never even imports the Spline runtime.
  *
- *  1. Zero layout shift: the box is sized by props; the canvas fills it.
- *  2. Never blocks the UI: @splinetool/runtime is dynamically imported, so
- *     it never lands in the initial bundle, and the scene loads async.
- *  3. Fails beautiful: if the scene can't load (offline, blocked network,
- *     bad URL) it swaps to the ink-fallback orb instead of throwing.
- *  4. Swappable scene: override with NEXT_PUBLIC_SPLINE_SCENE_URL. The
- *     default is a public example scene from Spline's own gallery.
+ * To mount a real 3D object of your own:
+ *   1. Author (or pick) a scene in Spline (spline.design), export it.
+ *   2. Host the exported .splinecode somewhere reachable (prod.spline.design
+ *      works if the scene is published from your account).
+ *   3. Set NEXT_PUBLIC_SPLINE_SCENE_URL=https://…/scene.splinecode in .env
+ *   4. Drop <SplineObject width={…} height={…} /> wherever you want it.
+ *
+ * Design goals kept from the original:
+ *   1. Zero layout shift: the box is sized by props; the canvas fills it.
+ *   2. Never blocks the UI: @splinetool/runtime is dynamically imported
+ *      ONLY when a scene URL exists.
+ *   3. Fails beautiful: if the scene can't load (offline, blocked network,
+ *      bad URL) it falls back to the ink orb instead of throwing.
  *
  * Pointer events are optionally disabled so the object can sit inside a
  * Link without eating clicks (set `interactive={false}`).
  */
 
 export const DEFAULT_SPLINE_SCENE =
-  process.env.NEXT_PUBLIC_SPLINE_SCENE_URL ??
-  "https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode";
+  process.env.NEXT_PUBLIC_SPLINE_SCENE_URL ?? null;
 
 type LoadState = "loading" | "ready" | "error";
 
@@ -34,7 +42,7 @@ export function SplineObject({
   interactive = false,
   fallbackClassName,
 }: {
-  scene?: string;
+  scene?: string | null;
   className?: string;
   width?: number;
   height?: number;
@@ -43,9 +51,10 @@ export function SplineObject({
   fallbackClassName?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [state, setState] = useState<LoadState>("loading");
+  const [state, setState] = useState<LoadState>(scene ? "loading" : "error");
 
   useEffect(() => {
+    if (!scene) return;
     let disposed = false;
     let app: { dispose: () => void } | null = null;
 
@@ -86,7 +95,9 @@ export function SplineObject({
       aria-hidden="true"
     >
       {/* Ink fallback: a breathing sumi orb. Always rendered under the
-          canvas so the switch from fallback -> scene has no blank frame. */}
+          canvas so the switch from fallback -> scene has no blank frame.
+          With no scene configured this IS the object — an animated,
+          on-theme, zero-dependency emblem. */}
       <span
         className={cn(
           "absolute inset-0 m-auto rounded-full",
@@ -102,25 +113,29 @@ export function SplineObject({
           animation: state === "ready" ? "none" : "ink-orb-breathe 4.5s ease-in-out infinite",
         }}
       />
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className={cn(
-          "absolute inset-0 h-full w-full transition-opacity duration-700",
-          state === "ready" ? "opacity-100" : "opacity-0",
-          !interactive && "pointer-events-none",
-        )}
-        style={{ width, height }}
-      />
-      <span
-        className={cn(
-          "absolute inset-0 rounded-[inherit] transition-opacity",
-          state === "loading" ? "opacity-100" : "opacity-0",
-          "bg-[conic-gradient(from_0deg,transparent,oklch(0.71_0.15_158/0.5),transparent_30%)]",
-        )}
-        style={{ animation: "ink-orb-spin 1.2s linear infinite" }}
-      />
+      {scene && (
+        <canvas
+          ref={canvasRef}
+          width={width}
+          height={height}
+          className={cn(
+            "absolute inset-0 h-full w-full transition-opacity duration-700",
+            state === "ready" ? "opacity-100" : "opacity-0",
+            !interactive && "pointer-events-none",
+          )}
+          style={{ width, height }}
+        />
+      )}
+      {scene && (
+        <span
+          className={cn(
+            "absolute inset-0 rounded-[inherit] transition-opacity",
+            state === "loading" ? "opacity-100" : "opacity-0",
+            "bg-[conic-gradient(from_0deg,transparent,oklch(0.71_0.15_158/0.5),transparent_30%)]",
+          )}
+          style={{ animation: "ink-orb-spin 1.2s linear infinite" }}
+        />
+      )}
     </span>
   );
 }

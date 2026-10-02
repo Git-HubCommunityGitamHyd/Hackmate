@@ -175,28 +175,16 @@
     border-radius: var(--radius);
     position: relative;
   }
-  /* Specular sheen: light catching the top edge of each glass pane.
-     This is what sells "frosted" over "translucent grey". */
+  /* Specular pass box: the pseudo-element that carries the card's light
+     layers. The gradients themselves are painted in the utilities layer
+     ("Interior light pass") — debossed bottom-lip catch + the pointer
+     bloom — so this block only establishes the box. */
   [data-slot="card"]::after {
     content: "";
     position: absolute;
     inset: 0;
     pointer-events: none;
     border-radius: inherit;
-    background: linear-gradient(
-      180deg,
-      oklch(1 0 0 / 0.06) 0%,
-      oklch(1 0 0 / 0.02) 30%,
-      transparent 55%
-    );
-  }
-  :root:not(.dark) [data-slot="card"]::after {
-    background: linear-gradient(
-      180deg,
-      oklch(1 0 0 / 0.5) 0%,
-      oklch(1 0 0 / 0.15) 30%,
-      transparent 55%
-    );
   }
   [data-slot="popover-content"],
   [data-slot="dropdown-menu-content"],
@@ -232,21 +220,48 @@
     box-shadow: inset 2px 0 0 0 var(--primary);
   }
 
-  /* Ray-traced card lighting: one light source above (top sheen), a
-     faint bounce light catching the bottom lip, and a soft ambient
-     occlusion pool under the pane — smooth gradients only, zero noise. */
+  /* Ray-traced card lighting, DEBOSSED edition: every card is a pane
+     of frosted glass pressed INTO the page. Ambient occlusion creeps in
+     from the top edge (two inset terms), a catch-light hairline catches
+     the bottom lip, an inner glass hairline frames the pane, and one
+     whisper of contact shadow keeps it anchored to the page. The hover
+     transition uses a soft overshoot bezier — the springy, physical
+     "pressed object" feel — so cards settle out of their wells like
+     real objects, the Spline-style soft-body interaction. */
   [data-slot="card"] {
     box-shadow:
-      inset 0 1px 0 0 oklch(1 0 0 / 0.09),
-      inset 0 -1px 0 0 oklch(1 0 0 / 0.035),
-      0 2px 6px -2px oklch(0 0 0 / 0.4),
-      0 14px 36px -18px oklch(0 0 0 / 0.55);
+      inset 0 2px 10px -4px oklch(0 0 0 / 0.62),
+      inset 0 1px 2px -1px oklch(0 0 0 / 0.45),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.10),
+      inset 0 0 0 1px oklch(1 0 0 / 0.045),
+      0 1px 2px 0 oklch(0 0 0 / 0.35);
+    transition:
+      transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  [data-slot="card"]:hover {
+    transform: translateY(-1.5px);
+    box-shadow:
+      inset 0 2px 8px -4px oklch(0 0 0 / 0.5),
+      inset 0 1px 2px -1px oklch(0 0 0 / 0.35),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.12),
+      inset 0 0 0 1px oklch(1 0 0 / 0.06),
+      0 3px 10px -2px oklch(0 0 0 / 0.4);
   }
   :root:not(.dark) [data-slot="card"] {
     box-shadow:
-      inset 0 1px 0 0 oklch(1 0 0 / 0.9),
-      inset 0 -1px 0 0 oklch(0.22 0.015 160 / 0.06),
-      0 1px 3px 0 oklch(0.22 0.015 160 / 0.08);
+      inset 0 2px 8px -4px oklch(0.22 0.015 160 / 0.22),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.9),
+      inset 0 0 0 1px oklch(0.22 0.015 160 / 0.05),
+      0 1px 2px 0 oklch(0.22 0.015 160 / 0.08);
+  }
+  :root:not(.dark) [data-slot="card"]:hover {
+    transform: translateY(-1.5px);
+    box-shadow:
+      inset 0 2px 6px -4px oklch(0.22 0.015 160 / 0.16),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.95),
+      inset 0 0 0 1px oklch(0.22 0.015 160 / 0.04),
+      0 3px 8px -2px oklch(0.22 0.015 160 / 0.12);
   }
 
   ::selection {
@@ -288,7 +303,9 @@
     opacity: 0.5;
   }
 
-  /* Strong fluted glass panel — hero moments. Coarse ribs + blur. */
+  /* Strong fluted glass panel — hero moments. Coarse ribs + blur.
+     Debossed like every other pane: AO creeping in from the top, catch
+     light on the bottom lip, one whisper of contact shadow. */
   .fluted-panel {
     position: relative;
     overflow: hidden;
@@ -297,6 +314,10 @@
     backdrop-filter: blur(18px) saturate(150%);
     -webkit-backdrop-filter: blur(18px) saturate(150%);
     border-radius: var(--radius);
+    box-shadow:
+      inset 0 2px 10px -4px oklch(0 0 0 / 0.6),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.09),
+      0 1px 2px 0 oklch(0 0 0 / 0.3);
   }
   .fluted-panel::before {
     content: "";
@@ -322,9 +343,9 @@
   }
 
   /* Liquid glass — the maximal frosted treatment for hero panels.
-     Deep blur, specular streak, inner hairline and a soft primary halo.
-     The inset light pair (top white / bottom white) is the 2D ray-traced
-     bevel: light above, bounce below, no grain anywhere. */
+     Deep blur, specular streak, inner hairline. DEBOSSED edition: the
+     inset pair is now AO from the top + bounce light on the bottom
+     lip — a well pressed into the page, no grain anywhere. */
   .liquid-glass {
     position: relative;
     overflow: hidden;
@@ -334,9 +355,10 @@
     backdrop-filter: blur(22px) saturate(165%);
     -webkit-backdrop-filter: blur(22px) saturate(165%);
     box-shadow:
-      inset 0 1px 0 0 oklch(1 0 0 / 0.14),
-      inset 0 -1px 0 0 oklch(1 0 0 / 0.05),
-      0 18px 50px -18px oklch(0 0 0 / 0.55);
+      inset 0 2px 12px -5px oklch(0 0 0 / 0.62),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.09),
+      inset 0 0 0 1px oklch(1 0 0 / 0.045),
+      0 1px 3px 0 oklch(0 0 0 / 0.35);
   }
   .liquid-glass::before {
     content: "";
@@ -357,8 +379,9 @@
     border-color: oklch(0.22 0.015 160 / 0.16);
     background: color-mix(in oklch, var(--card) 85%, transparent);
     box-shadow:
-      inset 0 1px 0 0 oklch(1 0 0 / 0.7),
-      0 18px 40px -20px oklch(0.22 0.015 160 / 0.25);
+      inset 0 2px 8px -4px oklch(0.22 0.015 160 / 0.2),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.85),
+      0 1px 2px 0 oklch(0.22 0.015 160 / 0.1);
   }
 
   /* Navbar active link: hard inset underline, no layout shift */
@@ -455,20 +478,38 @@
       linear-gradient(#000 0 0);
     mask-composite: exclude;
   }
-  /* Interior ink wash: a faint jade bloom that follows the pointer
-     across the card surface, on top of the permanent specular sheen. */
+  /* Interior light pass — the "2D ray tracing" inside each pane:
+     a jade bounce-light bloom that follows the pointer (the InkEdge
+     provider writes --ink-mx/--ink-my), laid over the debossed sheen
+     whose light now catches the BOTTOM lip (light pools at the bottom
+     of a well). This is what makes the field inside a card read as lit
+     by the same moving studio light as the login page. */
   [data-slot="card"]::after {
     background:
       radial-gradient(
-        340px circle at var(--ink-mx, 50%) var(--ink-my, 50%),
-        color-mix(in oklch, var(--primary) 14%, transparent),
-        transparent 72%
+        420px circle at var(--ink-mx, 50%) var(--ink-my, 50%),
+        color-mix(in oklch, var(--primary) 17%, transparent),
+        transparent 70%
       ),
       linear-gradient(
-        180deg,
-        oklch(1 0 0 / 0.06) 0%,
-        oklch(1 0 0 / 0.02) 30%,
-        transparent 55%
+        0deg,
+        oklch(1 0 0 / 0.055) 0%,
+        oklch(1 0 0 / 0.018) 24%,
+        transparent 48%
+      );
+  }
+  :root:not(.dark) [data-slot="card"]::after {
+    background:
+      radial-gradient(
+        420px circle at var(--ink-mx, 50%) var(--ink-my, 50%),
+        color-mix(in oklch, var(--primary) 12%, transparent),
+        transparent 70%
+      ),
+      linear-gradient(
+        0deg,
+        oklch(1 0 0 / 0.4) 0%,
+        oklch(1 0 0 / 0.12) 24%,
+        transparent 48%
       );
   }
   [data-slot="card"]:hover::before,
@@ -518,10 +559,10 @@
   }
 
   /* ---- Debossed wells — the pressed-in half of the lighting system ----
-     Where cards float (embossed, catching top light), these elements
-     sink INTO the page: shadow creeps in from the top edge, a single
-     hairline of light catches the bottom lip. Inputs, tab tracks and
-     the dock's command well all use this. */
+     Where the floating dock embosses outward, these elements sink INTO
+     the page: shadow creeps in from the top edge, a single hairline of
+     light catches the bottom lip. Inputs, tab tracks, the command
+     trigger and every Button variant="debossed" use this. */
   .debossed {
     box-shadow:
       inset 0 2px 6px -2px oklch(0 0 0 / 0.6),
@@ -533,35 +574,162 @@
       inset 0 -1px 0 0 oklch(1 0 0 / 0.9);
   }
 
-  /* ---- Ray light: noiseless 2D ray-traced cursor lighting ----
-     One studio light on a matte black field: a tight specular term,
-     a wide ambient bounce, and a whisper of jade edge-light that
-     echoes the ink-edge rims the cards carry. Pure smooth gradients —
-     no noise, no grain, no pixels. The field itself is OPAQUE black:
-     it covers the body's fluted wall entirely, so the login ground is
-     a clean matte slab (the fluting is the app's frosted identity and
-     stays on every other page). The RayLight component writes
-     --ray-x/--ray-y every frame (rAF + lerp) so the light glides
-     after the cursor like a physical source on a moveable arm. */
+  /* ---- Nav wells — the header's debossed text buttons ----
+     Each nav link is a small well pressed into the floating dock with
+     its label sitting inside. Hover deepens the press slightly; the
+     ACTIVE route presses deepest and carries an inner jade glow —
+     light pooling in the bottom of the well. */
+  .nav-well {
+    background: color-mix(in oklch, var(--muted) 32%, transparent);
+    border: 1px solid oklch(1 0 0 / 0.045);
+    box-shadow:
+      inset 0 1px 3px 0 oklch(0 0 0 / 0.5),
+      inset 0 3px 8px -4px oklch(0 0 0 / 0.4),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.075);
+  }
+  .nav-well:hover {
+    background: color-mix(in oklch, var(--muted) 52%, transparent);
+    box-shadow:
+      inset 0 1px 4px 0 oklch(0 0 0 / 0.55),
+      inset 0 4px 10px -4px oklch(0 0 0 / 0.45),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.09);
+  }
+  .nav-well-active {
+    background: color-mix(in oklch, var(--primary) 13%, transparent);
+    border-color: color-mix(in oklch, var(--primary) 26%, transparent);
+    box-shadow:
+      inset 0 1px 4px 0 oklch(0 0 0 / 0.62),
+      inset 0 4px 12px -5px oklch(0 0 0 / 0.5),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.1),
+      inset 0 0 14px 0 color-mix(in oklch, var(--primary) 20%, transparent);
+  }
+  :root:not(.dark) .nav-well {
+    background: color-mix(in oklch, var(--secondary) 55%, transparent);
+    border-color: oklch(0.22 0.015 160 / 0.1);
+    box-shadow:
+      inset 0 1px 3px 0 oklch(0.22 0.015 160 / 0.2),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.85);
+  }
+  :root:not(.dark) .nav-well:hover {
+    background: color-mix(in oklch, var(--secondary) 80%, transparent);
+  }
+  :root:not(.dark) .nav-well-active {
+    background: color-mix(in oklch, var(--primary) 14%, transparent);
+    border-color: color-mix(in oklch, var(--primary) 35%, transparent);
+    box-shadow:
+      inset 0 1px 4px 0 oklch(0.22 0.015 160 / 0.25),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.95),
+      inset 0 0 14px 0 color-mix(in oklch, var(--primary) 22%, transparent);
+  }
+
+  /* ---- Debossed container well (footer, pressed trays) ----
+     A large surface pressed into the page: AO shadow from the top,
+     diffuse darkening deepening inward, catch-light on the bottom lip,
+     framed by an inner hairline. Frosted translucency comes from the
+     backdrop-blur the element itself carries. */
+  .debossed-well {
+    background: color-mix(in oklch, var(--background) 24%, transparent);
+    border-top: 1px solid oklch(1 0 0 / 0.05);
+    box-shadow:
+      inset 0 2px 12px -6px oklch(0 0 0 / 0.72),
+      inset 0 8px 28px -14px oklch(0 0 0 / 0.6),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.08),
+      inset 0 0 0 1px oklch(1 0 0 / 0.035);
+  }
+  :root:not(.dark) .debossed-well {
+    background: color-mix(in oklch, var(--background) 30%, transparent);
+    border-top-color: oklch(0.22 0.015 160 / 0.1);
+    box-shadow:
+      inset 0 2px 10px -6px oklch(0.22 0.015 160 / 0.25),
+      inset 0 8px 24px -14px oklch(0.22 0.015 160 / 0.18),
+      inset 0 -1px 0 0 oklch(1 0 0 / 0.9);
+  }
+
+  /* ---- Ray light: noiseless 2D ray-traced cursor lighting, v2 ----
+     A four-term moving light (all smooth gradients, zero noise):
+       1. key specular — the tight, bright "bulb" core at the cursor
+       2. cone falloff — the visible pool of light around the key
+       3. jade edge light — chromatic rim wrapping the cone
+       4. wide ambient — the room glow the source throws
+     The STATIC half of the field (screen-space ambient occlusion + the
+     jade floor bounce) lives on ::before so it never repaints as the
+     light moves: structural lighting is painted once, only the four
+     moving terms track --ray-x/--ray-y (rAF + lerp, written by the
+     RayLight component). The field is OPAQUE black — it fully covers
+     the fluted body wall; the fluting stays on every other page. */
   .ray-light {
     background-color: #000;
     background-image:
       radial-gradient(
-        320px circle at var(--ray-x, 62vw) var(--ray-y, 30vh),
-        oklch(0.98 0.005 90 / 0.1),
-        oklch(0.98 0.005 90 / 0.035) 38%,
+        230px circle at var(--ray-x, 62vw) var(--ray-y, 30vh),
+        oklch(0.99 0.005 90 / 0.30),
+        oklch(0.99 0.005 90 / 0.09) 30%,
+        transparent 62%
+      ),
+      radial-gradient(
+        600px circle at var(--ray-x, 62vw) var(--ray-y, 30vh),
+        oklch(0.93 0.01 90 / 0.15),
+        oklch(0.52 0.005 90 / 0.07) 46%,
+        transparent 74%
+      ),
+      radial-gradient(
+        920px circle at var(--ray-x, 62vw) var(--ray-y, 30vh),
+        oklch(0.71 0.15 158 / 0.13),
+        oklch(0.55 0.1 158 / 0.05) 40%,
+        transparent 62%
+      ),
+      radial-gradient(
+        1500px circle at var(--ray-x, 62vw) var(--ray-y, 30vh),
+        oklch(0.44 0.004 90 / 0.11),
         transparent 68%
+      );
+  }
+  /* Static structural lighting — painted once, never repainted:
+     the jade floor bounce (light pooling up from below the fold) and
+     the ambient-occlusion vignette that crushes the corners to black. */
+  .ray-light::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(
+        120% 62% at 50% 118%,
+        oklch(0.5 0.1 158 / 0.24),
+        oklch(0.3 0.04 158 / 0.09) 42%,
+        transparent 66%
       ),
       radial-gradient(
-        1100px circle at var(--ray-x, 62vw) var(--ray-y, 30vh),
-        oklch(0.93 0.01 90 / 0.07),
-        oklch(0.35 0.004 90 / 0.045) 45%,
-        transparent 75%
-      ),
+        138% 122% at 50% 42%,
+        transparent 50%,
+        rgb(0 0 0 / 0.62) 100%
+      );
+  }
+
+  /* ---- Ray-lit card helpers (login sign-in card) ----
+     .ray-cast: the card's drop shadow, cast AWAY from the light —
+     the JS light tracker writes --cast-x/--cast-y every frame, so the
+     shadow swings around the card as the studio light moves behind it.
+     That swinging shadow + the specular streak (.ray-specular) are what
+     sell the "ray tracing". */
+  .ray-cast {
+    --cast-x: 0px;
+    --cast-y: 12px;
+    box-shadow:
+      calc(var(--cast-x) * -1) calc(var(--cast-y) + 18px) 58px -16px oklch(0 0 0 / 0.88),
+      calc(var(--cast-x) * -0.4) calc(var(--cast-y) * 0.5 + 8px) 18px -6px oklch(0 0 0 / 0.5);
+  }
+  /* .ray-specular: the streak of light the moving source throws
+     ACROSS the frosted pane — a white core with a jade skirt, at
+     --spec-x/--spec-y (percentages within the card, clamped so the
+     streak slides along the glass even when the light is off-card). */
+  .ray-specular {
+    background:
       radial-gradient(
-        520px circle at var(--ray-x, 62vw) var(--ray-y, 30vh),
-        oklch(0.71 0.15 158 / 0.05),
-        transparent 65%
+        560px circle at var(--spec-x, 62%) var(--spec-y, 35%),
+        oklch(1 0 0 / 0.13),
+        oklch(0.71 0.15 158 / 0.05) 38%,
+        transparent 66%
       );
   }
 }

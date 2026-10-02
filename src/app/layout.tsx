@@ -30,6 +30,11 @@ export const metadata: Metadata = {
     "teammates",
     "team matching",
   ],
+  /* Favicon = the same /public/logo.svg the navbar, footer and login
+     page render. Replace that one file and the favicon follows. */
+  icons: {
+    icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({
