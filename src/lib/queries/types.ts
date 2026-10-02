@@ -45,7 +45,13 @@ export interface PersonCardDTO {
   matchScore?: number;
   matchReasons?: string[];
   matchBreakdown?: MatchBreakdown;
+  karma?: number;
 }
+
+export type EqualCandidateDTO = PersonCardDTO & {
+  matchScore: number;
+  karma: number;
+};
 
 export interface HackathonCardDTO {
   id: string;
