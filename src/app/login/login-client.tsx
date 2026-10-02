@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -23,61 +23,100 @@ import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
 import { TextRepel } from "@/components/ui/text-repel";
 import { FlutedGlass } from "@/components/ui/fluted-glass";
 import { SplineReveal } from "@/components/ui/spline-reveal";
+import { SplineObject } from "@/components/ui/spline-object";
 import { InkBrush } from "@/components/ui/ink-brush";
 import { CursorField } from "@/components/ui/cursor-field";
 import { GrainGradient } from "@/components/ui/grain-gradient";
+import { MagnetLines } from "@/components/ui/magnet-lines";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+/* The interactive 3D hero object (Spline). A published public scene by
+   default; point NEXT_PUBLIC_SPLINE_SCENE_URL at your own exported
+   .splinecode to swap it. If it can't load (offline, blocked), the
+   animated ink-orb fallback renders instead — the hero never blanks. */
+const SPLINE_SCENE =
+  process.env.NEXT_PUBLIC_SPLINE_SCENE_URL ??
+  "https://prod.spline.design/6Wq1Q7YGyM-iab9i/scene.splinecode";
+
 /**
- * HeroPanel — the hero section's living ground.
+ * LoginBackdrop — the sign-in page's FULL-PAGE living ground.
  *
- * A hard-surface recess stamped into the fluted wall, and at its
- * floor the breathing jade GrainGradient (WebGL): soft ink tones
- * rolling through a slow two-wave cycle, fine grain baked into the
- * shader. A scrim keeps the copy's side deep ink so the type stays
- * first; the glow breathes against the sign-in pane. The recess is
- * closed with the same machined deboss lip every surface wears.
+ * NOT confined behind the text: the breathing jade GrainGradient
+ * (WebGL, grain OFF — no noise texture) fills the entire login page
+ * and is BLENDED into the black ribbed wall three ways:
+ *
+ *   1. the wall's own flutes are re-drawn OVER the gradient, so the
+ *      ribs continue through it — one continuous ribbed ground;
+ *   2. an animated field of magnet lines (Componentry) swivels every
+ *      rib toward the cursor on a damped spring — the ribbed
+ *      background is ALIVE, and only on this page;
+ *   3. an ink vignette melts the edges (and the area under the
+ *      floating navbar dock) back into the page's near-black, so the
+ *      gradient never reads as a pasted rectangle.
+ *
+ * The colored jade cursor wake (CursorField) sits above this backdrop
+ * and below the content.
  */
-function HeroPanel({ children }: { children: ReactNode }) {
+function LoginBackdrop() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <div
-      className="relative overflow-hidden rounded-[var(--radius)]"
-      style={{ border: "1px solid oklch(1 0 0 / 0.08)" }}
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
     >
-      {/* The breathing jade grain gradient — the hero's ground */}
+      {/* 1 — the breathing jade gradient: the whole page's ground.
+          Grain is OFF — clean color, no noise texture. */}
       <GrainGradient
         className="absolute inset-0"
         colorLight="#8ecdb6"
         colorMid="#2c5a4b"
-        colorDark="#0b1310"
+        colorDark="#0d100e"
         angle={0}
         curve={0.48}
-        softness={0.13}
-        grain={0.3}
+        softness={0.16}
+        grain={0}
         speed={1}
       />
-      {/* Ink scrim on the copy side — the type stays first, the glow
-          breathes on the right, toward the sign-in pane. */}
+
+      {/* 2 — the wall's flutes, re-drawn OVER the gradient: the ribbed
+          background continues through it (the blend). */}
       <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
+        className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(100deg, oklch(0.09 0.008 120 / 0.78) 0%, oklch(0.09 0.008 120 / 0.45) 42%, transparent 72%)",
+            "repeating-linear-gradient(90deg, oklch(1 0 0 / 0.03) 0px, oklch(1 0 0 / 0.03) 1px, transparent 1px, transparent 11px)",
         }}
       />
-      {/* Hard-surface deboss lip, pressed OVER the gradient so the
-          recess reads on top of the living ground. */}
+
+      {/* 3 — the animated rib field: thin jade ribs that swivel to
+          track the pointer on springs. Reduced motion: the field
+          simply stays a still ribbed ground. */}
+      {!reduceMotion && (
+        <div className="absolute inset-0">
+          <MagnetLines
+            containerSize="100%"
+            rows={7}
+            columns={15}
+            lineWidth="1px"
+            lineHeight="64px"
+            baseAngle={-90}
+            lineColor="oklch(0.85 0.06 158 / 0.13)"
+          />
+        </div>
+      )}
+
+      {/* 4 — ink vignette: the gradient melts into the page's black at
+          the edges and under the floating dock. */}
       <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{ boxShadow: "var(--deboss-2)" }}
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(125% 95% at 50% 40%, transparent 42%, oklch(0.11 0.004 90 / 0.88) 100%), linear-gradient(180deg, oklch(0.11 0.004 90 / 0.92) 0%, transparent 22%)",
+        }}
       />
-      <div className="relative flex min-h-[560px] flex-col justify-center p-8 lg:p-10">
-        {children}
-      </div>
     </div>
   );
 }
@@ -243,12 +282,18 @@ export function LoginClient() {
 
   return (
     <div className="relative pt-10 pb-12">
-      {/* The pixel wake — the sign-in hero page's own cursor effect.
-          Grayscale ink pixels that wake and brighten under the
-          pointer, then sink back. ONLY this page carries it; every
-          other page runs on the plain fluted wall. It sits below the
-          content (negative z) and above the wall, and the frosted
-          sign-in pane blurs it as it passes beneath. */}
+      {/* The FULL-PAGE living ground — the breathing jade gradient
+          blended into the black ribbed wall, ribs animated toward the
+          cursor. Covers the entire login page, not just the hero. */}
+      <LoginBackdrop />
+
+      {/* The jade pixel wake — the sign-in hero page's own cursor
+          effect. COLORED (jade, not black-and-white) pixels that wake
+          and brighten under the pointer, then sink back. ONLY this
+          page carries it; every other page runs on the plain fluted
+          wall. It sits above the backdrop (DOM order) and below the
+          content, and the frosted sign-in pane blurs it as it passes
+          beneath. */}
       <CursorField />
 
       <div className="relative z-10">
@@ -270,22 +315,32 @@ export function LoginClient() {
             against each other, so the text sits at the vertical middle of
             the card's side. */}
         <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 lg:items-center max-w-6xl mx-auto">
-          {/* Desktop: the hero — copy set into the breathing jade
-              grain-gradient recess */}
+          {/* Desktop: the hero — an interactive Spline 3D object you can
+              orbit with the pointer, floating on the full-page living
+              ground, above the animated copy. */}
           <div className="hidden lg:flex flex-col justify-center">
-            <HeroPanel>
-              <ProjectInfo />
-            </HeroPanel>
+            {/* Interactive Spline object — drag/orbit it. Falls back to
+                the breathing ink orb if the scene can't load. */}
+            <div className="flex justify-center mb-1">
+              <SplineObject
+                scene={SPLINE_SCENE}
+                interactive
+                width={440}
+                height={310}
+              />
+            </div>
+
+            <ProjectInfo />
           </div>
 
-          {/* Sign-in — a pane of ROUGH FROSTED GLASS, debossed into
-              the wall. 10px blur: the wall's fluted lines and the
-              cursor's ink wake smear through as soft streaks — the
-              frost read. The pane carries the fluting, the refraction
-              map and the sandblast grain; the pointer tilt settles on
-              a soft spring; and the whole card lands on the page via
-              the shared anime.js damped-spring entrance. Radius is
-              the one shared radius. */}
+          {/* Sign-in — a pane of TRANSLUCENT FROSTED GLASS, debossed
+              into the wall. 10px blur: the gradient's glow, the animated
+              ribs and the cursor's jade wake smear through as soft
+              streaks — the frost read. The pane carries the fluting and
+              the refraction map (no noise — clean frost); the pointer
+              tilt settles on a soft spring; and the whole card lands on
+              the page via the shared anime.js damped-spring entrance.
+              Radius is the one shared radius. */}
           <div className="w-full max-w-md mx-auto lg:mx-0">
             <SplineReveal drop={30} tilt={0} className="w-full">
               <FlutedGlass
@@ -450,11 +505,19 @@ export function LoginClient() {
             </p>
           </div>
 
-          {/* Mobile: the hero below the card, same grain-gradient recess */}
+          {/* Mobile: the hero below the card — the interactive Spline
+              object (smaller) above the same animated copy. */}
           <div className="lg:hidden">
-            <HeroPanel>
-              <ProjectInfo />
-            </HeroPanel>
+            <div className="flex justify-center mb-1">
+              <SplineObject
+                scene={SPLINE_SCENE}
+                interactive
+                width={280}
+                height={200}
+              />
+            </div>
+
+            <ProjectInfo />
           </div>
         </div>
       </div>

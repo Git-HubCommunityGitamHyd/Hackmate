@@ -81,23 +81,6 @@
   opacity: 0.65;
 }
 
-/* Sandblast grain — the rough, textured surface of the pane. Fine
-   speckle + coarse roughness, same tiles every card uses. */
-.grain {
-  position: absolute;
-  inset: 0;
-  z-index: 4;
-
-  pointer-events: none;
-
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.16 0.28' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)'/%3E%3C/svg%3E");
-  background-size: 160px 160px, 280px 280px;
-
-  opacity: 0.24;
-}
-
 /* Content sits above the glass */
 .content {
   position: relative;

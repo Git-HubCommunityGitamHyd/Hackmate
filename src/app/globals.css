@@ -59,10 +59,10 @@
 /* soft AO pools deepening the floor. Nothing floats, nothing glows,   */
 /* a debossed object never casts an outer shadow.                      */
 /*                                                                     */
-/* Frosted glass is ROUGH and GLOSSY: a 10px backdrop blur (enough     */
-/* that the wall's flutes smear into soft streaks behind the pane)     */
-/* plus two layers of physical grain (fine + coarse sandblast) and     */
-/* a glossy specular sheen catching the top edge of every pane.        */
+/* Frosted glass is TRANSLUCENT + GLOSSY: every pane is see-through    */
+/* with a 10px backdrop blur (the wall's flutes smear into soft        */
+/* streaks behind it) and a glossy specular sheen catching the top     */
+/* edge. NO noise textures — the blur and the ribs ARE the frost.      */
 /*                                                                     */
 /* Motion is Spline-language: damped-spring entrances (anime.js         */
 /* spring), 3D pointer tilt with overshoot settle.                      */
@@ -118,12 +118,12 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.71 0.15 158);
 
-  /* ---- Sandblast grain (the frost IS the texture) ----
-     Two reusable SVG turbulence tiles: a fine speckle and a coarse
-     roughness. Layered at low alpha over every frosted pane they read
-     as physically rough, grainy, sandblasted glass — not smooth blur. */
-  --grain-fine: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
-  --grain-rough: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.16 0.28' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)'/%3E%3C/svg%3E");
+  /* ---- Chip-scale recess (badges, avatars, progress, skeletons) ---- */
+  --deboss-chip:
+    inset 0 1px 0 0 oklch(0 0 0 / 0.55),
+    inset 0 -1px 0 0 oklch(1 0 0 / 0.1),
+    inset 0 0 0 1px oklch(0 0 0 / 0.3),
+    inset 0 2px 5px -2px oklch(0 0 0 / 0.4);
 
   /* ---- Deboss levels (everything is pressed IN, nothing floats) ----
      HARD-SURFACE recipe, like a machined recess in a panel: a crisp
@@ -133,12 +133,12 @@
      the floor of the well. */
   --deboss-1:
     inset 0 1px 0 0 oklch(0 0 0 / 0.7),
-    inset 0 -1px 0 0 oklch(1 0 0 / 0.08),
+    inset 0 -1px 0 0 oklch(1 0 0 / 0.1),
     inset 0 0 0 1px oklch(0 0 0 / 0.42),
     inset 0 3px 8px -3px oklch(0 0 0 / 0.55);
   --deboss-2:
     inset 0 1px 0 0 oklch(0 0 0 / 0.78),
-    inset 0 -1px 0 0 oklch(1 0 0 / 0.1),
+    inset 0 -1px 0 0 oklch(1 0 0 / 0.12),
     inset 0 0 0 1px oklch(0 0 0 / 0.38),
     inset 0 5px 12px -4px oklch(0 0 0 / 0.5),
     inset 0 18px 36px -16px oklch(0 0 0 / 0.32);
@@ -326,15 +326,6 @@
     border-radius: calc(var(--radius) - 1px);
     box-shadow: var(--deboss-1);
   }
-  .peep-window::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image: var(--grain-fine), var(--grain-rough);
-    background-size: 160px 160px, 280px 280px;
-    opacity: 0.2;
-  }
 
   /* ---- Nav pills — the header's pressed-in text buttons ----
      Each link is a shallow well; the label sits at its floor. Hover
@@ -395,29 +386,18 @@
       transparent 12px
     );
   }
-  /* Grain pass for the hero panel (cards carry theirs on ::after). */
-  .fluted-panel::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    border-radius: inherit;
-    background-image: var(--grain-fine), var(--grain-rough);
-    background-size: 160px 160px, 280px 280px;
-    opacity: 0.24;
-  }
 }
 
 /* ================================================================== */
-/* GLASS SURFACES — rough, grainy, debossed                            */
+/* GLASS SURFACES — translucent, glossy, debossed                      */
 /* ================================================================== */
 
 @layer base {
-  /* Every card: a pane of ROUGH FROSTED GLASS pressed into the wall.
-     The translucency is real (46% alpha + 10px blur + saturation), so
-     the fluted lines of the ground smear into soft streaks behind
+  /* Every card: a pane of TRANSLUCENT FROSTED GLASS pressed into the
+     wall. The translucency is real (46% alpha + 10px blur + saturation),
+     so the fluted lines of the ground smear into soft streaks behind
      the pane — 10px is the sweet spot: the flutes stay legible as
-     streaks instead of being erased. */
+     streaks instead of being erased. No noise pass — clean frost. */
   [data-slot="card"] {
     backdrop-filter: blur(10px) saturate(150%);
     -webkit-backdrop-filter: blur(10px) saturate(150%);
@@ -435,9 +415,11 @@
   [data-slot="card"]:hover {
     box-shadow: var(--deboss-2-pressed);
   }
-  /* Glossy pass: a specular sheen catching the TOP edge of the pane
-     (light skimming a glass surface). This is the gloss half of
-     rough-and-glossy frosted glass — sits under the grain. */
+  /* Recess lighting: inside the deboss, the CEILING shades the top of
+     the pane (dark falloff from the inset lip) and light catches the
+     floor of the recess at the bottom — the lighting of a physical
+     recess, so the pane reads as pressed INTO the page, never
+     floating on top of it. */
   [data-slot="card"]::before {
     content: "";
     position: absolute;
@@ -447,32 +429,25 @@
     z-index: 29;
     background: linear-gradient(
       180deg,
-      oklch(1 0 0 / 0.07) 0%,
-      oklch(1 0 0 / 0.025) 24%,
-      transparent 50%
+      oklch(0 0 0 / 0.3) 0%,
+      oklch(0 0 0 / 0.1) 16%,
+      transparent 40%,
+      transparent 80%,
+      oklch(1 0 0 / 0.05) 100%
     );
   }
-  /* Sandblast pass: fine speckle + coarse roughness over the whole
-     pane, above its content — the rough surface texture of the glass. */
-  [data-slot="card"]::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    border-radius: inherit;
-    z-index: 30;
-    background-image: var(--grain-fine), var(--grain-rough);
-    background-size: 160px 160px, 280px 280px;
-    opacity: 0.22;
-  }
+  /* Sandblast REMOVED — no noise textures anywhere: the frost is the
+     blur, the roughness is the ribs smeared behind it. */
 
   /* Floating layers (popovers, dialogs, sheets, menus) are recessed
      frost too — one material everywhere, one blur everywhere. */
   [data-slot="popover-content"],
   [data-slot="dropdown-menu-content"],
+  [data-slot="select-content"],
   [data-slot="dialog-content"],
   [data-slot="sheet-content"],
   [data-slot="command"],
+  [data-slot="command-dialog"],
   [data-slot="tooltip-content"],
   [data-slot="alert-dialog-content"] {
     backdrop-filter: blur(10px) saturate(150%);
@@ -527,6 +502,82 @@
   [data-slot="command-item"][data-selected="true"] {
     box-shadow: inset 2px 0 0 0 var(--primary);
   }
+}
+
+/* ================================================================== */
+/* DEBOSS EVERYTHING — every component is a recessed pane of frost,    */
+/* not just the buttons. These rules live UNLAYERED (outside           */
+/* @layer) so they beat any Tailwind utility that would paint a flat   */
+/* opaque fill over the glass. Focus rings are re-declared on          */
+/* :focus-visible so keyboard affordances survive the box-shadow       */
+/* takeover.                                                           */
+/* ================================================================== */
+
+/* Badges — glass chips: translucent tint + 10px blur + chip recess. */
+[data-slot="badge"] {
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+}
+[data-slot="badge"]:not(:focus-visible) {
+  box-shadow: var(--deboss-chip);
+}
+[data-slot="badge"]:focus-visible {
+  box-shadow:
+    var(--deboss-chip),
+    0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent);
+}
+[data-slot="badge"][data-variant="default"] {
+  background-color: color-mix(in oklch, var(--primary) 22%, transparent);
+  color: var(--primary);
+  border-color: color-mix(in oklch, var(--primary) 30%, transparent);
+}
+[data-slot="badge"][data-variant="secondary"] {
+  background-color: color-mix(in oklch, var(--secondary) 55%, transparent);
+}
+[data-slot="badge"][data-variant="destructive"] {
+  background-color: color-mix(in oklch, var(--destructive) 24%, transparent);
+  color: oklch(0.85 0.14 25);
+  border-color: color-mix(in oklch, var(--destructive) 32%, transparent);
+}
+
+/* Alerts — full frosted panes pressed into the page. */
+[data-slot="alert"] {
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: var(--deboss-2);
+}
+
+/* Select triggers, checkboxes, switches — wells like the inputs.
+   The inset yields to the focus ring while keyboard-focused. */
+[data-slot="select-trigger"]:not(:focus-visible),
+[data-slot="checkbox"]:not(:focus-visible),
+[data-slot="switch"]:not(:focus-visible) {
+  box-shadow: var(--deboss-1);
+}
+[data-slot="select-trigger"] {
+  background-color: color-mix(in oklch, var(--background) 45%, transparent);
+}
+
+/* Progress tracks and skeletons — shallow recesses. */
+[data-slot="progress"],
+[data-slot="skeleton"] {
+  box-shadow: var(--deboss-chip);
+}
+
+/* Avatars — a hairline recessed rim. */
+[data-slot="avatar"] {
+  box-shadow:
+    inset 0 0 0 1px oklch(0 0 0 / 0.35),
+    inset 0 1px 0 oklch(0 0 0 / 0.3);
+}
+
+/* Sonner toasts — floating frost (Sonner styles inline, so the
+   important flag is the only way to press them into the page). */
+[data-sonner-toast] {
+  backdrop-filter: blur(10px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
+  border: 1px solid oklch(1 0 0 / 0.08) !important;
+  box-shadow: var(--deboss-2) !important;
 }
 
 /* Keyframes for the Spline fallback orb (kept out of @layer so they win). */
