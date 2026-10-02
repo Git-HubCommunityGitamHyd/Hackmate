@@ -19,7 +19,9 @@ export function Logo({
   alt?: string;
 }) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- static SVG asset, no optimizer needed
+    /* Plain <img>: a static SVG asset in /public — the Next image
+       optimizer adds nothing here, and the same file drives the
+       favicon (see layout.tsx metadata.icons). */
     <img
       src="/logo.svg"
       alt={alt}

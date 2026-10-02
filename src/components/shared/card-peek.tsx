@@ -53,7 +53,9 @@ export function CardPeek({
   useEffect(() => {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
-    const card = wrapper.closest("[data-slot='card']") ?? wrapper.parentElement;
+    /* closest() returns Element; cast to HTMLElement so pointer-event
+       listeners carry their proper PointerEvent typing. */
+    const card = (wrapper.closest("[data-slot='card']") ?? wrapper.parentElement) as HTMLElement | null;
     if (!card) return;
 
     const show = () => setOpen(true);

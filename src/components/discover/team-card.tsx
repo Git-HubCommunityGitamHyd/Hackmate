@@ -54,7 +54,7 @@ export function TeamCard({ team, showMatch, delay = 0 }: { team: TeamCardDTO; sh
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
               {full ? (
-                <Badge variant="outline" className="text-[11px] text-zinc-500">full</Badge>
+                <Badge variant="outline" className="text-[11px] text-muted-foreground">full</Badge>
               ) : (
                 <Badge variant="outline" className="text-[11px] font-semibold border-primary/40 bg-primary/10 text-primary">
                   {spotsLeft} spot{spotsLeft > 1 ? "s" : ""} left

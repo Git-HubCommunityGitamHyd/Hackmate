@@ -22,9 +22,94 @@ import { PersonCard } from "@/components/discover/person-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useCurrentUser, useHackathons, useTeams, usePeople, useSearch } from "@/hooks/use-api";
 import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
+import { SortMenu, type SortOption } from "@/components/discover/sort-menu";
+import type { HackathonCardDTO, TeamCardDTO, PersonCardDTO } from "@/lib/queries/types";
 
 const DISCOVER_TABS = ["hackathons", "teams", "people"] as const;
 type DiscoverTab = (typeof DISCOVER_TABS)[number];
+
+/* ------------------------------------------------------------------ */
+/* Sorting — one debossed sort control per tab, the same pill on the */
+/* Emergency page. Each tab owns its keys + comparators.              */
+/* ------------------------------------------------------------------ */
+
+type HackathonSort = "starting-soon" | "prize" | "activity";
+type TeamSort = "completeness" | "match" | "spots" | "newest";
+type PeopleSort = "match" | "active" | "emergency" | "name";
+
+const HACKATHON_SORTS: ReadonlyArray<SortOption<HackathonSort>> = [
+  { value: "starting-soon", label: "Starting soon" },
+  { value: "prize", label: "Biggest prize" },
+  { value: "activity", label: "Most teams forming" },
+];
+const TEAM_SORTS: ReadonlyArray<SortOption<TeamSort>> = [
+  { value: "completeness", label: "Most complete" },
+  { value: "match", label: "Best match for me" },
+  { value: "spots", label: "Most open spots" },
+  { value: "newest", label: "Newest" },
+];
+const PEOPLE_SORTS: ReadonlyArray<SortOption<PeopleSort>> = [
+  { value: "match", label: "Best match for me" },
+  { value: "active", label: "Most available" },
+  { value: "emergency", label: "Emergency first" },
+  { value: "name", label: "A–Z" },
+];
+
+/* "$25,000" / "₹1L" / "25000" → a comparable number. */
+function parsePrize(pool: string | null): number {
+  const n = Number((pool ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function sortHackathons(list: HackathonCardDTO[], sort: HackathonSort): HackathonCardDTO[] {
+  const out = [...list];
+  if (sort === "prize") {
+    out.sort((a, b) => parsePrize(b.prizePool) - parsePrize(a.prizePool));
+  } else if (sort === "activity") {
+    out.sort(
+      (a, b) =>
+        b.recruitingTeamCount + b.peopleLookingCount - (a.recruitingTeamCount + a.peopleLookingCount),
+    );
+  } else {
+    /* Starting soon: live first (ending soonest), then upcoming
+       (starting soonest), then completed (most recent first). */
+    const rank = (s: HackathonCardDTO["status"]) => (s === "ongoing" ? 0 : s === "upcoming" ? 1 : 2);
+    out.sort(
+      (a, b) =>
+        rank(a.status) - rank(b.status) ||
+        new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+    );
+  }
+  return out;
+}
+
+function sortTeams(list: TeamCardDTO[], sort: TeamSort): TeamCardDTO[] {
+  const out = [...list];
+  if (sort === "match") {
+    out.sort((a, b) => (b.matchScore ?? -1) - (a.matchScore ?? -1));
+  } else if (sort === "spots") {
+    out.sort((a, b) => b.targetSize - b.memberCount - (a.targetSize - a.memberCount));
+  } else if (sort === "newest") {
+    out.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } else {
+    out.sort((a, b) => b.completeness - a.completeness);
+  }
+  return out;
+}
+
+function sortPeople(list: PersonCardDTO[], sort: PeopleSort): PersonCardDTO[] {
+  const out = [...list];
+  if (sort === "active") {
+    out.sort((a, b) => b.hoursPerWeek - a.hoursPerWeek);
+  } else if (sort === "emergency") {
+    out.sort((a, b) => Number(b.emergencyAvailable) - Number(a.emergencyAvailable) || b.hoursPerWeek - a.hoursPerWeek);
+  } else if (sort === "name") {
+    out.sort((a, b) => a.name.localeCompare(b.name));
+  } else {
+    out.sort((a, b) => (b.matchScore ?? -1) - (a.matchScore ?? -1));
+  }
+  return out;
+}
 
 function isDiscoverTab(value: string | null): value is DiscoverTab {
   return (DISCOVER_TABS as readonly string[]).includes(value ?? "");
@@ -45,13 +130,23 @@ function DiscoverContent() {
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [tab, setTab] = useState<DiscoverTab>("hackathons");
 
+  /* Per-tab sort — each tab remembers its own key. "Best match" leads
+     for signed-in users (the matching engine fills matchScore); guests
+     fall back to availability without changing the key. */
+  const [hackathonSort, setHackathonSort] = useState<HackathonSort>("starting-soon");
+  const [teamSort, setTeamSort] = useState<TeamSort>("completeness");
+  const [peopleSort, setPeopleSort] = useState<PeopleSort>("match");
+
   /* Deep-linkable tabs: /?tab=teams (set by the /teams redirect) opens
-     Discover with that tab pre-selected. Syncs again if the param changes
-     while mounted (e.g. navbar navigation) without remounting the page. */
+     Discover with that tab pre-selected. Synced with the
+     adjust-state-during-render pattern (React docs) — no effect, no
+     cascading render, and the page never remounts. */
   const tabParam = searchParams.get("tab");
-  useEffect(() => {
+  const [lastTabParam, setLastTabParam] = useState(tabParam);
+  if (lastTabParam !== tabParam) {
+    setLastTabParam(tabParam);
     if (isDiscoverTab(tabParam)) setTab(tabParam);
-  }, [tabParam]);
+  }
 
   const isSearching = submittedQuery.trim().length >= 2;
   const search = useSearch(isSearching ? submittedQuery : "");
@@ -72,6 +167,11 @@ function DiscoverContent() {
   const hackathonList = isSearching ? (search.data?.hackathons ?? []) : (hackathons.data ?? []);
   const teamList = isSearching ? (search.data?.teams ?? []) : (teams.data ?? []);
   const peopleList = isSearching ? (search.data?.people ?? []) : (people.data ?? []);
+
+  /* Sorted views feed the grids; raw lists keep their query order. */
+  const sortedHackathons = useMemo(() => sortHackathons(hackathonList, hackathonSort), [hackathonList, hackathonSort]);
+  const sortedTeams = useMemo(() => sortTeams(teamList, teamSort), [teamList, teamSort]);
+  const sortedPeople = useMemo(() => sortPeople(peopleList, peopleSort), [peopleList, peopleSort]);
   const loading = isSearching ? search.isLoading : hackathons.isLoading || teams.isLoading || people.isLoading;
 
   return (
@@ -150,6 +250,15 @@ function DiscoverContent() {
               <span className="text-xs text-muted-foreground ml-1">{peopleList.length}</span>
             </TabsTrigger>
           </TabsList>
+          {effectiveTab === "hackathons" && (
+            <SortMenu value={hackathonSort} onChange={setHackathonSort} options={HACKATHON_SORTS} ariaLabel="Sort hackathons" />
+          )}
+          {effectiveTab === "teams" && (
+            <SortMenu value={teamSort} onChange={setTeamSort} options={TEAM_SORTS} ariaLabel="Sort teams" />
+          )}
+          {effectiveTab === "people" && (
+            <SortMenu value={peopleSort} onChange={setPeopleSort} options={PEOPLE_SORTS} ariaLabel="Sort people" />
+          )}
           {isSearching && (
             <Button
               variant="ghost"
@@ -185,8 +294,8 @@ function DiscoverContent() {
             />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {hackathonList.map((h) => (
-                <HackathonCard key={h.id} hackathon={h} />
+              {sortedHackathons.map((h) => (
+                <HackathonCard key={h.id} hackathon={h} delay={0.04 * Math.min(8, hackathonList.indexOf(h))} />
               ))}
             </div>
           )}
@@ -212,8 +321,8 @@ function DiscoverContent() {
             />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {teamList.map((t) => (
-                <TeamCard key={t.id} team={t} showMatch={isAuthenticated && !isSearching} />
+              {sortedTeams.map((t) => (
+                <TeamCard key={t.id} team={t} showMatch={isAuthenticated && !isSearching} delay={0.04 * Math.min(8, teamList.indexOf(t))} />
               ))}
             </div>
           )}
@@ -230,8 +339,8 @@ function DiscoverContent() {
             />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {peopleList.map((p) => (
-                <PersonCard key={p.id} person={p} showMatch={isAuthenticated && !isSearching} />
+              {sortedPeople.map((p) => (
+                <PersonCard key={p.id} person={p} showMatch={isAuthenticated && !isSearching} delay={0.04 * Math.min(8, peopleList.indexOf(p))} />
               ))}
             </div>
           )}

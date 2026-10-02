@@ -110,8 +110,8 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
                     <Badge variant="outline" className={
                       team.status === "recruiting"
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 font-semibold"
-                        : "text-zinc-500"
+                        ? "bg-primary/10 text-primary border-primary/40 font-semibold"
+                        : "text-muted-foreground"
                     }>
                       {team.status === "recruiting" ? `${team.targetSize - team.memberCount} spot${team.targetSize - team.memberCount > 1 ? "s" : ""} left` : team.status}
                     </Badge>

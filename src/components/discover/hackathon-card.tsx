@@ -33,7 +33,7 @@ export function HackathonCard({ hackathon, delay = 0 }: { hackathon: HackathonCa
     hackathon.status === "ongoing"
       ? "border-primary/40 bg-primary/10 text-primary"
       : hackathon.status === "completed"
-        ? "text-zinc-500 border-border bg-secondary/40"
+        ? "text-muted-foreground border-border bg-secondary/40"
         : "border-foreground/30 bg-secondary/60 text-foreground/90";
 
   const regDays = hackathon.registrationDeadline ? daysUntil(hackathon.registrationDeadline) : null;

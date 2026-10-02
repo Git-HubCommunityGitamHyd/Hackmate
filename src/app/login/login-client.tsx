@@ -243,10 +243,10 @@ export function LoginClient() {
               >
                 <div className="p-7 space-y-6">
                   <motion.div {...(reduceMotion ? {} : stagger(0))}>
-                    <h2 className="text-xl font-bold tracking-tight text-white">
+                    <h2 className="text-xl font-bold tracking-tight text-foreground">
                       Sign in
                     </h2>
-                    <p className="text-sm text-neutral-400 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       Free forever. No credit card. No dark patterns.
                     </p>
                   </motion.div>
@@ -258,7 +258,7 @@ export function LoginClient() {
                     <motion.div {...(reduceMotion ? {} : stagger(1))}>
                       <Button
                         variant="outline"
-                        className="w-full h-11 font-semibold bg-neutral-900 border-white/30 hover:border-white/50 hover:bg-neutral-800 text-white transition-all"
+                        className="w-full h-11 font-semibold text-foreground transition-all"
                         onClick={() =>
                           signIn("github", {
                             callbackUrl: "/",
@@ -269,7 +269,7 @@ export function LoginClient() {
                         Continue with GitHub
                       </Button>
 
-                      <p className="text-[11px] text-neutral-400 text-center mt-2 leading-relaxed">
+                      <p className="text-[11px] text-muted-foreground text-center mt-2 leading-relaxed">
                         Developers: we import your languages, repos and
                         activity to verify skills automatically.
                       </p>
@@ -280,7 +280,7 @@ export function LoginClient() {
                       {...(reduceMotion ? {} : stagger(2))}
                     >
                       <Separator className="flex-1 bg-white/10" />
-                      <span className="text-xs text-neutral-400 uppercase tracking-wider">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider">
                         or
                       </span>
                       <Separator className="flex-1 bg-white/10" />
@@ -292,7 +292,7 @@ export function LoginClient() {
                       {...(reduceMotion ? {} : stagger(3))}
                     >
                       <div className="space-y-1.5">
-                        <Label htmlFor="email" className="text-neutral-300">
+                        <Label htmlFor="email" className="text-foreground/90">
                           Email magic link
                         </Label>
 
@@ -302,7 +302,7 @@ export function LoginClient() {
                           placeholder="you@college.edu"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-11 bg-neutral-950/70 border-white/15 text-white placeholder:text-neutral-600 focus-visible:ring-primary/50 focus-visible:border-primary/60 transition-colors"
+                          className="h-11 transition-colors"
                         />
                       </div>
 
@@ -321,8 +321,8 @@ export function LoginClient() {
                       </Button>
 
                       {/* LinkedIn copy — non-developer track. */}
-                      <p className="text-[11px] text-neutral-400 text-center leading-relaxed mt-1">
-                        <span className="inline-flex items-center gap-1 text-neutral-300">
+                      <p className="text-[11px] text-muted-foreground text-center leading-relaxed mt-1">
+                        <span className="inline-flex items-center gap-1 text-foreground/90">
                           <Linkedin className="h-3 w-3" /> LinkedIn-ready
                         </span>
                         <br />
@@ -340,7 +340,7 @@ export function LoginClient() {
                       >
                         <div className="flex items-center gap-3">
                           <Separator className="flex-1 bg-white/10" />
-                          <span className="text-xs text-neutral-400 uppercase tracking-wider">
+                          <span className="text-xs text-muted-foreground uppercase tracking-wider">
                             dev
                           </span>
                           <Separator className="flex-1 bg-white/10" />
@@ -348,7 +348,7 @@ export function LoginClient() {
 
                         <Button
                           variant="ghost"
-                          className="w-full border border-dashed border-white/15 hover:border-white/25 hover:bg-neutral-950/60 text-neutral-300"
+                          className="w-full border border-dashed border-border hover:border-primary/40 text-muted-foreground hover:text-foreground"
                           onClick={demoLogin}
                           disabled={demoLoading}
                         >
