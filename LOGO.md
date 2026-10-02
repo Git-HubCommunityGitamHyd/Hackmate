@@ -46,17 +46,12 @@ Next.js file-convention favicons win automatically when present, so:
 - The favicon is read from the same SVG at 16-32px — make sure the mark
   is still legible when tiny (bold shapes, high contrast).
 
-## Optional: a real 3D emblem (Spline)
+## No 3D emblem (removed)
 
-The stock Spline "robot" scene has been removed from the project. The
-`SplineObject` component (`src/components/ui/spline-object.tsx`) is still
-available if you want a live 3D emblem somewhere:
-
-1. Author or pick a scene at spline.design and export/publish it.
-2. Add to `.env.local`:
-   `NEXT_PUBLIC_SPLINE_SCENE_URL=https://prod.spline.design/<id>/scene.splinecode`
-3. Drop `<SplineObject width={36} height={36} />` wherever you want it
-   (e.g. back into the navbar brand slot).
-
-Without that env var the component renders an animated breathing ink orb
-(pure CSS, no network) instead of loading the Spline runtime.
+The app is intentionally 3D-free: the Spline scene, the
+`SplineObject` component and the `@splinetool/runtime` dependency were
+all removed. The login page's motion comes from the breathing
+GrainGradient (with its inbuilt film grain), the animated magnet-line
+rib field and the jade cursor wake — no WebGL 3D objects anywhere. If
+you ever want a live 3D emblem again, that is a deliberate design
+decision to revisit, not a gap to fill.

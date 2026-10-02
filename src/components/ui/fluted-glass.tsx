@@ -3,7 +3,6 @@
 import {
   CSSProperties,
   ReactNode,
-  useId,
   useRef,
 } from "react";
 import styles from "./fluted-glass.module.css";
@@ -15,11 +14,26 @@ interface FlutedGlassProps {
   borderRadius?: number;
   minHeight?: number;
   blur?: number;
-  refraction?: number;
   className?: string;
   style?: CSSProperties;
 }
 
+/**
+ * FlutedGlass — a pane of TRANSLUCENT FROSTED GLASS, debossed into the
+ * page.
+ *
+ * The 10px backdrop blur is applied DIRECTLY on the pane itself (the
+ * exact same pattern as every [data-slot="card"] in the app), so
+ * whatever moves behind it — the breathing gradient, the swiveling
+ * ribs, the jade cursor wake — smears through as soft streaks. This
+ * direct-application pattern is the one that reliably renders in every
+ * browser; layering the blur on an inner element mutes the frost.
+ *
+ * The pane carries a subtle vertical fluting (the ribbing the frost
+ * smears) and tilts a few degrees toward the pointer on a soft spring,
+ * settling back on leave. NO noise layers, NO SVG refraction filters —
+ * the blur and the ribs ARE the frost.
+ */
 export function FlutedGlass({
   children,
   maxTilt = 8,
@@ -27,13 +41,10 @@ export function FlutedGlass({
   borderRadius = 16,
   minHeight = 0,
   blur = 10,
-  refraction = 12,
   className = "",
   style,
 }: FlutedGlassProps) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const id = useId().replace(/:/g, "");
-  const filterId = `glass-refraction-${id}`;
 
   const reset = () => {
     const element = ref.current;
@@ -45,104 +56,60 @@ export function FlutedGlass({
   };
 
   return (
-    <>
-      {/* SVG distortion map used by the glass */}
-      <svg
-        className="absolute h-0 w-0 pointer-events-none"
-        aria-hidden="true"
-      >
-        <defs>
-          <filter
-            id={filterId}
-            x="-15%"
-            y="-15%"
-            width="130%"
-            height="130%"
-          >
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.018 0.09"
-              numOctaves="2"
-              seed="11"
-              result="noise"
-            />
+    <div
+      ref={ref}
+      className={`${styles.root} ${className}`}
+      style={{
+        background,
+        borderRadius,
+        minHeight,
+        /* THE FROST — 10px backdrop blur written as an INLINE style on
+           purpose: the production CSS minifier mangles
+           `backdrop-filter: blur(var(--glass-blur, ...))` into an
+           invalid declaration, so the blur MUST NOT live in the
+           stylesheet. Inline styles bypass the minifier and render in
+           every browser (this is the same pattern that reliably
+           frosted before). */
+        backdropFilter: `blur(${blur}px) saturate(120%)`,
+        WebkitBackdropFilter: `blur(${blur}px) saturate(120%)`,
+        ...style,
+      } as CSSProperties}
+      onPointerMove={(event) => {
+        if (
+          event.pointerType === "touch" ||
+          window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+          ).matches
+        ) {
+          return;
+        }
 
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="noise"
-              scale={refraction}
-              xChannelSelector="R"
-              yChannelSelector="G"
-            />
-          </filter>
-        </defs>
-      </svg>
+        const element = event.currentTarget;
+        const rect = element.getBoundingClientRect();
 
-      <div
-        ref={ref}
-        className={`${styles.root} ${className}`}
-        style={{
-          background,
-          borderRadius,
-          minHeight,
-          "--glass-blur": `${blur}px`,
-          ...style,
-        } as CSSProperties}
-        onPointerMove={(event) => {
-          if (
-            event.pointerType === "touch" ||
-            window.matchMedia(
-              "(prefers-reduced-motion: reduce)"
-            ).matches
-          ) {
-            return;
-          }
+        const x = (event.clientX - rect.left) / rect.width;
+        const y = (event.clientY - rect.top) / rect.height;
 
-          const element = event.currentTarget;
-          const rect = element.getBoundingClientRect();
+        element.style.setProperty(
+          "--tilt-x",
+          `${(0.5 - y) * maxTilt}deg`
+        );
 
-          const x = (event.clientX - rect.left) / rect.width;
-          const y = (event.clientY - rect.top) / rect.height;
+        element.style.setProperty(
+          "--tilt-y",
+          `${(x - 0.5) * maxTilt}deg`
+        );
+      }}
+      onPointerLeave={reset}
+    >
+      {/* Very subtle flute structure — ribbing the frost smears */}
+      <div className={styles.flutes} />
 
-          element.style.setProperty(
-            "--tilt-x",
-            `${(0.5 - y) * maxTilt}deg`
-          );
-
-          element.style.setProperty(
-            "--tilt-y",
-            `${(x - 0.5) * maxTilt}deg`
-          );
-        }}
-        onPointerLeave={reset}
-      >
-        {/* Transparent blurred glass */}
-        <div
-          className={styles.glass}
-          style={{
-            backdropFilter: `blur(${blur}px) saturate(120%)`,
-            WebkitBackdropFilter: `blur(${blur}px) saturate(120%)`,
-          }}
-        />
-
-        {/* Refraction layer */}
-        <div
-          className={styles.refraction}
-          style={{
-            backdropFilter: `url(#${filterId})`,
-            WebkitBackdropFilter: `url(#${filterId})`,
-          }}
-        />
-
-        {/* Very subtle flute structure — ribbing the frost smears */}
-        <div className={styles.flutes} />
-
-        {/* Content */}
-        <div className={styles.content}>
-          {children}
-        </div>
+      {/* Content */}
+      <div className={styles.content}>
+        {children}
       </div>
-    </>
+    </div>
   );
 }
 

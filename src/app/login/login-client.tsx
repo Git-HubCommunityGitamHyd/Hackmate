@@ -23,7 +23,6 @@ import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
 import { TextRepel } from "@/components/ui/text-repel";
 import { FlutedGlass } from "@/components/ui/fluted-glass";
 import { SplineReveal } from "@/components/ui/spline-reveal";
-import { SplineObject } from "@/components/ui/spline-object";
 import { InkBrush } from "@/components/ui/ink-brush";
 import { CursorField } from "@/components/ui/cursor-field";
 import { GrainGradient } from "@/components/ui/grain-gradient";
@@ -32,19 +31,12 @@ import { cn } from "@/lib/utils";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-/* The interactive 3D hero object (Spline). A published public scene by
-   default; point NEXT_PUBLIC_SPLINE_SCENE_URL at your own exported
-   .splinecode to swap it. If it can't load (offline, blocked), the
-   animated ink-orb fallback renders instead — the hero never blanks. */
-const SPLINE_SCENE =
-  process.env.NEXT_PUBLIC_SPLINE_SCENE_URL ??
-  "https://prod.spline.design/6Wq1Q7YGyM-iab9i/scene.splinecode";
-
 /**
  * LoginBackdrop — the sign-in page's FULL-PAGE living ground.
  *
  * NOT confined behind the text: the breathing jade GrainGradient
- * (WebGL, grain OFF — no noise texture) fills the entire login page
+ * (WebGL, its INBUILT film grain left ON at the default 0.32 — that
+ * grain is part of the component's look) fills the entire login page
  * and is BLENDED into the black ribbed wall three ways:
  *
  *   1. the wall's own flutes are re-drawn OVER the gradient, so the
@@ -57,7 +49,8 @@ const SPLINE_SCENE =
  *      gradient never reads as a pasted rectangle.
  *
  * The colored jade cursor wake (CursorField) sits above this backdrop
- * and below the content.
+ * and below the content. NO 3D objects — the page's motion is the
+ * breathing gradient, the swiveling ribs and the cursor wake.
  */
 function LoginBackdrop() {
   const reduceMotion = useReducedMotion();
@@ -68,7 +61,9 @@ function LoginBackdrop() {
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
     >
       {/* 1 — the breathing jade gradient: the whole page's ground.
-          Grain is OFF — clean color, no noise texture. */}
+          The component's INBUILT film grain stays ON (default 0.32) —
+          it is the texture of the gradient itself, not a bolted-on
+          noise layer. Never disable it. */}
       <GrainGradient
         className="absolute inset-0"
         colorLight="#8ecdb6"
@@ -77,7 +72,6 @@ function LoginBackdrop() {
         angle={0}
         curve={0.48}
         softness={0.16}
-        grain={0}
         speed={1}
       />
 
@@ -283,8 +277,9 @@ export function LoginClient() {
   return (
     <div className="relative pt-10 pb-12">
       {/* The FULL-PAGE living ground — the breathing jade gradient
-          blended into the black ribbed wall, ribs animated toward the
-          cursor. Covers the entire login page, not just the hero. */}
+          (inbuilt grain ON) blended into the black ribbed wall, ribs
+          animated toward the cursor. Covers the entire login page, not
+          just the hero. */}
       <LoginBackdrop />
 
       {/* The jade pixel wake — the sign-in hero page's own cursor
@@ -315,32 +310,23 @@ export function LoginClient() {
             against each other, so the text sits at the vertical middle of
             the card's side. */}
         <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 lg:items-center max-w-6xl mx-auto">
-          {/* Desktop: the hero — an interactive Spline 3D object you can
-              orbit with the pointer, floating on the full-page living
-              ground, above the animated copy. */}
+          {/* Desktop: the hero — animated copy on the full-page living
+              ground. No 3D object: the breathing gradient, the
+              swiveling ribs and the text's own reveal motion carry
+              the page. */}
           <div className="hidden lg:flex flex-col justify-center">
-            {/* Interactive Spline object — drag/orbit it. Falls back to
-                the breathing ink orb if the scene can't load. */}
-            <div className="flex justify-center mb-1">
-              <SplineObject
-                scene={SPLINE_SCENE}
-                interactive
-                width={440}
-                height={310}
-              />
-            </div>
-
             <ProjectInfo />
           </div>
 
           {/* Sign-in — a pane of TRANSLUCENT FROSTED GLASS, debossed
-              into the wall. 10px blur: the gradient's glow, the animated
-              ribs and the cursor's jade wake smear through as soft
-              streaks — the frost read. The pane carries the fluting and
-              the refraction map (no noise — clean frost); the pointer
-              tilt settles on a soft spring; and the whole card lands on
-              the page via the shared anime.js damped-spring entrance.
-              Radius is the one shared radius. */}
+              into the wall. 10px blur applied DIRECTLY on the pane
+              (same pattern as every card in the app), so the gradient's
+              glow, the animated ribs and the cursor's jade wake smear
+              through it as soft streaks — the frost read. The pane
+              carries the fluting; the pointer tilt settles on a soft
+              spring; and the whole card lands on the page via the
+              shared anime.js damped-spring entrance. Radius is the one
+              shared radius. */}
           <div className="w-full max-w-md mx-auto lg:mx-0">
             <SplineReveal drop={30} tilt={0} className="w-full">
               <FlutedGlass
@@ -505,18 +491,9 @@ export function LoginClient() {
             </p>
           </div>
 
-          {/* Mobile: the hero below the card — the interactive Spline
-              object (smaller) above the same animated copy. */}
+          {/* Mobile: the hero below the card — the same animated copy
+              on the living ground. */}
           <div className="lg:hidden">
-            <div className="flex justify-center mb-1">
-              <SplineObject
-                scene={SPLINE_SCENE}
-                interactive
-                width={280}
-                height={200}
-              />
-            </div>
-
             <ProjectInfo />
           </div>
         </div>

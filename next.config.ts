@@ -8,16 +8,16 @@ import type { NextConfig } from "next";
  * 'unsafe-eval'. Styles need 'unsafe-inline' (Tailwind + inline style
  * attributes from animation libraries). Pusher realtime chat connects over
  * wss:, and avatars/hackathon images load from https:, so both are allowed
- * narrowly. If you later add Spline/Three.js 3D embeds, extend script-src
- * with the CDN origin you actually use.
+ * narrowly. The app is intentionally 3D-free — no WebGL runtimes beyond
+ * the login page's own GrainGradient shader canvas.
  */
 const isDev = process.env.NODE_ENV === "development";
 
 const csp = [
   `default-src 'self'`,
-  // 'wasm-unsafe-eval' is for the Spline 3D runtime (WebAssembly module
-  // compilation) in production; dev keeps full 'unsafe-eval' for Turbopack.
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
+  // Dev keeps 'unsafe-eval' for Turbopack; production ships without it
+  // (the app no longer embeds any WebAssembly-based 3D runtime).
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   `style-src 'self' 'unsafe-inline'`,
   `img-src 'self' data: blob: https:`,
   `font-src 'self' data:`,

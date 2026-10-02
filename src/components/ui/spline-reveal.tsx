@@ -14,19 +14,19 @@ import { cn } from "@/lib/utils";
 const animePromise = import("animejs");
 
 /**
- * SplineReveal — the app's shared entrance + hover motion, in the
- * Spline design language.
+ * SplineReveal — the app's shared entrance + hover motion.
+ * (Name is historical: this has NO Spline/3D dependency — it is pure
+ * anime.js spring physics. The app is intentionally 3D-free.)
  *
- * Two coordinated physical systems, both driven the way a Spline
- * scene would drive them:
+ * Two coordinated physical systems:
  *
  *  1. ENTRANCE — a damped-spring settle computed by anime.js' real
  *     spring solver (mass / stiffness / damping). The element drops
- *     onto the page with a slight 3D rotation and settles with
- *     natural overshoot — the signature Spline "soft body lands"
- *     feel. No keyframes, no linear fades.
+ *     onto the page with a slight rotation and settles with
+ *     natural overshoot — the "soft body lands" feel. No keyframes,
+ *     no linear fades.
  *
- *  2. POINTER TILT — a 3D mount: the pane rotates a few degrees
+ *  2. POINTER TILT — a subtle mount: the pane rotates a few degrees
  *     toward the pointer (perspective + rotateX/rotateY written as
  *     CSS variables on pointer move) and settles back on leave via
  *     a springy cubic-bezier overshoot. This is the same mount the

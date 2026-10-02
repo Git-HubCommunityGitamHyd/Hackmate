@@ -62,10 +62,11 @@
 /* Frosted glass is TRANSLUCENT + GLOSSY: every pane is see-through    */
 /* with a 10px backdrop blur (the wall's flutes smear into soft        */
 /* streaks behind it) and a glossy specular sheen catching the top     */
-/* edge. NO noise textures — the blur and the ribs ARE the frost.      */
+/* edge. The ONE texture in the app is the GrainGradient's own        */
+/* inbuilt film grain on the login page — never disable it.            */
 /*                                                                     */
-/* Motion is Spline-language: damped-spring entrances (anime.js         */
-/* spring), 3D pointer tilt with overshoot settle.                      */
+/* Motion is spring-language: damped-spring entrances (anime.js        */
+/* spring), pointer tilt with overshoot settle. NO 3D objects.         */
 /*                                                                     */
 /* TOKEN SYSTEM (one system, everywhere):                              */
 /*   radius  : --radius = 1rem — every corner, no exceptions            */
@@ -150,7 +151,7 @@
     inset 0 7px 16px -4px oklch(0 0 0 / 0.58),
     inset 0 24px 44px -18px oklch(0 0 0 / 0.4);
 
-  /* Spline settle curve — soft overshoot, used by every transition. */
+  /* Spring settle curve — soft overshoot, used by every transition. */
   --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
 }
 
@@ -234,7 +235,7 @@
   }
   .text-balance { text-wrap: balance; }
 
-  /* SplineReveal mount: the 3D tilt settles on the spring curve
+  /* SplineReveal mount: the pointer tilt settles on the spring curve
      (perspective + rotation live in the component's inline style;
      this carries only the settle so the two never fight). */
   .spline-reveal {
@@ -411,7 +412,7 @@
   }
   /* Hover presses the pane deeper into the page — the deboss
      interaction: never lift, always sink. The spring curve gives the
-     settle its Spline feel. */
+     settle its soft overshoot. */
   [data-slot="card"]:hover {
     box-shadow: var(--deboss-2-pressed);
   }
@@ -436,8 +437,10 @@
       oklch(1 0 0 / 0.05) 100%
     );
   }
-  /* Sandblast REMOVED — no noise textures anywhere: the frost is the
-     blur, the roughness is the ribs smeared behind it. */
+  /* Sandblast REMOVED — no bolted-on noise overlays anywhere: the
+     frost is the blur, the roughness is the ribs smeared behind it.
+     (The login page's GrainGradient keeps its own INBUILT shader
+     grain — that is part of its look, not an overlay.) */
 
   /* Floating layers (popovers, dialogs, sheets, menus) are recessed
      frost too — one material everywhere, one blur everywhere. */
@@ -580,11 +583,4 @@
   box-shadow: var(--deboss-2) !important;
 }
 
-/* Keyframes for the Spline fallback orb (kept out of @layer so they win). */
-@keyframes ink-orb-breathe {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.08); filter: brightness(1.18); }
-}
-@keyframes ink-orb-spin {
-  to { transform: rotate(1turn); }
-}
+/* The fluted-panel's own ::before carries the ribbing — see above. */
