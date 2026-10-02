@@ -2,23 +2,21 @@ import Link from "next/link";
 import { Logo } from "@/components/shared/logo";
 
 /**
- * SiteFooter — a DEBOSSED tray, the bottom counterpart of the navbar
- * dock.
+ * SiteFooter — the floating bottom counterpart of the navbar dock.
  *
- * Rounded with the one shared radius and inset from the viewport edges
- * so it reads as a recess cut into the ink canvas, not an edge-to-edge
- * strip: a dark ceiling lip shades its top edge, one hairline of light
- * catches the bottom edge, and a soft AO pool deepens the floor. The
- * surface stays rough frost — translucent + backdrop blur + grain —
- * and the jade ink inlay runs along the top edge where the ink pools.
+ * A slab of rough frost recessed into the fluted wall, exactly the
+ * dock's width rhythm (max-w-5xl, inset from the viewport edges by
+ * the same padding) so the two bookend the page as a pair of floating
+ * trays. Rounded with the one shared radius, debossed with the same
+ * hard-surface recipe: crisp ceiling lip on top, light catch on the
+ * bottom edge, soft AO pool at the floor. No divider lines — the
+ * material and the recess do all the separating.
  */
 export function SiteFooter() {
   return (
     <footer className="relative z-10 mt-auto px-3 pb-3 sm:px-5 sm:pb-4">
-      <div className="deboss-tray backdrop-blur-xl">
-        {/* Jade inlay along the lit top edge */}
-        <div className="flute-edge mt-2 opacity-40" aria-hidden="true" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+      <div className="deboss-tray mx-auto max-w-5xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Logo className="h-6 w-6" alt="" />
             <span className="font-bold text-foreground tracking-tight">HackMate</span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -24,9 +24,63 @@ import { TextRepel } from "@/components/ui/text-repel";
 import { FlutedGlass } from "@/components/ui/fluted-glass";
 import { SplineReveal } from "@/components/ui/spline-reveal";
 import { InkBrush } from "@/components/ui/ink-brush";
+import { CursorField } from "@/components/ui/cursor-field";
+import { GrainGradient } from "@/components/ui/grain-gradient";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+/**
+ * HeroPanel — the hero section's living ground.
+ *
+ * A hard-surface recess stamped into the fluted wall, and at its
+ * floor the breathing jade GrainGradient (WebGL): soft ink tones
+ * rolling through a slow two-wave cycle, fine grain baked into the
+ * shader. A scrim keeps the copy's side deep ink so the type stays
+ * first; the glow breathes against the sign-in pane. The recess is
+ * closed with the same machined deboss lip every surface wears.
+ */
+function HeroPanel({ children }: { children: ReactNode }) {
+  return (
+    <div
+      className="relative overflow-hidden rounded-[var(--radius)]"
+      style={{ border: "1px solid oklch(1 0 0 / 0.08)" }}
+    >
+      {/* The breathing jade grain gradient — the hero's ground */}
+      <GrainGradient
+        className="absolute inset-0"
+        colorLight="#8ecdb6"
+        colorMid="#2c5a4b"
+        colorDark="#0b1310"
+        angle={0}
+        curve={0.48}
+        softness={0.13}
+        grain={0.3}
+        speed={1}
+      />
+      {/* Ink scrim on the copy side — the type stays first, the glow
+          breathes on the right, toward the sign-in pane. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(100deg, oklch(0.09 0.008 120 / 0.78) 0%, oklch(0.09 0.008 120 / 0.45) 42%, transparent 72%)",
+        }}
+      />
+      {/* Hard-surface deboss lip, pressed OVER the gradient so the
+          recess reads on top of the living ground. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{ boxShadow: "var(--deboss-2)" }}
+      />
+      <div className="relative flex min-h-[560px] flex-col justify-center p-8 lg:p-10">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 function ProjectInfo() {
   const [descriptionRevealed, setDescriptionRevealed] = useState(false);
@@ -189,10 +243,13 @@ export function LoginClient() {
 
   return (
     <div className="relative pt-10 pb-12">
-      {/* The ground of this page is the same one every page shares:
-          the radiance-cascades ink canvas + the cursor's pixel wake,
-          both mounted globally in the root layout. Login simply sits
-          on it — no special lighting, no overrides. */}
+      {/* The pixel wake — the sign-in hero page's own cursor effect.
+          Grayscale ink pixels that wake and brighten under the
+          pointer, then sink back. ONLY this page carries it; every
+          other page runs on the plain fluted wall. It sits below the
+          content (negative z) and above the wall, and the frosted
+          sign-in pane blurs it as it passes beneath. */}
+      <CursorField />
 
       <div className="relative z-10">
         {/* Mobile: brand + sign-in first */}
@@ -213,27 +270,30 @@ export function LoginClient() {
             against each other, so the text sits at the vertical middle of
             the card's side. */}
         <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 lg:items-center max-w-6xl mx-auto">
-          {/* Desktop: project info column */}
+          {/* Desktop: the hero — copy set into the breathing jade
+              grain-gradient recess */}
           <div className="hidden lg:flex flex-col justify-center">
-            <ProjectInfo />
+            <HeroPanel>
+              <ProjectInfo />
+            </HeroPanel>
           </div>
 
-          {/* Sign-in — a pane of ROUGH FROSTED GLASS, debossed into the
-              ink canvas. The pane is genuinely translucent (deep blur +
-              saturation) so the radiance field and the cursor's ink wake
-              visibly smear through it — that is the frost. Its surface
-              carries the fluting, the refraction map and the sandblast
-              grain; the pointer tilt settles on a soft spring; and the
-              whole card lands on the page via the shared anime.js
-              damped-spring entrance. Radius is the one shared radius. */}
+          {/* Sign-in — a pane of ROUGH FROSTED GLASS, debossed into
+              the wall. 10px blur: the wall's fluted lines and the
+              cursor's ink wake smear through as soft streaks — the
+              frost read. The pane carries the fluting, the refraction
+              map and the sandblast grain; the pointer tilt settles on
+              a soft spring; and the whole card lands on the page via
+              the shared anime.js damped-spring entrance. Radius is
+              the one shared radius. */}
           <div className="w-full max-w-md mx-auto lg:mx-0">
             <SplineReveal drop={30} tilt={0} className="w-full">
               <FlutedGlass
                 maxTilt={7}
-                background="rgba(10, 12, 11, 0.42)"
+                background="rgba(14, 16, 15, 0.45)"
                 borderRadius={16}
                 minHeight={0}
-                blur={24}
+                blur={10}
                 className="w-full"
               >
               <div
@@ -390,9 +450,11 @@ export function LoginClient() {
             </p>
           </div>
 
-          {/* Mobile: project info below the card */}
-          <div className="lg:hidden border-t pt-8">
-            <ProjectInfo />
+          {/* Mobile: the hero below the card, same grain-gradient recess */}
+          <div className="lg:hidden">
+            <HeroPanel>
+              <ProjectInfo />
+            </HeroPanel>
           </div>
         </div>
       </div>

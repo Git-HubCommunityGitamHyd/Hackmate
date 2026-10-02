@@ -28,8 +28,8 @@ export function TeamCard({ team, showMatch, delay = 0 }: { team: TeamCardDTO; sh
   return (
     <SplineReveal delay={delay} className="h-full">
     <Card className="group relative hover:border-primary/40 transition-all duration-300">
-      {/* Peep window — hover the card to peek at its components. */}
-      <CardPeek label="peek · team">
+      {/* Peek window — hover the card and the hub preview covers it. */}
+      <CardPeek>
         <PeekRow icon={<Users />}>
           {team.memberNames.slice(0, 3).join(", ")}
           {team.memberCount > 3 ? ` +${team.memberCount - 3} more` : ""}

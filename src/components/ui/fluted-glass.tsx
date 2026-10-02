@@ -26,7 +26,7 @@ export function FlutedGlass({
   background = "rgba(255, 255, 255, 0.035)",
   borderRadius = 16,
   minHeight = 0,
-  blur = 14,
+  blur = 10,
   refraction = 12,
   className = "",
   style,

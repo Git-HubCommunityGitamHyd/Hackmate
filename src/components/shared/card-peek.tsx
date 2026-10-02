@@ -5,25 +5,25 @@ import { cn } from "@/lib/utils";
 import { HoverTransition } from "@/components/ui/hover-transition";
 
 /**
- * CardPeek — the "peep in" hover window, running on the shared
+ * CardPeek — the hover preview window, running on the shared
  * HoverTransition engine.
  *
  * Settings (the peek spec): effect "parallax", direction "center",
  * snappy timing (0.38s with the crisp out-expo curve).
  *
- * Drop one inside a Card. When the pointer enters the card, a small
- * frosted window bloomes open near the top corner and shows a
- * miniature of what the card contains (members, roles, skills,
- * dates) — a peek, not a navigation. The reveal itself is the
- * parallax transition: the window un-clips from the card's centre
- * with a defocusing blur, rides a 3D tilt that tracks the pointer,
- * and carries the engine's glare pass.
+ * Drop one inside a Card. When the pointer enters the card, a frosted
+ * window un-clips open FROM THE CARD'S CENTRE and COVERS THE ENTIRE
+ * CARD — a full-cover preview of what the card's hub holds (members,
+ * roles, skills, dates). No caption, no label text: the pane is the
+ * preview. The reveal is the parallax transition: the window opens
+ * from centre with a defocusing blur, rides a 3D tilt that tracks the
+ * pointer, and carries the engine's glare pass. Clicks pass straight
+ * through (the overlay is pointer-events: none), so the card's links
+ * keep working while the hub shows.
  *
- * Activation is bound to the closest [data-slot="card"] ancestor (the
- * overlay itself is pointer-events: none, so it drives the
- * HoverTransition in controlled mode). Tilt + glare coordinates are
- * written as CSS variables on the wrapper, which the engine's inner
- * layers inherit.
+ * Activation is bound to the closest [data-slot="card"] ancestor. Tilt
+ * + glare coordinates are written as CSS variables on the wrapper,
+ * which the engine's inner layers inherit.
  *
  * It is purely presentational (aria-hidden): the same information is
  * fully reachable on the card's target page, so nothing is hidden
@@ -35,16 +35,12 @@ const PEEK_DURATION = 0.38;
 const PEEK_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 export function CardPeek({
-  label,
   children,
   className,
-  align = "right",
 }: {
-  /** Tiny uppercase caption, e.g. "peek · team". */
-  label: string;
+  /** The hub preview shown inside the full-cover pane. */
   children: ReactNode;
   className?: string;
-  align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -96,29 +92,23 @@ export function CardPeek({
     <div
       ref={wrapperRef}
       aria-hidden="true"
-      className={cn("pointer-events-none absolute inset-0 z-[5]", className)}
+      className={cn("pointer-events-none absolute inset-0 z-40", className)}
     >
       <HoverTransition
         effect="parallax"
         direction="center"
         duration={PEEK_DURATION}
         easing={PEEK_EASING}
-        label={`Peek: ${label}`}
         active={open}
         tabIndex={-1}
-        className="h-full min-h-0 overflow-visible"
+        className="h-full min-h-0"
         defaultComponent={<span className="block h-full w-full" />}
         hoverComponent={
-          <div
-            className={cn(
-              "peep-window absolute top-2 w-52 p-2.5",
-              align === "right" ? "right-2" : "left-2",
-            )}
-          >
-            <p className="label-harsh mb-1.5 text-[9px] tracking-[0.24em] text-primary/80">
-              {label}
-            </p>
-            <div className="space-y-1.5 text-[11px] leading-snug text-foreground/90">
+          /* The hub preview window — covers the ENTIRE card: a pane of
+             rough frost recessed one level deeper than its host, hub
+             rows centred inside it. */
+          <div className="peep-window flex h-full w-full flex-col">
+            <div className="scrollbar-slim flex flex-1 flex-col justify-center gap-3 overflow-auto p-5">
               {children}
             </div>
           </div>
@@ -128,7 +118,7 @@ export function CardPeek({
   );
 }
 
-/** One row inside a peep window: icon + text, tiny and quiet. */
+/** One row inside the peek window: icon + text, quiet and readable. */
 export function PeekRow({
   icon,
   children,
@@ -137,9 +127,9 @@ export function PeekRow({
   children: ReactNode;
 }) {
   return (
-    <p className="flex items-center gap-1.5 text-muted-foreground [&_svg]:h-3 [&_svg]:w-3 [&_svg]:shrink-0">
+    <p className="flex items-center gap-2.5 text-sm text-foreground/90 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0">
       {icon}
-      <span className="min-w-0 truncate">{children}</span>
+      <span className="min-w-0">{children}</span>
     </p>
   );
 }
