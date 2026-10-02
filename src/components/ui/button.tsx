@@ -9,25 +9,28 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        /* Filled variants carry their deboss recess via
+           [data-variant] rules in globals.css (base layer), so no
+           shadow-* utilities here — utilities would out-rank them. */
         default:
-          "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
+          "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive:
-          "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        /* Embossed relief — raised OFF the surface behind it (lit
-           top-left edge + shaded bottom-right edge + small penumbra via
-           the .embossed utility in globals.css). Frosted translucency
-           comes from bg-muted/40 over whatever glass the parent
-           carries. "debossed" stays as a legacy alias. */
-        embossed:
-          "embossed border border-border/60 bg-muted/40 text-muted-foreground shadow-none hover:text-foreground hover:bg-muted/70 dark:bg-white/[0.045] dark:border-white/10 dark:hover:bg-white/[0.08]",
+        /* Debossed well — pressed INTO the surface (dark ceiling lip,
+           faint light catch on the bottom edge via the .debossed
+           utility in globals.css). Frosted translucency comes from
+           bg-muted/30 over whatever glass the parent carries.
+           "embossed" stays as a legacy alias — same recess. */
         debossed:
-          "embossed border border-border/60 bg-muted/40 text-muted-foreground shadow-none hover:text-foreground hover:bg-muted/70 dark:bg-white/[0.045] dark:border-white/10 dark:hover:bg-white/[0.08]",
+          "debossed border border-border/60 bg-muted/30 text-muted-foreground shadow-none hover:text-foreground hover:bg-muted/60 dark:bg-white/[0.04] dark:border-white/10 dark:hover:bg-white/[0.07]",
+        embossed:
+          "debossed border border-border/60 bg-muted/30 text-muted-foreground shadow-none hover:text-foreground hover:bg-muted/60 dark:bg-white/[0.04] dark:border-white/10 dark:hover:bg-white/[0.07]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
@@ -59,6 +62,7 @@ function Button({
   return (
     <Comp
       data-slot="button"
+      data-variant={variant ?? "default"}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />

@@ -47,21 +47,22 @@ const NAV_LINKS = [
 ];
 
 /**
- * Header, round 5 — floating ink dock with EMBOSSED controls.
+ * Header, round 6 — floating ink dock with DEBOSSED controls.
  *
- * The dock is a raised frosted slab (one shared radius), and every
- * control in it is raised too — the embossed half of the lighting
- * system, every term agreeing with the single top-left key light:
- *  - Nav links are raised frosted pills with the text sitting on them
- *    (lit top-left edge, shaded bottom-right edge, small penumbra).
- *    The active link sits highest and glows jade underneath it.
+ * The dock is a slab of rough frost recessed into the ink canvas (one
+ * shared radius), and every control in it is pressed in too — the
+ * deboss half of the system: dark ceiling lip, one faint light catch
+ * on the bottom edge, soft AO pool at the floor of the recess.
+ *  - Nav links are shallow wells with the text sitting at their
+ *    floor. The active link is pressed deepest and pools jade.
  *  - Icon buttons, the search trigger and the sign-in CTA are the
- *    same raised pills (Button variant="embossed" / .embossed).
+ *    same recessed pills (Button variant="debossed" / .debossed).
  *  - The brand emblem is the HackMate logo mark (/public/logo.svg) —
  *    the same single file that drives the favicon.
  *  - The dock entrance (drop + settle) and the nav-link stagger run
- *    on anime.js; stateful UI (badges, mobile menu) stays framer.
- * Everything else kept from round 4: ⌘K palette, notification preview
+ *    on anime.js' real spring solver — the Spline landing feel.
+ *    Stateful UI (badges, mobile menu) stays framer.
+ * Everything else kept from round 5: ⌘K palette, notification preview
  * popover, karma in the account menu, springy badge, skip link,
  * animated mobile menu, scroll shrink.
  */
@@ -79,29 +80,28 @@ export function Navbar() {
   const dockRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
 
-  /* Anime.js one-shot entrance: dock drops in, links stagger. */
+  /* Anime.js spring entrance: dock drops in and settles like a soft
+     body landing, links stagger behind it on the same solver. */
   useEffect(() => {
     if (reduceMotion) return;
     let cancelled = false;
     (async () => {
-      const { animate, stagger } = await import("animejs");
+      const { animate, stagger, spring } = await import("animejs");
       if (cancelled) return;
       if (dockRef.current) {
         animate(dockRef.current, {
-          translateY: [-18, 0],
+          translateY: [-22, 0],
           opacity: [0, 1],
-          duration: 620,
-          ease: "out(3)",
+          ease: spring({ mass: 1, stiffness: 70, damping: 10, velocity: 0 }),
         });
       }
       const links = navRef.current?.querySelectorAll("[data-nav-link]");
       if (links && links.length > 0) {
         animate(Array.from(links), {
           opacity: [0, 1],
-          translateX: [10, 0],
-          duration: 480,
-          delay: stagger(70, { start: 180 }),
-          ease: "out(3)",
+          translateX: [12, 0],
+          delay: stagger(70, { start: 160 }),
+          ease: spring({ mass: 1, stiffness: 90, damping: 12, velocity: 0 }),
         });
       }
     })();
@@ -167,11 +167,11 @@ export function Navbar() {
         Skip to content
       </a>
 
-      {/* The floating dock — embossed on the outside, one shared radius */}
+      {/* The floating dock — debossed into the canvas, one shared radius */}
       <div
         ref={dockRef}
         className={cn(
-          "emboss-dock ink-edge mx-auto flex w-full max-w-5xl items-center gap-3 rounded-lg px-3 sm:px-4",
+          "deboss-dock mx-auto flex w-full max-w-5xl items-center gap-3 rounded-lg px-3 sm:px-4",
           "transition-[height,padding,box-shadow] duration-300",
           scrolled ? "h-12" : "h-14",
         )}
@@ -190,10 +190,10 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop nav — every link is a raised frosted pill with its
-            text sitting on it; the active link sits highest and glows
-            jade underneath. Transitions carry a soft overshoot so the
-            lift reads as physical (the Spline-style spring feel). */}
+        {/* Desktop nav — every link is a shallow recessed well with its
+            text sitting at the floor; the active link is pressed deepest
+            and pools jade. Transitions carry the spring settle so the
+            press reads as physical (the Spline feel). */}
         <nav
           ref={navRef}
           className="hidden items-center gap-1.5 ml-2 md:flex"
@@ -235,7 +235,7 @@ export function Navbar() {
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  variant="embossed"
+                  variant="debossed"
                   size="icon"
                   className="relative rounded-lg"
                   aria-label={badgeCount > 0 ? `Notifications, ${badgeCount} unread` : "Notifications"}
@@ -305,14 +305,14 @@ export function Navbar() {
               </PopoverContent>
             </Popover>
 
-            <Button asChild variant="embossed" size="icon" className="hidden rounded-lg sm:inline-flex" aria-label="Saved items">
+            <Button asChild variant="debossed" size="icon" className="hidden rounded-lg sm:inline-flex" aria-label="Saved items">
               <Link href="/saved">
                 <Bookmark className="h-5 w-5" />
               </Link>
             </Button>
 
             {isAdmin && (
-              <Button asChild variant="embossed" size="sm" className="hidden rounded-lg font-semibold lg:inline-flex">
+              <Button asChild variant="debossed" size="sm" className="hidden rounded-lg font-semibold lg:inline-flex">
                 <Link href="/hackathons/new">
                   <Trophy className="h-4 w-4 mr-1.5" /> Post hackathon
                 </Link>
@@ -323,7 +323,7 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="rounded-full border border-border p-0.5 transition-all hover:border-primary/60 hover:shadow-[0_0_0_3px_color-mix(in_oklch,var(--primary)_18%,transparent)]"
+                  className="debossed rounded-full border border-border p-0.5 transition-colors hover:border-primary/60"
                   aria-label="Account menu"
                 >
                   <Avatar className="h-8 w-8">
@@ -396,14 +396,14 @@ export function Navbar() {
             </DropdownMenu>
           </>
         ) : (
-          <Button asChild size="sm" className="embossed shadow-none rounded-lg font-bold">
+          <Button asChild size="sm" className="debossed rounded-lg font-bold">
             <Link href="/login">Sign in</Link>
           </Button>
         )}
 
         {/* Mobile trigger */}
         <Button
-          variant="embossed"
+          variant="debossed"
           size="icon"
           className="rounded-lg md:hidden"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
@@ -422,7 +422,7 @@ export function Navbar() {
             animate={reduceMotion ? { opacity: 1 } : { height: "auto", opacity: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="emboss-dock mx-auto mt-2 max-w-5xl overflow-hidden rounded-lg md:hidden"
+            className="deboss-dock mx-auto mt-2 max-w-5xl overflow-hidden rounded-lg md:hidden"
             aria-label="Mobile"
           >
             <div className="px-4 py-4 flex flex-col gap-1">

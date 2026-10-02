@@ -89,6 +89,10 @@ export function PixelCanvas({
         const container = containerRef.current;
         if (!canvas || !container) return;
 
+        /* Reduced motion: the field stays asleep — a still, matte ink
+           canvas with no wake and zero animation cost. */
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
         const ctx = canvas.getContext("2d", { alpha: true });
         if (!ctx) return;
 
@@ -143,7 +147,16 @@ export function PixelCanvas({
             const radius = variant === "glow" ? 120 : 80;
             const glowPasses = variant === "glow" ? 2 : 1;
 
+            /* Idle sleep: when the pointer is far off-field and every
+               pixel has decayed to black, skip the grid scan entirely —
+               the loop costs ~nothing until the next pointer wake. */
+            if (mouseX < -500 && mouseY < -500 && !idleAwake) {
+                animationRef.current = requestAnimationFrame(draw);
+                return;
+            }
+
             // Update pixel states
+            idleAwake = false; // reset each frame; re-armed by awake pixels below
             for (let i = 0; i < cols; i++) {
                 const col = pixels[i];
                 if (!col) continue;
@@ -174,6 +187,10 @@ export function PixelCanvas({
                         : speed; // Slow decay for trailing
 
                     pixel.intensity += (pixel.targetIntensity - pixel.intensity) * lerpSpeed;
+
+                    // Track whether any pixel is still awake (for the
+                    // idle-sleep fast path above).
+                    if (pixel.intensity > 0.01) idleAwake = true;
 
                     // Shift color phase slowly for shimmer effect
                     pixel.colorPhase = (pixel.colorPhase + 0.001 * (deltaTime / 16)) % 1;
@@ -249,6 +266,7 @@ export function PixelCanvas({
         };
 
         // Initialize
+        let idleAwake = false;
         initPixels();
         lastTimeRef.current = performance.now();
         animationRef.current = requestAnimationFrame(draw);

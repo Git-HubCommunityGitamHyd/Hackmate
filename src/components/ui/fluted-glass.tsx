@@ -134,8 +134,11 @@ export function FlutedGlass({
           }}
         />
 
-        {/* Very subtle flute structure */}
+        {/* Very subtle flute structure — ribbing the frost smears */}
         <div className={styles.flutes} />
+
+        {/* Sandblast grain — the rough, textured surface */}
+        <div className={styles.grain} />
 
         {/* Content */}
         <div className={styles.content}>

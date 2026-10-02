@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
@@ -19,10 +19,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/shared/logo";
-import { RayLight } from "@/components/ui/ray-light";
 import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
 import { TextRepel } from "@/components/ui/text-repel";
 import { FlutedGlass } from "@/components/ui/fluted-glass";
+import { SplineReveal } from "@/components/ui/spline-reveal";
 import { InkBrush } from "@/components/ui/ink-brush";
 import { cn } from "@/lib/utils";
 
@@ -74,21 +74,7 @@ function ProjectInfo() {
             jade flourish of the ink-wash page. */}
         <InkBrush className="mt-1 mb-1 -rotate-1" width={220} height={12} />
 
-        <div className="relative text-muted-foreground mt-4 max-w-xl leading-relaxed min-h-[8rem] rounded-lg">
-          {/* Neutral frosted slab behind the copy — translucent now so
-              the diagonal key sweep bleeds through it too. */}
-          <div
-            className="pointer-events-none absolute -inset-6 z-0 rounded-lg bg-black/40 backdrop-blur-md"
-            style={{
-              maskImage:
-                "linear-gradient(to right, transparent, black 10%, black 90%, transparent), linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)",
-              maskComposite: "intersect",
-              WebkitMaskImage:
-                "linear-gradient(to right, transparent, black 10%, black 90%, transparent), linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)",
-              WebkitMaskComposite: "source-in",
-            }}
-          />
-
+        <div className="relative text-muted-foreground mt-4 max-w-xl leading-relaxed min-h-[8rem]">
           {/* Entrance animation */}
           <span
             className={descriptionRevealed ? "invisible" : "visible"}
@@ -132,106 +118,6 @@ const stagger = (i: number) => ({
   transition: { duration: 0.5, ease: EASE, delay: 0.25 + i * 0.07 },
 });
 
-/**
- * useCardLight — the ray-tracing rig for the sign-in card.
- *
- * One invisible studio light (the same one RayLight paints on the
- * black field) is tracked in viewport space. Every frame this hook
- * computes, from the light's position relative to the CARD:
- *
- *   - the cast shadow direction: the shadow always falls AWAY from
- *     the light, so the card's drop shadow swings around it like a
- *     real occluder (--cast-x / --cast-y on the wrapper)
- *   - the specular streak: where the light strikes the frosted pane,
- *     clamped so the streak keeps sliding along the glass even when
- *     the light has moved off-card (--spec-x / --spec-y in %)
- *
- * Both are written as CSS variables and consumed by .ray-cast /
- * .ray-specular in globals.css — no React re-renders, just paint.
- * prefers-reduced-motion parks everything at the resting position.
- */
-function useCardLight(
-  castRef: React.RefObject<HTMLDivElement | null>,
-  specRef: React.RefObject<HTMLDivElement | null>,
-) {
-  useEffect(() => {
-    const castEl = castRef.current;
-    const specEl = specRef.current;
-    if (!castEl) return;
-
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-
-    let targetX = window.innerWidth * 0.3;
-    let targetY = window.innerHeight * 0.26;
-    let x = targetX;
-    let y = targetY;
-    let raf = 0;
-    let running = true;
-
-    /* Resting pose: light at its editorial parking spot. */
-    apply(targetX, targetY);
-    if (reduced) return;
-
-    const onMove = (event: PointerEvent) => {
-      /* Touch never moves the studio light. */
-      if (event.pointerType === "touch") return;
-      targetX = event.clientX;
-      targetY = event.clientY;
-    };
-
-    function apply(lx: number, ly: number) {
-      if (!castEl) return;
-      const rect = castEl.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-
-      /* Cast shadow: direction from light -> card centre, saturating
-         at 34px of offset; biased downward because light comes from
-         above the "floor". */
-      const dx = cx - lx;
-      const dy = cy - ly;
-      const dist = Math.hypot(dx, dy) || 1;
-      const k = Math.min(dist / 26, 34);
-      castEl.style.setProperty("--cast-x", `${((dx / dist) * k).toFixed(1)}px`);
-      castEl.style.setProperty(
-        "--cast-y",
-        `${((dy / dist) * k * 0.55 + 12).toFixed(1)}px`,
-      );
-
-      /* Specular streak: light position as % of the card box,
-         clamped to [-30%, 130%] so it slides along the pane. */
-      if (specEl) {
-        const sx = Math.max(-30, Math.min(130, ((lx - rect.left) / rect.width) * 100));
-        const sy = Math.max(-30, Math.min(130, ((ly - rect.top) / rect.height) * 100));
-        specEl.style.setProperty("--spec-x", `${sx.toFixed(1)}%`);
-        specEl.style.setProperty("--spec-y", `${sy.toFixed(1)}%`);
-      }
-    }
-
-    const tick = () => {
-      if (!running) return;
-      /* Same critically-damped glide as RayLight so the card's shadow
-         and the field's light move as ONE source. */
-      x += (targetX - x) * 0.085;
-      y += (targetY - y) * 0.085;
-      apply(x, y);
-      raf = requestAnimationFrame(tick);
-    };
-
-    window.addEventListener("pointermove", onMove, { passive: true });
-    raf = requestAnimationFrame(tick);
-
-    return () => {
-      running = false;
-      cancelAnimationFrame(raf);
-      window.removeEventListener("pointermove", onMove);
-    };
-  }, [castRef, specRef]);
-}
-
 export function LoginClient() {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
@@ -242,11 +128,6 @@ export function LoginClient() {
 
   const hasDemo =
     process.env.NEXT_PUBLIC_ALLOW_DEMO_LOGIN === "true";
-
-  /* The ray-tracing rig: cast shadow + specular streak on the card. */
-  const castRef = useRef<HTMLDivElement>(null);
-  const specRef = useRef<HTMLDivElement>(null);
-  useCardLight(castRef, specRef);
 
   async function sendMagicLink(e: React.FormEvent) {
     e.preventDefault();
@@ -307,12 +188,11 @@ export function LoginClient() {
   }
 
   return (
-    <div className="relative pt-10 pb-12 overflow-hidden">
-      {/* Ray-traced cursor light on a pure black ground: one smooth
-          studio light (specular + ambient + a whisper of jade edge)
-          gliding after the pointer. No pixels, no noise — the field
-          stays matte black, the jade lives on the edges. */}
-      <RayLight className="fixed inset-0 z-0" />
+    <div className="relative pt-10 pb-12">
+      {/* The ground of this page is the same one every page shares:
+          the radiance-cascades ink canvas + the cursor's pixel wake,
+          both mounted globally in the root layout. Login simply sits
+          on it — no special lighting, no overrides. */}
 
       <div className="relative z-10">
         {/* Mobile: brand + sign-in first */}
@@ -338,62 +218,29 @@ export function LoginClient() {
             <ProjectInfo />
           </div>
 
-          {/* Sign-in — FROSTED GLASS card on the ray-traced field. The
-              pane is genuinely translucent (42% alpha) with a deep blur,
-              so the diagonal key sweep visibly BLEEDS THROUGH it — that
-              is what makes it read as frosted instead of a dark panel.
-              Fluting + refraction + pointer tilt intact via FlutedGlass.
-              The ray-tracing rig sits on the wrapper: .ray-cast swings
-              the drop shadow away from the light, .ray-specular (inside)
-              is the streak the light throws across the pane, and the
-              ink-edge class adds the mouse-reactive jade hairline on
-              top. Radius is 16px — the one radius every corner shares. */}
+          {/* Sign-in — a pane of ROUGH FROSTED GLASS, debossed into the
+              ink canvas. The pane is genuinely translucent (deep blur +
+              saturation) so the radiance field and the cursor's ink wake
+              visibly smear through it — that is the frost. Its surface
+              carries the fluting, the refraction map and the sandblast
+              grain; the pointer tilt settles on a soft spring; and the
+              whole card lands on the page via the shared anime.js
+              damped-spring entrance. Radius is the one shared radius. */}
           <div className="w-full max-w-md mx-auto lg:mx-0">
-            <motion.div
-              ref={castRef}
-              className="ray-cast rounded-lg"
-              initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{ duration: 0.6, ease: EASE }}
-            >
+            <SplineReveal drop={30} tilt={0} className="w-full">
               <FlutedGlass
                 maxTilt={7}
                 background="rgba(10, 12, 11, 0.42)"
                 borderRadius={16}
                 minHeight={0}
                 blur={24}
-                className="ink-edge w-full"
-                style={{
-                  /* The wrapper (.ray-cast) owns the drop shadow; the
-                     pane itself carries only its EDGE LIGHTING — a bright
-                     two-step hairline where the key light strikes the
-                     top-left of the thick glass, a shaded line on the
-                     far edge. This is what reads as a lit, frosted,
-                     bevelled pane. */
-                  boxShadow:
-                    "inset 1px 1px 0 0 rgba(255, 255, 255, 0.24), inset 2px 2px 0 0 rgba(255, 255, 255, 0.08), inset -1px -1px 0 0 rgba(0, 0, 0, 0.5)",
-                }}
+                className="w-full"
               >
               <div
                 role="group"
                 aria-label="Sign in"
                 className="relative w-full text-foreground"
               >
-                {/* Specular streak — where the studio light strikes the
-                    frosted pane; --spec-x/--spec-y come from useCardLight. */}
-                <div
-                  ref={specRef}
-                  aria-hidden="true"
-                  className="ray-specular pointer-events-none absolute inset-0 z-[5] rounded-[16px]"
-                />
-
-                {/* Paper-white top hairline — quiet light catching the top
-                    edge of the frosted pane. */}
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
-                />
-
                 <div className="p-7 space-y-6">
                   <motion.div {...(reduceMotion ? {} : stagger(0))}>
                     <h2 className="text-xl font-bold tracking-tight text-white">
@@ -455,13 +302,13 @@ export function LoginClient() {
                           placeholder="you@college.edu"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="h-11 bg-neutral-950 border-white/15 text-white placeholder:text-neutral-600 focus-visible:ring-primary/50 focus-visible:border-primary/60 transition-colors dark:shadow-[inset_1px_1px_0_0_rgb(255_255_255/0.08),inset_-1px_-1px_0_0_rgb(0_0_0/0.5),2px_3px_8px_-5px_rgb(0_0_0/0.75)]"
+                          className="h-11 bg-neutral-950/70 border-white/15 text-white placeholder:text-neutral-600 focus-visible:ring-primary/50 focus-visible:border-primary/60 transition-colors"
                         />
                       </div>
 
                       <Button
                         type="submit"
-                        className="w-full h-11 font-semibold btn-harsh transition-transform active:scale-[0.98]"
+                        className="w-full h-11 font-semibold transition-transform active:scale-[0.98]"
                         disabled={sendingMagic}
                       >
                         {sendingMagic ? (
@@ -501,7 +348,7 @@ export function LoginClient() {
 
                         <Button
                           variant="ghost"
-                          className="w-full border border-dashed border-white/15 hover:border-white/25 hover:bg-neutral-950 text-neutral-300"
+                          className="w-full border border-dashed border-white/15 hover:border-white/25 hover:bg-neutral-950/60 text-neutral-300"
                           onClick={demoLogin}
                           disabled={demoLoading}
                         >
@@ -519,7 +366,7 @@ export function LoginClient() {
                 </div>
               </div>
               </FlutedGlass>
-            </motion.div>
+            </SplineReveal>
 
             <p className="text-xs text-muted-foreground text-center mt-2 max-w-xs mx-auto text-balance">
               <motion.span

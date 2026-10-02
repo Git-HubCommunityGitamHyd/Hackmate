@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import { Github, Clock, MapPin, Compass, Lightbulb, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { UserAvatar } from "@/components/shared/user-avatar";
 import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
 import { CardPeek, PeekRow } from "@/components/shared/card-peek";
+import { SplineReveal } from "@/components/ui/spline-reveal";
 import {
   SkillBadge,
   RecruitmentBadge,
@@ -26,20 +26,17 @@ export function PersonCard({
   showMatch,
   showKarma,
   action,
+  delay = 0,
 }: {
   person: PersonCardDTO;
   showMatch?: boolean;
   showKarma?: boolean;
   action?: React.ReactNode;
+  /** Seconds to wait before the spring entrance (list stagger). */
+  delay?: number;
 }) {
-  const reduceMotion = useReducedMotion();
   return (
-    <motion.div
-      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={reduceMotion ? undefined : { y: -3 }}
-    >
+    <SplineReveal delay={delay} className="h-full">
     <Card className="group relative hover:border-primary/40 transition-all duration-300">
       {/* Peep window — hover the card to peek at its components. */}
       <CardPeek label="peek · person">
@@ -184,6 +181,6 @@ export function PersonCard({
         </div>
       </CardContent>
     </Card>
-    </motion.div>
+    </SplineReveal>
   );
 }

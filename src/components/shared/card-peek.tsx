@@ -2,22 +2,38 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { HoverTransition } from "@/components/ui/hover-transition";
 
 /**
- * CardPeek — the "peep in" hover window.
+ * CardPeek — the "peep in" hover window, running on the shared
+ * HoverTransition engine.
+ *
+ * Settings (the peek spec): effect "parallax", direction "center",
+ * snappy timing (0.38s with the crisp out-expo curve).
  *
  * Drop one inside a Card. When the pointer enters the card, a small
- * glass window scales open near the top corner and shows a miniature
- * of what the card contains (members, roles, skills, dates) — a peek,
- * not a navigation. The pop animation runs on anime.js with a soft
- * easing; leave is a fast CSS collapse.
+ * frosted window bloomes open near the top corner and shows a
+ * miniature of what the card contains (members, roles, skills,
+ * dates) — a peek, not a navigation. The reveal itself is the
+ * parallax transition: the window un-clips from the card's centre
+ * with a defocusing blur, rides a 3D tilt that tracks the pointer,
+ * and carries the engine's glare pass.
  *
- * Hover detection binds to the closest [data-slot="card"] ancestor, so
- * the component works no matter where in the card's tree it sits. It is
- * purely presentational (aria-hidden): the same information is fully
- * reachable on the card's target page, so nothing is hidden from
- * keyboard or screen-reader users.
+ * Activation is bound to the closest [data-slot="card"] ancestor (the
+ * overlay itself is pointer-events: none, so it drives the
+ * HoverTransition in controlled mode). Tilt + glare coordinates are
+ * written as CSS variables on the wrapper, which the engine's inner
+ * layers inherit.
+ *
+ * It is purely presentational (aria-hidden): the same information is
+ * fully reachable on the card's target page, so nothing is hidden
+ * from keyboard or screen-reader users.
  */
+
+/** Snappy: fast attack, crisp settle — the peek never lingers. */
+const PEEK_DURATION = 0.38;
+const PEEK_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+
 export function CardPeek({
   label,
   children,
@@ -31,65 +47,81 @@ export function CardPeek({
   align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
-  const windowRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
-  /* Bind hover to the owning card. */
+  /* Bind hover + pointer tracking to the owning card. */
   useEffect(() => {
-    const el = windowRef.current;
-    if (!el) return;
-    const card = el.closest("[data-slot='card']") ?? el.parentElement;
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const card = wrapper.closest("[data-slot='card']") ?? wrapper.parentElement;
     if (!card) return;
+
     const show = () => setOpen(true);
     const hide = () => setOpen(false);
+
+    /* Feed the engine's tilt/glare variables from the card's own
+       pointer travel (the overlay never receives pointer events). */
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      const rect = card.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const x = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+      const y = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
+      const maxTilt = 2.4;
+      wrapper.style.setProperty("--hover-tilt-x", `${((0.5 - y) * maxTilt).toFixed(2)}deg`);
+      wrapper.style.setProperty("--hover-tilt-y", `${((x - 0.5) * maxTilt).toFixed(2)}deg`);
+      wrapper.style.setProperty("--hover-glare-x", `${(x * 100).toFixed(1)}%`);
+      wrapper.style.setProperty("--hover-glare-y", `${(y * 100).toFixed(1)}%`);
+    };
+    const onPointerLeave = () => {
+      wrapper.style.setProperty("--hover-tilt-x", "0deg");
+      wrapper.style.setProperty("--hover-tilt-y", "0deg");
+    };
+
     card.addEventListener("mouseenter", show);
     card.addEventListener("mouseleave", hide);
+    card.addEventListener("pointermove", onPointerMove, { passive: true });
+    card.addEventListener("pointerleave", onPointerLeave);
     return () => {
       card.removeEventListener("mouseenter", show);
       card.removeEventListener("mouseleave", hide);
+      card.removeEventListener("pointermove", onPointerMove);
+      card.removeEventListener("pointerleave", onPointerLeave);
     };
   }, []);
 
-  /* Enter: anime.js pop (scale + slight y drift). */
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-    (async () => {
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-      if (!windowRef.current) return;
-      const { animate } = await import("animejs");
-      if (cancelled || !windowRef.current) return;
-      animate(windowRef.current, {
-        scale: [0.94, 1],
-        translateY: [-6, 0],
-        duration: 320,
-        ease: "out(3)",
-      });
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [open]);
-
   return (
     <div
-      ref={windowRef}
+      ref={wrapperRef}
       aria-hidden="true"
-      className={cn(
-        "peep-window pointer-events-none absolute top-2 z-[5] w-52 rounded-lg p-2.5",
-        "transition-[opacity,transform] duration-200 ease-out",
-        align === "right" ? "right-2 origin-top-right" : "left-2 origin-top-left",
-        open
-          ? "scale-100 opacity-100"
-          : "scale-95 opacity-0 -translate-y-1",
-        className,
-      )}
+      className={cn("pointer-events-none absolute inset-0 z-[5]", className)}
     >
-      <p className="label-harsh mb-1.5 text-[9px] tracking-[0.24em] text-primary/80">
-        {label}
-      </p>
-      <div className="space-y-1.5 text-[11px] leading-snug text-foreground/90">
-        {children}
-      </div>
+      <HoverTransition
+        effect="parallax"
+        direction="center"
+        duration={PEEK_DURATION}
+        easing={PEEK_EASING}
+        label={`Peek: ${label}`}
+        active={open}
+        tabIndex={-1}
+        className="h-full min-h-0 overflow-visible"
+        defaultComponent={<span className="block h-full w-full" />}
+        hoverComponent={
+          <div
+            className={cn(
+              "peep-window absolute top-2 w-52 p-2.5",
+              align === "right" ? "right-2" : "left-2",
+            )}
+          >
+            <p className="label-harsh mb-1.5 text-[9px] tracking-[0.24em] text-primary/80">
+              {label}
+            </p>
+            <div className="space-y-1.5 text-[11px] leading-snug text-foreground/90">
+              {children}
+            </div>
+          </div>
+        }
+      />
     </div>
   );
 }

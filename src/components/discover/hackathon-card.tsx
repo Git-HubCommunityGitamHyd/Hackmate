@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import {
   Calendar,
   Clock,
@@ -17,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookmarkButton } from "@/components/shared/bookmark-button";
 import { CardPeek, PeekRow } from "@/components/shared/card-peek";
+import { SplineReveal } from "@/components/ui/spline-reveal";
 import type { HackathonCardDTO } from "@/lib/queries/types";
 
 function fmtDate(iso: string) {
@@ -28,7 +28,7 @@ function daysUntil(iso: string) {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-export function HackathonCard({ hackathon }: { hackathon: HackathonCardDTO }) {
+export function HackathonCard({ hackathon, delay = 0 }: { hackathon: HackathonCardDTO; delay?: number }) {
   const statusColor =
     hackathon.status === "ongoing"
       ? "border-primary/40 bg-primary/10 text-primary"
@@ -37,18 +37,12 @@ export function HackathonCard({ hackathon }: { hackathon: HackathonCardDTO }) {
         : "border-foreground/30 bg-secondary/60 text-foreground/90";
 
   const regDays = hackathon.registrationDeadline ? daysUntil(hackathon.registrationDeadline) : null;
-  const reduceMotion = useReducedMotion();
 
   const noActivity =
     hackathon.recruitingTeamCount === 0 && hackathon.peopleLookingCount === 0;
 
   return (
-    <motion.div
-      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={reduceMotion ? undefined : { y: -4 }}
-    >
+    <SplineReveal delay={delay} className="h-full">
     <Card className="group relative hover:border-primary/40 transition-all duration-300 overflow-hidden cursor-pointer focus-within:ring-2 focus-within:ring-ring/40">
       {/* Peep window — hover the card to peek at its components. */}
       <CardPeek label="peek · hackathon">
@@ -165,6 +159,6 @@ export function HackathonCard({ hackathon }: { hackathon: HackathonCardDTO }) {
         </Button>
       </CardFooter>
     </Card>
-    </motion.div>
+    </SplineReveal>
   );
 }

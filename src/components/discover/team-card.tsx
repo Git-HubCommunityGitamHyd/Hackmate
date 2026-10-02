@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import {
   Lightbulb,
   Users,
@@ -19,20 +18,15 @@ import { MatchRing } from "@/components/shared/match-ring";
 import { CommitmentBadge } from "@/components/shared/badges";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { CardPeek, PeekRow } from "@/components/shared/card-peek";
+import { SplineReveal } from "@/components/ui/spline-reveal";
 import type { TeamCardDTO } from "@/lib/queries/types";
 
-export function TeamCard({ team, showMatch }: { team: TeamCardDTO; showMatch?: boolean }) {
-  const reduceMotion = useReducedMotion();
+export function TeamCard({ team, showMatch, delay = 0 }: { team: TeamCardDTO; showMatch?: boolean; delay?: number }) {
   const spotsLeft = team.targetSize - team.memberCount;
   const full = spotsLeft <= 0 || team.status !== "recruiting";
 
   return (
-    <motion.div
-      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={reduceMotion ? undefined : { y: -3 }}
-    >
+    <SplineReveal delay={delay} className="h-full">
     <Card className="group relative hover:border-primary/40 transition-all duration-300">
       {/* Peep window — hover the card to peek at its components. */}
       <CardPeek label="peek · team">
@@ -163,6 +157,6 @@ export function TeamCard({ team, showMatch }: { team: TeamCardDTO; showMatch?: b
         </div>
       </CardFooter>
     </Card>
-    </motion.div>
+    </SplineReveal>
   );
 }
