@@ -12,7 +12,11 @@ import {
   Medal,
   Award,
   CheckCircle2,
+  CalendarCheck,
   Hammer,
+  Crown,
+  HeartHandshake,
+  ShieldCheck,
   Users,
   ExternalLink,
   Sparkles,
@@ -39,6 +43,7 @@ import { LinkedInSections } from "@/components/profile/linkedin-sections";
 import { GithubCalendar } from "@/components/profile/github-calendar";
 import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { KarmaPill } from "@/components/reputation/karma-pill";
+import { FindEqualButton } from "@/components/profile/find-equal-button";
 
 const BADGE_ICONS: Record<string, typeof Trophy> = {
   "completed-hackathon": CheckCircle2,
@@ -46,6 +51,12 @@ const BADGE_ICONS: Record<string, typeof Trophy> = {
   finalist: Medal,
   winner: Trophy,
   "worked-together": Users,
+  "first-win": Trophy,
+  "hat-trick": Medal,
+  "serial-winner": Crown,
+  regular: CalendarCheck,
+  veteran: ShieldCheck,
+  "great-teammate": HeartHandshake,
 };
 
 /** Load and display a student profile, including verified status and imported LinkedIn details. */
@@ -101,11 +112,14 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                   {profile.emergencyAvailable && <EmergencyBadge />}
                 </div>
                 {isOwnProfile && (
-                  <Button asChild size="sm" variant="outline" className="font-medium">
-                    <Link href="/profile/edit">
-                      <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit profile
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button asChild size="sm" variant="outline" className="font-medium">
+                      <Link href="/profile/edit">
+                        <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit profile
+                      </Link>
+                    </Button>
+                    {user?.id && <FindEqualButton userId={user.id} />}
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-3 flex-wrap text-sm text-muted-foreground mt-1">

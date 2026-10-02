@@ -1,0 +1,35 @@
+name: Badges dependency
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  reputation-prerequisite:
+    name: Reputation PR merged
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify dependency
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPUTATION_PR: "7"
+        run: |
+          set -euo pipefail
+
+          if [[ "$GITHUB_HEAD_REF" != "dev/Aditya/Badges" ]]; then
+            echo "Not the badges branch; dependency check is not applicable."
+            exit 0
+          fi
+
+          state="$(gh pr view "$REPUTATION_PR" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json state,mergedAt \
+            --jq '.state + "|" + (.mergedAt // "")')"
+
+          if [[ "$state" != MERGED\|* ]]; then
+            echo "Blocked: Reputation PR #$REPUTATION_PR must be merged first."
+            exit 1
+          fi
+
+          echo "Reputation PR #$REPUTATION_PR is merged."

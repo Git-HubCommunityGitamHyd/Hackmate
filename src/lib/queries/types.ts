@@ -52,7 +52,13 @@ export interface PersonCardDTO {
     hasIdea: boolean;
     ideaBlurb: string | null;
   };
+  karma?: number;
 }
+
+export type EqualCandidateDTO = PersonCardDTO & {
+  matchScore: number;
+  karma: number;
+};
 
 export interface HackathonCardDTO {
   id: string;
@@ -163,7 +169,7 @@ export interface ProfileDTO extends PersonCardDTO {
     openToIdeaSwaps: boolean;
   } | null;
   skills: SkillDTO[];
-  badges: { slug: string; name: string; icon: string; category: string; hackathonName: string | null }[];
+  badges: { slug: string; name: string; description: string | null; icon: string; category: string; hackathonName: string | null }[];
   history: {
     hackathonName: string;
     hackathonId: string;

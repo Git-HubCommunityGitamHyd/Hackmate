@@ -14,9 +14,10 @@ import type {
   TeamCardDTO,
   TeamDetailDTO,
   ProfileDTO,
+  EqualCandidateDTO,
 } from "@/lib/queries/types";
 
-export type { PersonCardDTO, HackathonCardDTO, TeamCardDTO, TeamDetailDTO, ProfileDTO };
+export type { PersonCardDTO, HackathonCardDTO, TeamCardDTO, TeamDetailDTO, ProfileDTO, EqualCandidateDTO };
 
 /* ------------------------------------------------------------------ */
 /* Typed fetch helper                                                  */

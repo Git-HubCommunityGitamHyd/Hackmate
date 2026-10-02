@@ -24,10 +24,12 @@ import type { PersonCardDTO } from "@/lib/queries/types";
 export function PersonCard({
   person,
   showMatch,
+  showKarma,
   action,
 }: {
   person: PersonCardDTO;
   showMatch?: boolean;
+  showKarma?: boolean;
   action?: React.ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
@@ -120,6 +122,11 @@ export function PersonCard({
               <RecruitmentBadge status={person.recruitmentStatus} />
               <CommitmentBadge commitment={person.commitment} />
               <ExperienceBadge level={person.experienceLevel} />
+              {showKarma && person.karma !== undefined && (
+                <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                  {person.karma} karma
+                </span>
+              )}
               {person.roles[0] && (
                 <span className="text-[11px] text-muted-foreground">
                   · {person.roles[0].name}

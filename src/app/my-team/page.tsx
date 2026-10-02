@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Crown,
   Compass,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +25,14 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { TrackRecordCard } from "@/components/track-record/track-record-card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -114,6 +123,7 @@ function TeamWorkspace({
 }) {
   const qc = useQueryClient();
   const isAdmin = team.viewer.isAdmin;
+  const [selectedMember, setSelectedMember] = useState<{ userId: string; name: string } | null>(null);
 
   /* Gap-driven candidate recommendations for the admin view. */
   const recs = useQuery({
@@ -345,26 +355,36 @@ function TeamWorkspace({
                           ))}
                         </div>
                       </div>
-                      {isAdmin && !m.isAdmin && (
+                      <div className="flex items-center gap-2">
                         <Button
                           size="sm"
-                          variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() =>
-                            api(`/api/teams/${team.id}/members`, {
-                              method: "DELETE",
-                              body: JSON.stringify({ userId: m.userId }),
-                            })
-                              .then(() => {
-                                toast.success(`${m.name} was removed`);
-                                invalidate();
-                              })
-                              .catch((e) => toast.error(e.message))
-                          }
+                          variant="outline"
+                          className="h-8 text-xs gap-1.5"
+                          onClick={() => setSelectedMember({ userId: m.userId, name: m.name })}
                         >
-                          Remove
+                          <History className="h-3.5 w-3.5 text-muted-foreground" /> Track record
                         </Button>
-                      )}
+                        {isAdmin && !m.isAdmin && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() =>
+                              api(`/api/teams/${team.id}/members`, {
+                                method: "DELETE",
+                                body: JSON.stringify({ userId: m.userId }),
+                              })
+                                .then(() => {
+                                  toast.success(`${m.name} was removed`);
+                                  invalidate();
+                                })
+                                .catch((e) => toast.error(e.message))
+                            }
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ))}
                   {[...Array(Math.max(0, team.targetSize - team.members.length))].map((_, i) => (
@@ -440,6 +460,25 @@ function TeamWorkspace({
         teamName={team.name}
         openRoles={team.openRoles}
       />
+
+      <Dialog
+        open={Boolean(selectedMember)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedMember(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-none bg-transparent shadow-none">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {selectedMember ? `${selectedMember.name}'s Track Record` : "Track Record"}
+            </DialogTitle>
+            <DialogDescription>
+              Factual summary of past attendance, teammate feedback, and cancellations.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedMember && <TrackRecordCard userId={selectedMember.userId} />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

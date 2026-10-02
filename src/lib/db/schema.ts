@@ -559,7 +559,10 @@ export const userBadges = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (t) => [index("user_badge_user_idx").on(t.userId)],
+  (t) => [
+    index("user_badge_user_idx").on(t.userId),
+    uniqueIndex("user_badge_user_badge_uniq").on(t.userId, t.badgeId),
+  ],
 );
 
 export const hackathonResults = pgTable(
