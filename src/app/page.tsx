@@ -236,16 +236,19 @@ function DiscoverContent() {
       {/* Tabs */}
       <Tabs value={effectiveTab} onValueChange={(v) => setTab(v as DiscoverTab)}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <TabsList className="h-11 bg-muted">
-            <TabsTrigger value="hackathons" className="gap-1.5 px-4 data-[state=active]:bg-background">
+          {/* max-w-full + overflow-x-auto: at phone widths the three
+              triggers don't all fit — the list swipes instead of
+              spilling out of the viewport (no horizontal overflow). */}
+          <TabsList className="h-11 bg-muted max-w-full overflow-x-auto scrollbar-slim">
+            <TabsTrigger value="hackathons" className="gap-1.5 px-3 sm:px-4 data-[state=active]:bg-background shrink-0">
               <Trophy className="h-4 w-4" /> Hackathons
               <span className="text-xs text-muted-foreground ml-1">{hackathonList.length}</span>
             </TabsTrigger>
-            <TabsTrigger value="teams" className="gap-1.5 px-4 data-[state=active]:bg-background">
+            <TabsTrigger value="teams" className="gap-1.5 px-3 sm:px-4 data-[state=active]:bg-background shrink-0">
               <Users2 className="h-4 w-4" /> Teams
               <span className="text-xs text-muted-foreground ml-1">{teamList.length}</span>
             </TabsTrigger>
-            <TabsTrigger value="people" className="gap-1.5 px-4 data-[state=active]:bg-background">
+            <TabsTrigger value="people" className="gap-1.5 px-3 sm:px-4 data-[state=active]:bg-background shrink-0">
               <Compass className="h-4 w-4" /> People
               <span className="text-xs text-muted-foreground ml-1">{peopleList.length}</span>
             </TabsTrigger>

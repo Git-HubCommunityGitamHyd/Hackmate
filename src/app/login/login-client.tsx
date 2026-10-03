@@ -26,7 +26,6 @@ import { SplineReveal } from "@/components/ui/spline-reveal";
 import { InkBrush } from "@/components/ui/ink-brush";
 import { CursorField } from "@/components/ui/cursor-field";
 import { GrainGradient } from "@/components/ui/grain-gradient";
-import { MagnetLines } from "@/components/ui/magnet-lines";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -36,36 +35,37 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  *
  * NOT confined behind the text: the breathing jade GrainGradient
  * (WebGL, its INBUILT film grain left ON at the default 0.32 — that
- * grain is part of the component's look) fills the entire login page
- * and is BLENDED into the black ribbed wall three ways:
+ * grain is part of the component's look) fills the entire login page,
+ * FLIPPED — mirrored horizontally AND vertically (scale(-1, -1), the
+ * 180° turn) so the gradient's breathing sweep and brightest corner
+ * run opposite to the component's default — and is BLENDED into the
+ * black ribbed wall two ways:
  *
  *   1. the wall's own flutes are re-drawn OVER the gradient, so the
  *      ribs continue through it — one continuous ribbed ground;
- *   2. an animated field of magnet lines (Componentry) swivels every
- *      rib toward the cursor on a damped spring — the ribbed
- *      background is ALIVE, and only on this page;
- *   3. an ink vignette melts the edges (and the area under the
+ *   2. an ink vignette melts the edges (and the area under the
  *      floating navbar dock) back into the page's near-black, so the
  *      gradient never reads as a pasted rectangle.
  *
  * The colored jade cursor wake (CursorField) sits above this backdrop
- * and below the content. NO 3D objects — the page's motion is the
- * breathing gradient, the swiveling ribs and the cursor wake.
+ * and below the content. NO 3D objects, NO magnet-lines — the page's
+ * motion is the breathing gradient and the cursor wake.
  */
 function LoginBackdrop() {
-  const reduceMotion = useReducedMotion();
-
   return (
     <div
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
     >
       {/* 1 — the breathing jade gradient: the whole page's ground.
-          The component's INBUILT film grain stays ON (default 0.32) —
-          it is the texture of the gradient itself, not a bolted-on
-          noise layer. Never disable it. */}
+          FLIPPED horizontally + vertically (the 180° turn) via an
+          outer CSS transform — the component itself stays VERBATIM.
+          The INBUILT film grain stays ON (default 0.32): it is the
+          texture of the gradient itself, not a bolted-on noise layer.
+          Never disable it. */}
       <GrainGradient
         className="absolute inset-0"
+        style={{ transform: "scale(-1, -1)" }}
         colorLight="#8ecdb6"
         colorMid="#2c5a4b"
         colorDark="#0d100e"
@@ -85,24 +85,7 @@ function LoginBackdrop() {
         }}
       />
 
-      {/* 3 — the animated rib field: thin jade ribs that swivel to
-          track the pointer on springs. Reduced motion: the field
-          simply stays a still ribbed ground. */}
-      {!reduceMotion && (
-        <div className="absolute inset-0">
-          <MagnetLines
-            containerSize="100%"
-            rows={7}
-            columns={15}
-            lineWidth="1px"
-            lineHeight="64px"
-            baseAngle={-90}
-            lineColor="oklch(0.85 0.06 158 / 0.13)"
-          />
-        </div>
-      )}
-
-      {/* 4 — ink vignette: the gradient melts into the page's black at
+      {/* 3 — ink vignette: the gradient melts into the page's black at
           the edges and under the floating dock. */}
       <div
         className="absolute inset-0"
@@ -277,9 +260,9 @@ export function LoginClient() {
   return (
     <div className="relative pt-10 pb-12">
       {/* The FULL-PAGE living ground — the breathing jade gradient
-          (inbuilt grain ON) blended into the black ribbed wall, ribs
-          animated toward the cursor. Covers the entire login page, not
-          just the hero. */}
+          (inbuilt grain ON, flipped 180°) blended into the black
+          ribbed wall. Covers the entire login page, not just the
+          hero. */}
       <LoginBackdrop />
 
       {/* The jade pixel wake — the sign-in hero page's own cursor
@@ -311,9 +294,8 @@ export function LoginClient() {
             the card's side. */}
         <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 lg:items-center max-w-6xl mx-auto">
           {/* Desktop: the hero — animated copy on the full-page living
-              ground. No 3D object: the breathing gradient, the
-              swiveling ribs and the text's own reveal motion carry
-              the page. */}
+              ground. No 3D object: the breathing gradient and the
+              text's own reveal motion carry the page. */}
           <div className="hidden lg:flex flex-col justify-center">
             <ProjectInfo />
           </div>

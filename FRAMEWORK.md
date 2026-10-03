@@ -9,7 +9,7 @@
 | Language | TypeScript 5 (strict) | Build fails on type errors |
 | Styling | Tailwind CSS 4 + `tw-animate-css` | shadcn/ui-style component library in `src/components/ui` |
 | Animation | framer-motion 12 + anime.js 4.5 | Kinetic text reveal, text repel, pixel canvas, fluted glass (framer); one-shot entrances, ink brush stroke, peek-window pops (anime.js) |
-| Background art | GrainGradient (WebGL shader, login page) | User-supplied breathing gradient with INBUILT film grain — mounted verbatim, full-page on login; `magnet-lines` (Componentry) animated rib field |
+| Background art | GrainGradient (WebGL shader, login page) | User-supplied breathing gradient with INBUILT film grain — mounted verbatim, full-page on login, flipped 180°; blended with the ribbed wall |
 | Auth | Auth.js v5 (`next-auth@5` beta) | GitHub OAuth + email magic links, database sessions via Drizzle adapter |
 | Database | Drizzle ORM 0.45 + Postgres / CockroachDB | Works with local Postgres 14+ or CockroachDB Serverless (free tier) |
 | Validation | Zod 4 | Every mutation body validated before it touches the DB |

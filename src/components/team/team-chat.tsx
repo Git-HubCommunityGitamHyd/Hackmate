@@ -109,7 +109,12 @@ export function TeamChat({ teamId, teamName }: { teamId: string; teamName: strin
                   <div
                     className={cn(
                       "inline-block rounded-xl px-3 py-2 text-sm text-left",
-                      mine ? "bg-primary text-primary-foreground" : "bg-muted",
+                      mine
+                        ? "bg-primary text-primary-foreground"
+                        : /* Incoming bubble: translucent frosted glass —
+                             10px backdrop blur, same as every other
+                             translucent surface in the app. */
+                          "bg-muted/60 backdrop-blur-[10px]",
                     )}
                   >
                     {m.content}

@@ -24,13 +24,25 @@ const animePromise = import("animejs");
  *     spring solver (mass / stiffness / damping). The element drops
  *     onto the page with a slight rotation and settles with
  *     natural overshoot — the "soft body lands" feel. No keyframes,
- *     no linear fades.
+ *     no linear fades. When the animation completes, anime's inline
+ *     transform is CLEARED so the stylesheet tilt transform (with its
+ *     live CSS variables) takes over — otherwise the leftover inline
+ *     transform permanently shadows the pointer tilt.
  *
  *  2. POINTER TILT — a subtle mount: the pane rotates a few degrees
- *     toward the pointer (perspective + rotateX/rotateY written as
- *     CSS variables on pointer move) and settles back on leave via
- *     a springy cubic-bezier overshoot. This is the same mount the
+ *     toward the pointer (rAF-throttled CSS-variable writes) and
+ *     settles back on leave via one soft spring transition. While the
+ *     pointer is over the element the tilt tracks 1:1 with NO
+ *     transition — a transition restarted on every pointermove is
+ *     what makes a tilt mount read as "twitching". The same mount the
  *     login card uses (FlutedGlass), so the whole app moves as one.
+ *
+ * The tilt transform lives in the `.spline-tilt` stylesheet class
+ * (NOT an inline style — anime.js writes inline transforms during the
+ * entrance, which would clobber it). Elements with `tilt <= 0` never
+ * get the class, and therefore never open a 3D rendering context —
+ * important because 3D contexts inside backdrop-filter elements
+ * cause Chrome rendering artifacts.
  *
  * prefers-reduced-motion: both systems off — content renders in
  * place, zero motion.
@@ -78,7 +90,7 @@ export function SplineReveal({
     (async () => {
       const { animate, spring } = await animePromise;
       if (cancelled || !ref.current) return;
-      animate(ref.current, {
+      const anim = animate(ref.current, {
         opacity: [0, 1],
         translateY: [drop, 0],
         rotateX: [7, 0], // slight nose-up landing, flattens as it settles
@@ -86,6 +98,17 @@ export function SplineReveal({
         delay,
         transformOrigin: "50% 100%",
       });
+      /* Wait for the landing, then clear anime's inline transform so
+         the stylesheet's CSS-variable tilt transform takes over. */
+      try {
+        await anim;
+      } catch {
+        /* Animation cancelled mid-flight — the reset below is still
+           safe: opacity stays, transform returns to the class rule. */
+      }
+      if (!cancelled && ref.current) {
+        ref.current.style.transform = "";
+      }
     })();
 
     return () => {
@@ -93,30 +116,55 @@ export function SplineReveal({
     };
   }, [delay, drop]);
 
-  /* 2 — pointer tilt mount (CSS variables + springy bezier settle).
-     Written imperatively so lists of reveals share one code path. */
+  /* 2 — pointer tilt mount (rAF-throttled CSS-variable writes; one
+     soft spring transition on leave only). */
   useEffect(() => {
     const el = ref.current;
     if (!el || tilt <= 0) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    let raf: number | null = null;
+
     const onMove = (event: PointerEvent) => {
       if (event.pointerType === "touch") return;
-      const rect = el.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) return;
-      const x = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
-      const y = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
-      el.style.setProperty("--tilt-x", `${((0.5 - y) * tilt).toFixed(2)}deg`);
-      el.style.setProperty("--tilt-y", `${((x - 0.5) * tilt).toFixed(2)}deg`);
+      /* Tracking mode: no transition — 1:1 follow, one write/frame. */
+      el.classList.add("tilt-tracking");
+      el.classList.remove("tilt-settle");
+
+      const { clientX, clientY } = event;
+      if (raf !== null) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const x = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+        const y = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height));
+        el.style.setProperty("--tilt-x", `${((0.5 - y) * tilt).toFixed(2)}deg`);
+        el.style.setProperty("--tilt-y", `${((x - 0.5) * tilt).toFixed(2)}deg`);
+      });
     };
+
     const onLeave = () => {
+      if (raf !== null) {
+        cancelAnimationFrame(raf);
+        raf = null;
+      }
+      /* Settle mode: ONE soft spring transition back to rest. */
+      el.classList.remove("tilt-tracking");
+      el.classList.add("tilt-settle");
       el.style.setProperty("--tilt-x", "0deg");
       el.style.setProperty("--tilt-y", "0deg");
+      const onSettled = () => {
+        el.classList.remove("tilt-settle");
+        el.removeEventListener("transitionend", onSettled);
+      };
+      el.addEventListener("transitionend", onSettled);
     };
 
     el.addEventListener("pointermove", onMove, { passive: true });
     el.addEventListener("pointerleave", onLeave);
     return () => {
+      if (raf !== null) cancelAnimationFrame(raf);
       el.removeEventListener("pointermove", onMove);
       el.removeEventListener("pointerleave", onLeave);
     };
@@ -125,13 +173,12 @@ export function SplineReveal({
   return (
     <Tag
       ref={ref}
-      className={cn("spline-reveal", className)}
-      style={{
-        ...style,
-        transform:
-          "perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg))",
-        transformStyle: "preserve-3d",
-      }}
+      /* The tilt transform + its classes live in globals.css
+         (.spline-tilt / .tilt-tracking / .tilt-settle) — NEVER as an
+         inline style: the anime.js entrance writes inline transforms,
+         which would clobber it mid-flight. */
+      className={cn("spline-reveal", tilt > 0 && "spline-tilt", className)}
+      style={style}
     >
       {children}
     </Tag>

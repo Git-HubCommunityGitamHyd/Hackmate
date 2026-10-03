@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.3",
+    "@embedded-postgres/linux-x64": "^18.4.0-beta.17",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.3.2",
@@ -73,5 +74,11 @@
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
   },
-  "description": "Student hackathon team-finding platform with Team Composition Intelligence"
+  "description": "Student hackathon team-finding platform with Team Composition Intelligence",
+  "trustedDependencies": [
+    "@embedded-postgres/linux-x64",
+    "esbuild",
+    "sharp",
+    "unrs-resolver"
+  ]
 }
