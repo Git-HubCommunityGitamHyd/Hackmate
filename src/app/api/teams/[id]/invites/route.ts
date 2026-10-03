@@ -7,9 +7,9 @@ import { inviteSchema } from "@/lib/validations";
 import { sendEmail, emailTemplates } from "@/lib/email";
 import { ok, fail, requireUser } from "@/lib/api";
 
-/** GET /api/teams/:id/invites — invites I received (for workspace view). */
+/** GET /api/teams/:id/invites - invites I received (for workspace view). */
 
-/** POST /api/teams/:id/invites — direct invite from a team admin. */
+/** POST /api/teams/:id/invites - direct invite from a team admin. */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -113,7 +113,7 @@ export async function POST(
   return ok({ status: "sent" }, { status: 201 });
 }
 
-/** PATCH /api/teams/:id/invites — respond to an invite I received. */
+/** PATCH /api/teams/:id/invites - respond to an invite I received. */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

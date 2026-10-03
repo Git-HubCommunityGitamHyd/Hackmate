@@ -10,7 +10,7 @@ import { ok, withPublic, requireUser } from "@/lib/api";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 /**
- * GET /api/search?q=… — natural-language search across everything.
+ * GET /api/search?q=… - natural-language search across everything.
  * "Need someone who knows Next.js and has ML experience for a 4-person team"
  *   → parses skills (next.js), category (ai_ml), team size (4), intent (people)
  * Postgres full-text (tsvector) used for hackathon text; structured filters
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const viewer = await requireUser();
 
     /* When the parser found structured signals (skills/roles), those carry
-       the intent — leftover words like "need/for/team" would over-filter.
+       the intent - leftover words like "need/for/team" would over-filter.
        Only apply free-text matching when nothing structured was found. */
     const structured = skillIds.length > 0 || filters.categories.length > 0;
     const freeText = structured ? undefined : filters.q;

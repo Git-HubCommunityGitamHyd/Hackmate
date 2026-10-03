@@ -4,7 +4,7 @@
 Why: Turbopack's Lightning CSS minifier alias-collapses `backdrop-filter` and
 `-webkit-backdrop-filter` in the same rule, KEEPING ONLY THE LAST-DECLARED
 form. With the standard form declared first (our old order), only the
--webkit- form survived — and Chromium (this sandbox's browser, and any
+-webkit- form survived - and Chromium (this sandbox's browser, and any
 browser that dropped the legacy alias) ignores it entirely, so every
 stylesheet-driven frost silently died. Tailwind's own utilities declare the
 prefixed form first and the standard form last, which is why they survive.

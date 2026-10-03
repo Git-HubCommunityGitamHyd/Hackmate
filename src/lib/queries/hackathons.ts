@@ -86,7 +86,7 @@ export async function getHackathonBySlugOrId(idOrSlug: string) {
 }
 
 /** Full-text search over hackathons (tsvector), with a portable fallback.
- *  CockroachDB has no tsvector support — the try/catch silently degrades
+ *  CockroachDB has no tsvector support - the try/catch silently degrades
  *  to a LIKE search, so the same code runs on both databases. */
 export async function searchHackathonsFTS(q: string): Promise<string[]> {
   try {

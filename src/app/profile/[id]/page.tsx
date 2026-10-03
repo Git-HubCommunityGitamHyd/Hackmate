@@ -216,7 +216,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Github className="h-4 w-4" /> GitHub — verified at sign-in
+                  <Github className="h-4 w-4" /> GitHub - verified at sign-in
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -258,7 +258,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Github className="h-4 w-4" /> GitHub activity — last year
+                  <Github className="h-4 w-4" /> GitHub activity - last year
                 </CardTitle>
               </CardHeader>
               <CardContent className="overflow-x-auto">
@@ -282,7 +282,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             </CardHeader>
             <CardContent className="space-y-4">
               {profile.history.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No hackathons recorded yet — the résumé starts at the first submission.</p>
+                <p className="text-sm text-muted-foreground">No hackathons recorded yet - the résumé starts at the first submission.</p>
               ) : (
                 profile.history.map((h, i) => (
                   <div key={i}>
@@ -338,7 +338,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             </CardHeader>
             <CardContent>
               {profile.badges.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Badges appear after hackathons — Completed, Finalist, Winner, Worked Together.</p>
+                <p className="text-sm text-muted-foreground">Badges appear after hackathons - Completed, Finalist, Winner, Worked Together.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {profile.badges.map((b, i) => {

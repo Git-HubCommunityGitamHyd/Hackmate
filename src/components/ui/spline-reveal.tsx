@@ -9,42 +9,42 @@ import {
 import { cn } from "@/lib/utils";
 
 /* Prefetch the motion engine the moment this module is evaluated (it
-   rides in the page chunk, so the download overlaps hydration — the
+   rides in the page chunk, so the download overlaps hydration - the
    spring is ready by the time the first reveal mounts). */
 const animePromise = import("animejs");
 
 /**
- * SplineReveal — the app's shared entrance + hover motion.
- * (Name is historical: this has NO Spline/3D dependency — it is pure
+ * SplineReveal - the app's shared entrance + hover motion.
+ * (Name is historical: this has NO Spline/3D dependency - it is pure
  * anime.js spring physics. The app is intentionally 3D-free.)
  *
  * Two coordinated physical systems:
  *
- *  1. ENTRANCE — a damped-spring settle computed by anime.js' real
+ *  1. ENTRANCE - a damped-spring settle computed by anime.js' real
  *     spring solver (mass / stiffness / damping). The element drops
  *     onto the page with a slight rotation and settles with
- *     natural overshoot — the "soft body lands" feel. No keyframes,
+ *     natural overshoot - the "soft body lands" feel. No keyframes,
  *     no linear fades. When the animation completes, anime's inline
  *     transform is CLEARED so the stylesheet tilt transform (with its
- *     live CSS variables) takes over — otherwise the leftover inline
+ *     live CSS variables) takes over - otherwise the leftover inline
  *     transform permanently shadows the pointer tilt.
  *
- *  2. POINTER TILT — a subtle mount: the pane rotates a few degrees
+ *  2. POINTER TILT - a subtle mount: the pane rotates a few degrees
  *     toward the pointer (rAF-throttled CSS-variable writes) and
  *     settles back on leave via one soft spring transition. While the
  *     pointer is over the element the tilt tracks 1:1 with NO
- *     transition — a transition restarted on every pointermove is
+ *     transition - a transition restarted on every pointermove is
  *     what makes a tilt mount read as "twitching". The same mount the
  *     login card uses (FlutedGlass), so the whole app moves as one.
  *
  * The tilt transform lives in the `.spline-tilt` stylesheet class
- * (NOT an inline style — anime.js writes inline transforms during the
+ * (NOT an inline style - anime.js writes inline transforms during the
  * entrance, which would clobber it). Elements with `tilt <= 0` never
- * get the class, and therefore never open a 3D rendering context —
+ * get the class, and therefore never open a 3D rendering context -
  * important because 3D contexts inside backdrop-filter elements
  * cause Chrome rendering artifacts.
  *
- * prefers-reduced-motion: both systems off — content renders in
+ * prefers-reduced-motion: both systems off - content renders in
  * place, zero motion.
  *
  * Stagger: pass `delay` (seconds); a parent can compute
@@ -76,7 +76,7 @@ export function SplineReveal({
   const ref = useRef<HTMLDivElement | null>(null);
   const Tag = as as "div";
 
-  /* 1 — spring entrance (anime.js real spring solver). */
+  /* 1 - spring entrance (anime.js real spring solver). */
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -103,7 +103,7 @@ export function SplineReveal({
       try {
         await anim;
       } catch {
-        /* Animation cancelled mid-flight — the reset below is still
+        /* Animation cancelled mid-flight - the reset below is still
            safe: opacity stays, transform returns to the class rule. */
       }
       if (!cancelled && ref.current) {
@@ -116,7 +116,7 @@ export function SplineReveal({
     };
   }, [delay, drop]);
 
-  /* 2 — pointer tilt mount (rAF-throttled CSS-variable writes; one
+  /* 2 - pointer tilt mount (rAF-throttled CSS-variable writes; one
      soft spring transition on leave only). */
   useEffect(() => {
     const el = ref.current;
@@ -127,7 +127,7 @@ export function SplineReveal({
 
     const onMove = (event: PointerEvent) => {
       if (event.pointerType === "touch") return;
-      /* Tracking mode: no transition — 1:1 follow, one write/frame. */
+      /* Tracking mode: no transition - 1:1 follow, one write/frame. */
       el.classList.add("tilt-tracking");
       el.classList.remove("tilt-settle");
 
@@ -174,7 +174,7 @@ export function SplineReveal({
     <Tag
       ref={ref}
       /* The tilt transform + its classes live in globals.css
-         (.spline-tilt / .tilt-tracking / .tilt-settle) — NEVER as an
+         (.spline-tilt / .tilt-tracking / .tilt-settle) - NEVER as an
          inline style: the anime.js entrance writes inline transforms,
          which would clobber it mid-flight. */
       className={cn("spline-reveal", tilt > 0 && "spline-tilt", className)}

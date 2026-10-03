@@ -25,7 +25,7 @@ import type { PersonCardDTO } from "@/lib/queries/types";
 const HOURS_OPTIONS = [6, 12, 18, 24, 48, 72];
 
 /* ------------------------------------------------------------------ */
-/* Solidarity-feed sort — the same debossed pill Discover uses.        */
+/* Solidarity-feed sort - the same debossed pill Discover uses.        */
 /* ------------------------------------------------------------------ */
 
 type FeedSort = "recent" | "hours" | "skills" | "name";
@@ -50,7 +50,7 @@ function sortFeed(list: PersonCardDTO[], sort: FeedSort): PersonCardDTO[] {
   } else if (sort === "name") {
     out.sort((a, b) => a.name.localeCompare(b.name));
   }
-  /* "recent" keeps the API order — the server already sorts by
+  /* "recent" keeps the API order - the server already sorts by
      most-recently-boosted first. */
   return out;
 }
@@ -67,7 +67,7 @@ export default function EmergencyPage() {
     enabled: isAuthenticated,
   });
 
-  /* Other students currently in emergency mode — solidarity feed. */
+  /* Other students currently in emergency mode - solidarity feed. */
   const others = useQuery({
     queryKey: ["emergency-others"],
     queryFn: () => api<PersonCardDTO[]>("/api/users?emergency=true"),
@@ -85,7 +85,7 @@ export default function EmergencyPage() {
       }),
     onSuccess: (data: { emergencyAvailable: boolean }) => {
       toast[data.emergencyAvailable ? "success" : "info"](
-        data.emergencyAvailable ? "Emergency mode ON — you're boosted in searches" : "Emergency mode off",
+        data.emergencyAvailable ? "Emergency mode ON - you're boosted in searches" : "Emergency mode off",
       );
       qc.invalidateQueries({ queryKey: ["emergency-status"] });
       qc.invalidateQueries({ queryKey: ["people"] });
@@ -122,7 +122,7 @@ export default function EmergencyPage() {
         </h1>
         <p className="text-muted-foreground mt-2 text-balance">
           Your team lost someone hours before a deadline? Activate to appear at the top of
-          gap-matched team searches — for everyone who needs exactly your skills, right now.
+          gap-matched team searches - for everyone who needs exactly your skills, right now.
         </p>
       </div>
 
@@ -142,7 +142,7 @@ export default function EmergencyPage() {
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   {active && status.data?.until
-                    ? `Boosted until ${new Date(status.data.until).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} — auto-expires via cron`
+                    ? `Boosted until ${new Date(status.data.until).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} - auto-expires via cron`
                     : "Boosted ranking + red pulse on your profile"}
                 </p>
               </div>
@@ -181,7 +181,7 @@ export default function EmergencyPage() {
               <CardTitle className="text-sm flex items-center gap-1.5">
                 <Radar className="h-4 w-4 text-primary" /> Others in emergency mode right now
               </CardTitle>
-              <CardDescription>Solidarity feed — teams with a hole to fill are seeing these people first.</CardDescription>
+              <CardDescription>Solidarity feed - teams with a hole to fill are seeing these people first.</CardDescription>
             </div>
             {(others.data ?? []).length > 1 && (
               <SortMenu
@@ -205,7 +205,7 @@ export default function EmergencyPage() {
       <p className="text-xs text-muted-foreground flex items-start gap-1.5">
         <Zap className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
         Auto-expiry runs twice daily via Vercel Cron, and every ranking query also lazy-checks the
-        timestamp — so an expired boost never lingers.
+        timestamp - so an expired boost never lingers.
       </p>
     </div>
   );

@@ -29,7 +29,7 @@ async function main() {
 
   if (isCockroach) {
     console.log(
-      "CockroachDB Serverless URL detected — the database lives on your\n" +
+      "CockroachDB Serverless URL detected - the database lives on your\n" +
         "cluster already and migrations create all tables. Nothing to do here.",
     );
     return;

@@ -32,7 +32,7 @@ function personInput(profile: Profile): PersonMatchInput {
 
 /** Cap on how many candidates get a full profile fetch + match scoring.
  *  Each scored candidate costs one getProfile (≈7 queries), so an
- *  unbounded loop over the whole directory was a query amplifier — a
+ *  unbounded loop over the whole directory was a query amplifier - a
  *  single request could fire 700+ queries. 24 karma-nearest candidates
  *  comfortably fills the top-8 response at a bounded cost. */
 const MAX_SCORED_CANDIDATES = 24;

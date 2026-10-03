@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * InkBrush — an animated ink-wash brush stroke (anime.js).
+ * InkBrush - an animated ink-wash brush stroke (anime.js).
  *
  * A single calligraphy-like path is drawn on mount by animating
  * stroke-dashoffset from full length to 0, the way a loaded brush

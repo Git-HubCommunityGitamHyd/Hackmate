@@ -47,20 +47,20 @@ const NAV_LINKS = [
 ];
 
 /**
- * Header, round 6 — floating ink dock with DEBOSSED controls.
+ * Header, round 6 - floating ink dock with DEBOSSED controls.
  *
  * The dock is a slab of rough frost recessed into the ink canvas (one
- * shared radius), and every control in it is pressed in too — the
+ * shared radius), and every control in it is pressed in too - the
  * deboss half of the system: dark ceiling lip, one faint light catch
  * on the bottom edge, soft AO pool at the floor of the recess.
  *  - Nav links are shallow wells with the text sitting at their
  *    floor. The active link is pressed deepest and pools jade.
  *  - Icon buttons, the search trigger and the sign-in CTA are the
  *    same recessed pills (Button variant="debossed" / .debossed).
- *  - The brand emblem is the HackMate logo mark (/public/logo.svg) —
+ *  - The brand emblem is the HackMate logo mark (/public/logo.svg) -
  *    the same single file that drives the favicon.
  *  - The dock entrance (drop + settle) and the nav-link stagger run
- *    on anime.js' real spring solver — the Spline landing feel.
+ *    on anime.js' real spring solver - the Spline landing feel.
  *    Stateful UI (badges, mobile menu) stays framer.
  * Everything else kept from round 5: ⌘K palette, notification preview
  * popover, karma in the account menu, springy badge, skip link,
@@ -110,7 +110,7 @@ export function Navbar() {
     };
   }, [reduceMotion]);
 
-  /* Scroll elevation — dock tightens slightly. */
+  /* Scroll elevation - dock tightens slightly. */
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
@@ -159,7 +159,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full px-3 pt-3 sm:px-5 sm:pt-4">
-      {/* Keyboard users land here first — skip the nav entirely. */}
+      {/* Keyboard users land here first - skip the nav entirely. */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-bold focus:rounded-full focus:border focus:border-primary/50"
@@ -167,7 +167,7 @@ export function Navbar() {
         Skip to content
       </a>
 
-      {/* The floating dock — debossed into the canvas, one shared radius */}
+      {/* The floating dock - debossed into the canvas, one shared radius */}
       <div
         ref={dockRef}
         className={cn(
@@ -190,7 +190,7 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop nav — every link is a shallow recessed well with its
+        {/* Desktop nav - every link is a shallow recessed well with its
             text sitting at the floor; the active link is pressed deepest
             and pools jade. Transitions carry the spring settle so the
             press reads as physical (the Spline feel). */}
@@ -414,7 +414,7 @@ export function Navbar() {
         </Button>
       </div>
 
-      {/* Mobile menu — floating slide-down panel, staggered links */}
+      {/* Mobile menu - floating slide-down panel, staggered links */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.nav

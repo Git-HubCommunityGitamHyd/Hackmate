@@ -39,7 +39,7 @@ async function loadKarmaCounts(userId: string): Promise<KarmaCounts> {
       db
         .select({
           ratingCount: sql<number>`count(*)::int`,
-          /* NULL when there are no rows — mapped to null below, never 0,
+          /* NULL when there are no rows - mapped to null below, never 0,
              so "unrated" stays distinct from "rated badly". */
           avgRating: sql<number | null>`avg(${schema.performanceReviews.rating})::float8`,
         })
@@ -71,7 +71,7 @@ async function loadKarmaCounts(userId: string): Promise<KarmaCounts> {
 /**
  * GET /api/reputation?userId=<uuid>
  *
- * Recomputes karma from source rows on every call — a profile view is the
+ * Recomputes karma from source rows on every call - a profile view is the
  * trigger, so the number is always current and no write route needs to know
  * this endpoint exists. `user.reputation_score` is then refreshed as a cache
  * for sorting only; it is never read back as the score.
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
     const counts = await loadKarmaCounts(userId);
     const result = computeKarma(counts);
 
-    /* Refresh the sort cache only when it actually moved — a profile view
+    /* Refresh the sort cache only when it actually moved - a profile view
        shouldn't write on every request. Failure here is non-fatal: the
        caller still gets the freshly computed score. */
     if (user.cachedScore !== result.score) {

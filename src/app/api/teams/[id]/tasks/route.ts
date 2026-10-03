@@ -5,7 +5,7 @@ import { schema } from "@/lib/db";
 import { taskSchema } from "@/lib/validations";
 import { ok, fail, isUuid, requireUser } from "@/lib/api";
 
-/** GET /api/teams/:id/tasks — checklist (members only). */
+/** GET /api/teams/:id/tasks - checklist (members only). */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -24,7 +24,7 @@ export async function GET(
   return ok(rows.map((t) => ({ ...t, dueDate: t.dueDate?.toISOString() ?? null, createdAt: t.createdAt.toISOString() })));
 }
 
-/** POST /api/teams/:id/tasks — add a checklist item (members). */
+/** POST /api/teams/:id/tasks - add a checklist item (members). */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -60,7 +60,7 @@ export async function POST(
   return ok({ ...task, dueDate: task.dueDate?.toISOString() ?? null, createdAt: task.createdAt.toISOString() }, { status: 201 });
 }
 
-/** PATCH /api/teams/:id/tasks — toggle done / reassign / edit. */
+/** PATCH /api/teams/:id/tasks - toggle done / reassign / edit. */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

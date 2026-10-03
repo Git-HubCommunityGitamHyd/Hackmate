@@ -7,7 +7,7 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * GET /api/users — people directory with structured filters.
+ * GET /api/users - people directory with structured filters.
  * Query: q, skillIds (csv), categories (csv), experience, commitment,
  *        collegeId, hackathonId, emergency=true, limit (1–100)
  *

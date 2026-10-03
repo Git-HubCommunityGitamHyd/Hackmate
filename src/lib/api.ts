@@ -56,7 +56,7 @@ export async function withUser<T>(
   } catch (err: any) {
     /* Full detail goes to the server log only. The client gets a generic
        message: thrown errors here are internal invariants ("AUTH_SECRET is
-       not configured", driver errors, …) — leaking them exposes schema,
+       not configured", driver errors, …) - leaking them exposes schema,
        file paths and env state. */
     console.error("[api:error]", err);
     return fail("Internal server error", 500);
@@ -80,7 +80,7 @@ export async function withAdmin<T>(
 ) {
   const session = await auth();
   const id = session?.user?.id;
-  if (!id) return fail("Unauthorized — sign in first", 401);
+  if (!id) return fail("Unauthorized - sign in first", 401);
   const role = await getUserRole(id);
   if (role !== "admin") {
     return fail(

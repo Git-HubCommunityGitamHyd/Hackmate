@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Navbar } from "@/components/layout/navbar";
 import { SiteFooter } from "@/components/layout/footer";
+import { AmbientLayer } from "@/components/ui/ambient-layer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "HackMate — Find your hackathon team",
+    default: "HackMate · Find your hackathon team",
     template: "%s · HackMate",
   },
   description:
@@ -50,8 +51,12 @@ export default function RootLayout({
           {/* The ground of EVERY page is the FLUTED WALL, painted on
               <body> itself (see globals.css): near-black ink, fine
               vertical lines, one jade bloom top-right. Fixed-attachment,
-              pixel-identical everywhere. The pixel cursor wake lives
-              ONLY on the sign-in hero page (login), not globally. */}
+              pixel-identical everywhere. The AmbientLayer (a whisper
+              of film grain + the soft cursor glow that reveals the
+              frosted surfaces' translucency) runs on every page EXCEPT
+              the sign-in hero, which carries its own living ground
+              (GrainGradient + the jade pixel wake). */}
+          <AmbientLayer />
           <Navbar />
           <main id="main-content" className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pb-16">
             {children}

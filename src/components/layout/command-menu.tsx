@@ -52,7 +52,7 @@ export function CommandMenu() {
   const authenticated = status === "authenticated";
 
   /* Global shortcut: Cmd+K / Ctrl+K. ("/" stays reserved for the
-     Discover search bar — two different shortcuts, two different jobs.) */
+     Discover search bar - two different shortcuts, two different jobs.) */
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
@@ -67,7 +67,7 @@ export function CommandMenu() {
   const go = useCallback(
     (href: string) => {
       setOpen(false);
-      /* Warm the route while the palette closes — feels instant. */
+      /* Warm the route while the palette closes - feels instant. */
       router.prefetch?.(href);
       router.push(href);
     },

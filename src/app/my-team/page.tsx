@@ -94,7 +94,7 @@ export default function MyTeamPage() {
         <EmptyState
           icon={Users2}
           title="You're not on a team yet"
-          description="Find a recruiting team that needs exactly your skills — or create one around your idea."
+          description="Find a recruiting team that needs exactly your skills - or create one around your idea."
           action={
             <div className="flex gap-3">
               <Button asChild><Link href="/#teams">Browse teams</Link></Button>
@@ -144,7 +144,7 @@ function TeamWorkspace({
         body: JSON.stringify({ requestId, action }),
       }),
     onSuccess: (_d, vars) => {
-      toast.success(vars.action === "accepted" ? "Request accepted — they're in! 🎉" : "Request declined");
+      toast.success(vars.action === "accepted" ? "Request accepted - they're in! 🎉" : "Request declined");
       invalidate();
     },
     onError: (err: Error) => toast.error(err.message),
@@ -186,7 +186,7 @@ function TeamWorkspace({
           </Link>
         ) : (
           <Link href="/#teams">
-            <ArrowLeft className="h-4 w-4 mr-1" /> Idea-first — event not chosen yet
+            <ArrowLeft className="h-4 w-4 mr-1" /> Idea-first - event not chosen yet
           </Link>
         )}
       </Button>

@@ -36,7 +36,7 @@ export default function NotificationsPage() {
     mutationFn: ({ teamId, action }: { teamId: string; action: "accepted" | "declined" }) =>
       api(`/api/teams/${teamId}/invites`, { method: "PATCH", body: JSON.stringify({ action }) }),
     onSuccess: (_d, vars) => {
-      toast.success(vars.action === "accepted" ? "Invite accepted — welcome to the team! 🎉" : "Invite declined");
+      toast.success(vars.action === "accepted" ? "Invite accepted - welcome to the team! 🎉" : "Invite declined");
       qc.invalidateQueries();
     },
     onError: (err: Error) => toast.error(err.message),

@@ -43,7 +43,7 @@ export interface HoverTransitionProps extends Omit<
   label?: string;
   /**
    * Controlled activation. When provided, the component uses this
-   * value instead of its internal hover/focus state — lets a parent
+   * value instead of its internal hover/focus state - lets a parent
    * (e.g. a card hosting a peek window) drive the transition from
    * events the overlay itself can never receive (pointer-events-none
    * layers). Unspecified = fully self-governing, as originally

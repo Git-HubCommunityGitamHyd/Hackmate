@@ -1,8 +1,8 @@
 /**
- * Demo-data seed — populates a realistic, explorable dataset on top of the
+ * Demo-data seed - populates a realistic, explorable dataset on top of the
  * taxonomy seed (`bun run db:seed`). Safe to re-run: it clears demo rows
  * first, then re-inserts. The dev account (dev@hackmate.local) keeps its
- * session — you stay signed in across reseeds.
+ * session - you stay signed in across reseeds.
  *
  * Run: bun run db:seed:demo
  */
@@ -245,7 +245,7 @@ async function main() {
 
   /* ---------- The dev account (created on the fly if missing) ----------
      The demo login route creates dev@hackmate.local on first sign-in, but a
-     fresh machine running db:seed:demo has never signed in yet — the old code
+     fresh machine running db:seed:demo has never signed in yet - the old code
      silently skipped promotion and then crashed on dev!.id below. Create it
      here so the seed is self-contained. */
   let [dev] = await db
@@ -571,7 +571,7 @@ async function main() {
     {
       userId: dev!.id, type: "system",
       title: "Welcome to HackMate",
-      body: "Complete your profile so teams can find you — skills, availability and commitment take 2 minutes.",
+      body: "Complete your profile so teams can find you - skills, availability and commitment take 2 minutes.",
       link: "/profile/edit",
     },
   ]);

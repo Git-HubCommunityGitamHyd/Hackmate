@@ -45,7 +45,7 @@ export interface PersonCardDTO {
   matchScore?: number;
   matchReasons?: string[];
   matchBreakdown?: MatchBreakdown;
-  /** Set when listing people for a specific hackathon — their per-event signal. */
+  /** Set when listing people for a specific hackathon - their per-event signal. */
   hackathonProfile?: {
     preferredRoleSlug: string | null;
     motivation: string | null;

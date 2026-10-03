@@ -28,7 +28,7 @@ export function TeamCard({ team, showMatch, delay = 0 }: { team: TeamCardDTO; sh
   return (
     <SplineReveal delay={delay} className="h-full">
     <Card className="group relative hover:border-primary/40 transition-all duration-300">
-      {/* Peek window — hover the card and the hub preview covers it. */}
+      {/* Peek window - hover the card and the hub preview covers it. */}
       <CardPeek>
         <PeekRow icon={<Users />}>
           {team.memberNames.slice(0, 3).join(", ")}
@@ -87,14 +87,14 @@ export function TeamCard({ team, showMatch, delay = 0 }: { team: TeamCardDTO; sh
               </p>
             ) : (
               <p className="text-xs text-muted-foreground mt-0.5">
-                event not chosen yet — the idea leads, the hackathon follows
+                event not chosen yet; the idea leads, the hackathon follows
               </p>
             )}
 
             {team.ideaAnonymous ? (
               <p className="text-sm text-muted-foreground mt-2 flex items-center gap-1.5">
                 <Lock className="h-3.5 w-3.5 shrink-0" />
-                <span className="italic">{team.ideaDomain ?? "Idea under wraps"} — request to join for details</span>
+                <span className="italic">{team.ideaDomain ?? "Idea under wraps"} · request to join for details</span>
               </p>
             ) : (
               <p className="text-sm text-muted-foreground mt-2 line-clamp-2">

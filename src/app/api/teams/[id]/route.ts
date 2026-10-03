@@ -7,7 +7,7 @@ import { teamPatchSchema } from "@/lib/validations";
 import { ok, fail, withPublic, requireUser } from "@/lib/api";
 
 /**
- * GET /api/teams/:id — full team detail with composition intelligence,
+ * GET /api/teams/:id - full team detail with composition intelligence,
  * viewer context (member? admin? pending request?) and gap-driven
  * people recommendations for leaders.
  */
@@ -31,7 +31,7 @@ export async function GET(
   });
 }
 
-/** PATCH /api/teams/:id — admin updates (status, links, idea reveal, event). */
+/** PATCH /api/teams/:id - admin updates (status, links, idea reveal, event). */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

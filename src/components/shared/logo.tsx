@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Logo — the HackMate mark, loaded from ONE file: `/public/logo.svg`.
+ * Logo - the HackMate mark, loaded from ONE file: `/public/logo.svg`.
  *
  * Every surface (navbar, footer, login page) and the favicon (via
  * `metadata.icons` in app/layout.tsx) point at the same asset, so
@@ -19,7 +19,7 @@ export function Logo({
   alt?: string;
 }) {
   return (
-    /* Plain <img>: a static SVG asset in /public — the Next image
+    /* Plain <img>: a static SVG asset in /public - the Next image
        optimizer adds nothing here, and the same file drives the
        favicon (see layout.tsx metadata.icons). */
     <img

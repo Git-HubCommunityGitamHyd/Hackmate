@@ -6,7 +6,7 @@ import { emergencySchema } from "@/lib/validations";
 import { ok, withUser } from "@/lib/api";
 
 /**
- * POST /api/emergency — "Hackathon starts in 18 hours, our backend dev
+ * POST /api/emergency - "Hackathon starts in 18 hours, our backend dev
  * dropped out." Marks you immediately available with boosted ranking.
  * Auto-expires via cron + lazy timestamp checks in every ranking query.
  */
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   });
 }
 
-/** GET /api/emergency — my current emergency status. */
+/** GET /api/emergency - my current emergency status. */
 export async function GET() {
   return withUser(async (user) => {
     const [row] = await db

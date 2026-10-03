@@ -48,7 +48,7 @@ export function FindEqualButton({ userId }: { userId: string }) {
           )}
           {equals.data && equals.data.length === 0 && (
             <p className="py-8 text-center text-sm text-muted-foreground">
-              No equals yet — earn more karma.
+              No equals yet. Earn more karma.
             </p>
           )}
           {equals.data && equals.data.length > 0 && (

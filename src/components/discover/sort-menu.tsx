@@ -16,12 +16,12 @@ export interface SortOption<V extends string> {
 }
 
 /**
- * SortMenu — the shared sort control for Discover and Emergency.
+ * SortMenu - the shared sort control for Discover and Emergency.
  *
  * A debossed pill (the app's control material) that opens the standard
  * frosted dropdown with a jade check on the active option. Generic over
  * the option value so each page owns its own sort keys and comparators
- * — this component is purely the consistent UI.
+ * - this component is purely the consistent UI.
  */
 export function SortMenu<V extends string>({
   value,

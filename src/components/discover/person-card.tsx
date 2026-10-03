@@ -38,7 +38,7 @@ export function PersonCard({
   return (
     <SplineReveal delay={delay} className="h-full">
     <Card className="group relative hover:border-primary/40 transition-all duration-300">
-      {/* Peek window — hover the card and the hub preview covers it. */}
+      {/* Peek window - hover the card and the hub preview covers it. */}
       <CardPeek>
         {person.topSkills.length > 0 && (
           <PeekRow icon={<Zap className="text-primary" />}>

@@ -20,7 +20,7 @@ $PGBIN/pg_ctl -D .pgdata status | head -1
 
 echo "== 1. start dev server =="
 # The sandbox shell carries a stale exported DATABASE_URL (file:...) that
-# Next.js prefers over .env — force the correct local Postgres URL.
+# Next.js prefers over .env - force the correct local Postgres URL.
 export DATABASE_URL="postgres://postgres@localhost:5432/hackmate"
 bun run dev > /tmp/dev.log 2>&1 &
 DEV_PID=$!
@@ -90,7 +90,7 @@ agent-browser screenshot "$SHOTS/header-floating-ink.png"
 echo "== 9. errors check =="
 agent-browser errors 2>&1 | head -8
 
-echo "== 10. done — stop server =="
+echo "== 10. done - stop server =="
 kill $DEV_PID 2>/dev/null
 sleep 2
 pkill -f "next dev" 2>/dev/null

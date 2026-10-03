@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { HoverTransition } from "@/components/ui/hover-transition";
 
 /**
- * CardPeek — the hover preview window, running on the shared
+ * CardPeek - the hover preview window, running on the shared
  * HoverTransition engine.
  *
  * Settings (the peek spec): effect "parallax", direction "center",
@@ -13,7 +13,7 @@ import { HoverTransition } from "@/components/ui/hover-transition";
  *
  * Drop one inside a Card. When the pointer enters the card, a frosted
  * window un-clips open FROM THE CARD'S CENTRE and COVERS THE ENTIRE
- * CARD — a full-cover preview of what the card's hub holds (members,
+ * CARD - a full-cover preview of what the card's hub holds (members,
  * roles, skills, dates). No caption, no label text: the pane is the
  * preview. The reveal is the parallax transition: the window opens
  * from centre with a defocusing blur, rides a 3D tilt that tracks the
@@ -30,7 +30,7 @@ import { HoverTransition } from "@/components/ui/hover-transition";
  * from keyboard or screen-reader users.
  */
 
-/** Snappy: fast attack, crisp settle — the peek never lingers. */
+/** Snappy: fast attack, crisp settle - the peek never lingers. */
 const PEEK_DURATION = 0.38;
 const PEEK_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
@@ -104,7 +104,7 @@ export function CardPeek({
         className="h-full min-h-0"
         defaultComponent={<span className="block h-full w-full" />}
         hoverComponent={
-          /* The hub preview window — covers the ENTIRE card: a pane of
+          /* The hub preview window - covers the ENTIRE card: a pane of
              rough frost recessed one level deeper than its host, hub
              rows centred inside it. */
           <div className="peep-window flex h-full w-full flex-col">

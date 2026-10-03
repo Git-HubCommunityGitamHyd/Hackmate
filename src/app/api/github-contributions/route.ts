@@ -9,7 +9,7 @@ import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
  *
  * Why a proxy instead of calling the upstream from the browser:
  *  1. The component's original upstream (github-contributions-api.deno.dev)
- *     died with Deno Deploy Classic in July 2026 — a same-origin route makes
+ *     died with Deno Deploy Classic in July 2026 - a same-origin route makes
  *     the upstream swappable via env instead of another client deploy.
  *  2. Keeps the upstream under our rate limit (public route, 30 req/min/IP)
  *     and caches responses for 6 hours per username so a popular profile

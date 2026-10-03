@@ -29,7 +29,7 @@ import { ROLE_TAXONOMY } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 /**
- * "I'm looking for a team" — the hackathon-specific profile form.
+ * "I'm looking for a team" - the hackathon-specific profile form.
  *
  * Collects what the person wants for THIS event (role, motivation, whether
  * they're carrying an idea) instead of silently marking them as looking.
@@ -78,7 +78,7 @@ export function LookingDialog({
       return;
     }
     if (hasIdea && ideaBlurb.trim().length < 10) {
-      toast.error("Describe the idea in at least 10 characters — that's the teaser");
+      toast.error("Describe the idea in at least 10 characters. That's the teaser");
       return;
     }
     save.mutate();
@@ -95,7 +95,7 @@ export function LookingDialog({
         <DialogHeader>
           <DialogTitle>Looking for a team at {hackathonName}?</DialogTitle>
           <DialogDescription>
-            Teams recruiting for this event will see you in the People tab — tell
+            Teams recruiting for this event will see you in the People tab. Tell
             them what you want to do here. Your general profile stays untouched.
           </DialogDescription>
         </DialogHeader>
@@ -144,7 +144,7 @@ export function LookingDialog({
                   rows={2}
                   value={ideaBlurb}
                   onChange={(e) => setIdeaBlurb(e.target.value)}
-                  placeholder="AI campus navigation that works offline — looking for a backend + a designer."
+                  placeholder="AI campus navigation that works offline. Looking for a backend + a designer."
                 />
               </div>
             )}

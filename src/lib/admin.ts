@@ -8,7 +8,7 @@ import type { UserRole } from "@/lib/db/schema";
  *
  * HOW ADMIN WORKS
  * ---------------
- * 1. Set ADMIN_EMAILS in .env.local / Vercel env — a comma-separated list:
+ * 1. Set ADMIN_EMAILS in .env.local / Vercel env - a comma-separated list:
  *      ADMIN_EMAILS=you@college.edu,club@college.edu
  * 2. Sign in with any of those emails (GitHub OAuth account with that email,
  *    or that email's magic link).

@@ -4,7 +4,7 @@ let pusher: Pusher | null = null;
 
 /**
  * Pusher server client (free tier: 100 concurrent connections,
- * 200k messages/day). Team chat only — we trigger on new messages;
+ * 200k messages/day). Team chat only - we trigger on new messages;
  * clients subscribe when the chat is open and disconnect on close.
  */
 export function getPusher(): Pusher | null {

@@ -23,7 +23,7 @@ export function calculateCancellationTiming(startsAt: Date, leaveTime: Date) {
 /** Dependencies for recording a cancellation on member leave.
  *  hackathonId is nullable: idea-first teams (posted before choosing
  *  an event) have no hackathon, and the inner join below simply won't
- *  match them — no event, no cancellation timing. */
+ *  match them - no event, no cancellation timing. */
 export interface RecordCancellationDeps {
   getTeamWithHackathon: (teamId: string) => Promise<{ hackathonId: string | null; startsAt: Date } | null>;
   insertCancellation: (data: {
@@ -74,7 +74,7 @@ export async function recordCancellationOnLeave(
   if (!team) {
     return { created: false, reason: "team_not_found" as const };
   }
-  /* Idea-first team with no event attached yet — nothing to time a
+  /* Idea-first team with no event attached yet - nothing to time a
      cancellation against (the join already filters these; this guard
      keeps the contract explicit for the test doubles). */
   if (!team.hackathonId) {
@@ -233,7 +233,7 @@ export async function GET(req: NextRequest) {
   const caller = await requireUser();
   if (!caller) return fail("Unauthorized", 401);
   const targetUserId = req.nextUrl.searchParams.get("userId") || caller.id;
-  /* Malformed ids must 404 here — a bad uuid would otherwise surface as a
+  /* Malformed ids must 404 here - a bad uuid would otherwise surface as a
      Postgres "invalid input syntax" 500 (found by the pentest suite). */
   if (!isUuid(targetUserId)) return fail("User not found", 404);
   try {

@@ -3,7 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 
 /**
- * InkEdgeProvider — one global pointer listener that feeds the ink-edge
+ * InkEdgeProvider - one global pointer listener that feeds the ink-edge
  * CSS rings (`--ink-mx` / `--ink-my`, see globals.css).
  *
  * Instead of every card adding its own listener, a single delegated

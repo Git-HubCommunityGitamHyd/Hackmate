@@ -48,7 +48,7 @@ Prerequisites:
 ### Windows shortcut (one command)
 
 Windows PowerShell 5.1 does not support `&&`, and `#` is not a comment in
-cmd.exe — so do not paste multi-command bash blocks. Instead, open PowerShell
+cmd.exe - so do not paste multi-command bash blocks. Instead, open PowerShell
 inside the extracted `hackmate` folder and run:
 
 ```powershell

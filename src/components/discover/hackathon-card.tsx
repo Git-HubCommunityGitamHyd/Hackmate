@@ -44,7 +44,7 @@ export function HackathonCard({ hackathon, delay = 0 }: { hackathon: HackathonCa
   return (
     <SplineReveal delay={delay} className="h-full">
     <Card className="group relative hover:border-primary/40 transition-all duration-300 overflow-hidden cursor-pointer focus-within:ring-2 focus-within:ring-ring/40">
-      {/* Peek window — hover the card and the hub preview covers it. */}
+      {/* Peek window - hover the card and the hub preview covers it. */}
       <CardPeek>
         <PeekRow icon={<Calendar />}>
           {fmtDate(hackathon.startsAt)} – {fmtDate(hackathon.endsAt)} · {hackathon.mode}

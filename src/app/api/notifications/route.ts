@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { ok, fail, withUser } from "@/lib/api";
 
-/** GET /api/notifications — my notifications + pending invites + join requests. */
+/** GET /api/notifications - my notifications + pending invites + join requests. */
 export async function GET() {
   return withUser(async (user) => {
     const [notifRows, inviteRows, myRequestRows, myTeams] = await Promise.all([
@@ -106,7 +106,7 @@ export async function GET() {
   });
 }
 
-/** PATCH /api/notifications — mark all (or one) as read. */
+/** PATCH /api/notifications - mark all (or one) as read. */
 export async function PATCH(req: NextRequest) {
   return withUser(async (user) => {
     const body = await req.json().catch(() => ({}));

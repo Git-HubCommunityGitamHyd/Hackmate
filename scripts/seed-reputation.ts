@@ -40,7 +40,7 @@ async function main() {
     process.exit(1);
   }
 
-  /* Two teammates to review them — a user cannot review themselves. */
+  /* Two teammates to review them - a user cannot review themselves. */
   const reviewers = await db
     .insert(schema.users)
     .values([

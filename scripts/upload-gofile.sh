@@ -6,7 +6,7 @@ set -uo pipefail
 FILE="${1:-/home/z/my-project/download/hackmate.zip}"
 [ -f "$FILE" ] || { echo "ERROR: file not found: $FILE"; exit 1; }
 
-fetch() { # fetch <url> [extra curl args...] — retries transient network blips
+fetch() { # fetch <url> [extra curl args...] - retries transient network blips
   local url="$1"; shift
   local out=""
   for i in 1 2 3 4 5; do

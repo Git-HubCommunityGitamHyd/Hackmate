@@ -58,7 +58,7 @@ export const hackathonSchema = z.object({
   registrationDeadline: z.string().optional().or(z.literal("")),
   teamSizeMin: z.number().int().min(1).max(10),
   teamSizeMax: z.number().int().min(1).max(10),
-  /** Prize — free text. Prizes aren't always money: internships, goodies,
+  /** Prize - free text. Prizes aren't always money: internships, goodies,
    *  credits, hardware all welcome. e.g. "₹1,00,000 pool + internship offers". */
   prizePool: z.string().max(100).optional().or(z.literal("")),
   mode: z.enum(["online", "offline", "hybrid"]),

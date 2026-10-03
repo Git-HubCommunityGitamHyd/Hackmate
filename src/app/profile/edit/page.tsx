@@ -78,7 +78,7 @@ export default function EditProfilePage() {
   });
 
   /* Hydrate the local editable state once the profile arrives.
-     (Render-time "adjust state when props change" pattern — no effect needed.) */
+     (Render-time "adjust state when props change" pattern - no effect needed.) */
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
   if (profile && loadedFor !== profile.id) {
     setLoadedFor(profile.id);
@@ -142,7 +142,7 @@ export default function EditProfilePage() {
           ? [queryClient.invalidateQueries({ queryKey: ["profile", profile.id] })]
           : []),
       ]);
-      toast.success("Profile saved — teams can find you now");
+      toast.success("Profile saved - teams can find you now");
       router.push(profile ? `/profile/${profile.id}` : "/");
     },
     onError: (err: Error) => toast.error(err.message),
@@ -379,7 +379,7 @@ export default function EditProfilePage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {EXPERIENCE_LEVELS.map((e) => (
-                    <SelectItem key={e.value} value={e.value}>{e.label} — {e.hint}</SelectItem>
+                    <SelectItem key={e.value} value={e.value}>{e.label} - {e.hint}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -390,7 +390,7 @@ export default function EditProfilePage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {COMMITMENT_LEVELS.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>{c.label} — {c.hint}</SelectItem>
+                    <SelectItem key={c.value} value={c.value}>{c.label} - {c.hint}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -455,9 +455,9 @@ export default function EditProfilePage() {
             <Select value={compat.workStyle} onValueChange={(v) => setCompat({ ...compat, workStyle: v })}>
               <SelectTrigger className="w-full sm:w-72"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="plan_first">Plan first — scope before code</SelectItem>
-                <SelectItem value="build_first">Build first — prototype to think</SelectItem>
-                <SelectItem value="hybrid">Hybrid — depends on the idea</SelectItem>
+                <SelectItem value="plan_first">Plan first - scope before code</SelectItem>
+                <SelectItem value="build_first">Build first - prototype to think</SelectItem>
+                <SelectItem value="hybrid">Hybrid - depends on the idea</SelectItem>
               </SelectContent>
             </Select>
           </div>

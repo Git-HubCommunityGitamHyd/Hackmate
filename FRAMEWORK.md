@@ -1,4 +1,4 @@
-# HackMate — Framework & Architecture (updated)
+# HackMate - Framework & Architecture (updated)
 
 ## Stack
 
@@ -9,7 +9,7 @@
 | Language | TypeScript 5 (strict) | Build fails on type errors |
 | Styling | Tailwind CSS 4 + `tw-animate-css` | shadcn/ui-style component library in `src/components/ui` |
 | Animation | framer-motion 12 + anime.js 4.5 | Kinetic text reveal, text repel, pixel canvas, fluted glass (framer); one-shot entrances, ink brush stroke, peek-window pops (anime.js) |
-| Background art | GrainGradient (WebGL shader, login page) | User-supplied breathing gradient with INBUILT film grain — mounted verbatim, full-page on login, flipped 180°; blended with the ribbed wall |
+| Background art | GrainGradient (WebGL shader, login page) | User-supplied breathing gradient with INBUILT film grain - mounted verbatim, full-page on login, flipped 180°; blended with the ribbed wall |
 | Auth | Auth.js v5 (`next-auth@5` beta) | GitHub OAuth + email magic links, database sessions via Drizzle adapter |
 | Database | Drizzle ORM 0.45 + Postgres / CockroachDB | Works with local Postgres 14+ or CockroachDB Serverless (free tier) |
 | Validation | Zod 4 | Every mutation body validated before it touches the DB |
@@ -26,9 +26,9 @@
 
 ### Three primary screens
 
-1. **Discover** (`/`) — the home screen with three tabs: Hackathons, Teams, People, plus natural-language search ("need a backend dev who knows FastAPI for SIH"). Deep-linkable via `/?tab=teams`.
-2. **Hackathon Hub** (`/hackathons/[slug]`) — single-event page: roles in demand, registered teams, join flow.
-3. **My Team** (`/my-team`) — the team workspace: chat, task checklist, completeness meter, gap analysis, result reporting.
+1. **Discover** (`/`) - the home screen with three tabs: Hackathons, Teams, People, plus natural-language search ("need a backend dev who knows FastAPI for SIH"). Deep-linkable via `/?tab=teams`.
+2. **Hackathon Hub** (`/hackathons/[slug]`) - single-event page: roles in demand, registered teams, join flow.
+3. **My Team** (`/my-team`) - the team workspace: chat, task checklist, completeness meter, gap analysis, result reporting.
 
 ### Application layers
 
@@ -65,10 +65,10 @@ contribution calendar; upstream configurable via `GITHUB_CONTRIB_API`),
 
 ### Domain engines
 
-- **Matching** — deterministic first: skill overlap, role complementarity, availability and commitment compatibility, hackathon-specific roles. NL search parses role/skill/event intent from a free-text query. Embedding/LLM upgrades can layer on later without changing the call sites.
-- **Team Composition Intelligence** — `lib/matching/composition.ts` produces text coverage/gap analysis ("strong ML and frontend coverage, no backend/cloud member") surfaced in team detail and My Team.
-- **Reputation** — post-hackathon results feed karma, badges and track record (`lib/reputation.ts`, tested in `reputation.test.ts`).
-- **Verification** — college ID image -> OCR extraction -> claim matching -> decision, with a manual admin fallback and a private Blob store for the documents.
+- **Matching** - deterministic first: skill overlap, role complementarity, availability and commitment compatibility, hackathon-specific roles. NL search parses role/skill/event intent from a free-text query. Embedding/LLM upgrades can layer on later without changing the call sites.
+- **Team Composition Intelligence** - `lib/matching/composition.ts` produces text coverage/gap analysis ("strong ML and frontend coverage, no backend/cloud member") surfaced in team detail and My Team.
+- **Reputation** - post-hackathon results feed karma, badges and track record (`lib/reputation.ts`, tested in `reputation.test.ts`).
+- **Verification** - college ID image -> OCR extraction -> claim matching -> decision, with a manual admin fallback and a private Blob store for the documents.
 
 ### Design language: Ink Wash (sumi-e) minimalist maximalism
 
@@ -80,10 +80,10 @@ paint an accented edge highlight that follows the mouse:
   `pointermove` listener and writes `--ink-mx/--ink-my` on the hovered
   surface (cards, `.fluted-panel`, `.liquid-glass`, `.ink-edge`).
 - `globals.css` renders a 2px vermilion ring (masked radial gradient) plus
-  a faint interior ink wash on hover — no per-component JS.
+  a faint interior ink wash on hover - no per-component JS.
 - Discover cards also carry a `CardPeek` hover window: a small glass panel
-  that pops in (anime.js) showing the card's components — members, open
-  roles, missing skills, dates, prize — without leaving the grid.
+  that pops in (anime.js) showing the card's components - members, open
+  roles, missing skills, dates, prize - without leaving the grid.
 - The header is a detached floating pill dock (`.emboss-dock`): frosted,
   minimally embossed (light top edge, dark bottom edge, deep float shadow),
   with the Spline 3D emblem as the brand mark.

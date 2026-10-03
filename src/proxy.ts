@@ -2,13 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Route protection proxy (Next.js 16 `proxy.ts` convention, formerly
- * `middleware.ts`) — deliberately NOT the Auth.js wrapper.
+ * `middleware.ts`) - deliberately NOT the Auth.js wrapper.
  *
  * Why not `NextAuth(authConfig)` here: the Auth.js middleware tries to
  * validate the session cookie in the edge runtime, where the database
  * adapter (and therefore database sessions) is unavailable. It then treats
  * the opaque database session token as invalid and silently DELETES the
- * `authjs.session-token` cookie on every matched request — logging the
+ * `authjs.session-token` cookie on every matched request - logging the
  * user out the moment they touch a protected route.
  *
  * This proxy only checks for the presence of the session cookie:
@@ -18,7 +18,7 @@ import { NextResponse, type NextRequest } from "next/server";
  *    components via `auth()` (database-backed)
  *
  * A stale cookie (session deleted server side) simply renders the signed
- * out view — the login page then shows a working sign-in form, so there
+ * out view - the login page then shows a working sign-in form, so there
  * is no redirect loop.
  */
 const PROTECTED_PREFIXES = [

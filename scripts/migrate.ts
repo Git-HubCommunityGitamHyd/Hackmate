@@ -68,7 +68,7 @@ async function main() {
 
   for (const file of files) {
     if (applied.has(file)) {
-      console.log(`· ${file} — already applied`);
+      console.log(`· ${file} - already applied`);
       continue;
     }
     console.log(`· applying ${file}…`);

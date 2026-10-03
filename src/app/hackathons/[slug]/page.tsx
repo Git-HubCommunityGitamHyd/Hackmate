@@ -195,7 +195,7 @@ export default function HackathonHubPage({
             <EmptyState
               icon={Users2}
               title="No teams recruiting yet"
-              description="Be the first — post your idea and let compatible people find you."
+              description="Be the first - post your idea and let compatible people find you."
               action={isAuthenticated ? (
                 <Button asChild>
                   <Link href={`/teams/new?hackathon=${hackathon.id}`}>Create a team</Link>
@@ -270,7 +270,7 @@ export default function HackathonHubPage({
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Team of {t.memberCount} with {t.memberNames.slice(0, 3).join(", ")} — bring your idea to them.
+                      Team of {t.memberCount} with {t.memberNames.slice(0, 3).join(", ")} - bring your idea to them.
                     </p>
                   </CardContent>
                 </Card>

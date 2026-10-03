@@ -6,7 +6,7 @@ import type { NextRequest } from "next/server";
  * Good enough for a single-instance deployment and for local dev; it blocks
  * the cheap abuse vectors (scraping the public directory, hammering search,
  * brute-forcing the dev sign-in). For multi-instance serverless (Vercel),
- * swap the Map for Upstash Redis (@upstash/ratelimit) — the call signature
+ * swap the Map for Upstash Redis (@upstash/ratelimit) - the call signature
  * stays identical.
  *
  * Usage:

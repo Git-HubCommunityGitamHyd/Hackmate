@@ -4,7 +4,7 @@ import postgres from "postgres";
 import * as schema from "./schema";
 
 /**
- * Database client — Drizzle ORM over postgres-js.
+ * Database client - Drizzle ORM over postgres-js.
  *
  * In production this connects to CockroachDB Serverless (Postgres
  * wire-compatible) via DATABASE_URL:
@@ -19,7 +19,7 @@ import * as schema from "./schema";
  *   "unable to verify the first certificate" unless you supply the root
  *   cert yourself. Resolution:
  *     - default: encrypted TLS, certificate not pinned (equivalent to
- *       sslmode=require) — works everywhere, zero setup
+ *       sslmode=require) - works everywhere, zero setup
  *     - optional strict mode: set DATABASE_SSL_ROOT_CERT to the path of
  *       the downloaded ccrl root certificate for full verification
  */
@@ -52,7 +52,7 @@ function resolveSsl(): ResolvedSsl {
   try {
     sslmode = new URL(connectionString).searchParams.get("sslmode") ?? "";
   } catch {
-    /* Not a parseable URL — fall through to the host-based default below. */
+    /* Not a parseable URL - fall through to the host-based default below. */
   }
 
   if (sslmode === "disable") return false;

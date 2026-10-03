@@ -89,7 +89,7 @@ export function PixelCanvas({
         const container = containerRef.current;
         if (!canvas || !container) return;
 
-        /* Reduced motion: the field stays asleep — a still, matte ink
+        /* Reduced motion: the field stays asleep - a still, matte ink
            canvas with no wake and zero animation cost. */
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -148,7 +148,7 @@ export function PixelCanvas({
             const glowPasses = variant === "glow" ? 2 : 1;
 
             /* Idle sleep: when the pointer is far off-field and every
-               pixel has decayed to black, skip the grid scan entirely —
+               pixel has decayed to black, skip the grid scan entirely -
                the loop costs ~nothing until the next pointer wake. */
             if (mouseX < -500 && mouseY < -500 && !idleAwake) {
                 animationRef.current = requestAnimationFrame(draw);

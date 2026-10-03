@@ -29,7 +29,7 @@ const DISCOVER_TABS = ["hackathons", "teams", "people"] as const;
 type DiscoverTab = (typeof DISCOVER_TABS)[number];
 
 /* ------------------------------------------------------------------ */
-/* Sorting — one debossed sort control per tab, the same pill on the */
+/* Sorting - one debossed sort control per tab, the same pill on the */
 /* Emergency page. Each tab owns its keys + comparators.              */
 /* ------------------------------------------------------------------ */
 
@@ -130,7 +130,7 @@ function DiscoverContent() {
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [tab, setTab] = useState<DiscoverTab>("hackathons");
 
-  /* Per-tab sort — each tab remembers its own key. "Best match" leads
+  /* Per-tab sort - each tab remembers its own key. "Best match" leads
      for signed-in users (the matching engine fills matchScore); guests
      fall back to availability without changing the key. */
   const [hackathonSort, setHackathonSort] = useState<HackathonSort>("starting-soon");
@@ -139,7 +139,7 @@ function DiscoverContent() {
 
   /* Deep-linkable tabs: /?tab=teams (set by the /teams redirect) opens
      Discover with that tab pre-selected. Synced with the
-     adjust-state-during-render pattern (React docs) — no effect, no
+     adjust-state-during-render pattern (React docs) - no effect, no
      cascading render, and the page never remounts. */
   const tabParam = searchParams.get("tab");
   const [lastTabParam, setLastTabParam] = useState(tabParam);
@@ -176,7 +176,7 @@ function DiscoverContent() {
 
   return (
     <div className="pt-8 pb-4">
-      {/* Compact header: actions only — project details live on the login screen */}
+      {/* Compact header: actions only - project details live on the login screen */}
       <section className="mb-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <h1 className="text-2xl font-extrabold tracking-tight">
@@ -237,7 +237,7 @@ function DiscoverContent() {
       <Tabs value={effectiveTab} onValueChange={(v) => setTab(v as DiscoverTab)}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           {/* max-w-full + overflow-x-auto: at phone widths the three
-              triggers don't all fit — the list swipes instead of
+              triggers don't all fit - the list swipes instead of
               spilling out of the viewport (no horizontal overflow). */}
           <TabsList className="h-11 bg-muted max-w-full overflow-x-auto scrollbar-slim">
             <TabsTrigger value="hackathons" className="gap-1.5 px-3 sm:px-4 data-[state=active]:bg-background shrink-0">

@@ -7,7 +7,7 @@ import { triggerTeamMessage } from "@/lib/pusher-server";
 import { ok, fail, isUuid, requireUser } from "@/lib/api";
 import { createHmac } from "crypto";
 
-/** GET /api/teams/:id/chat — message history (members only). */
+/** GET /api/teams/:id/chat - message history (members only). */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -46,7 +46,7 @@ export async function GET(
   );
 }
 
-/** POST /api/teams/:id/chat — send a message (members only, triggers Pusher). */
+/** POST /api/teams/:id/chat - send a message (members only, triggers Pusher). */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -81,7 +81,7 @@ export async function POST(
 }
 
 /**
- * PUT /api/teams/:id/chat — Pusher private-channel auth endpoint.
+ * PUT /api/teams/:id/chat - Pusher private-channel auth endpoint.
  * pusher-js POSTs form-encoded socket_id + channel_name; members only.
  */
 export async function PUT(

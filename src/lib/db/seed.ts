@@ -1,5 +1,5 @@
 /**
- * Seed script — system taxonomies ONLY (skills, roles, badges).
+ * Seed script - system taxonomies ONLY (skills, roles, badges).
  * Run: bun run db:seed   (after bun run db:push)
  *
  * NO demo data: no example hackathons, no example people, no example teams.

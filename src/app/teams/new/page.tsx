@@ -96,9 +96,9 @@ function NewTeamForm() {
     e.preventDefault();
     if (!ideaFirst && !effectiveHackathonId) return toast.error("Pick a hackathon, or switch to idea-first");
     if (ideaFirst && form.ideaTitle.trim().length < 3)
-      return toast.error("Idea-first teams need an idea title — that's the pitch");
+      return toast.error("Idea-first teams need an idea title - that's the pitch");
     if (form.name.trim().length < 2) return toast.error("Team name is required");
-    if (roleSlugs.length === 0) return toast.error("Pick at least one role you need — this powers your completeness meter");
+    if (roleSlugs.length === 0) return toast.error("Pick at least one role you need - this powers your completeness meter");
     create.mutate();
   }
 
@@ -139,7 +139,7 @@ function NewTeamForm() {
                   <SelectItem value="__idea_first__">
                     <span className="flex items-center gap-1.5">
                       <Compass className="h-3.5 w-3.5 text-violet-500" />
-                      Idea-first — decide the event later
+                      Idea-first - decide the event later
                     </span>
                   </SelectItem>
                   {(hackathons.data ?? []).map((h) => (
@@ -180,7 +180,7 @@ function NewTeamForm() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {COMMITMENT_LEVELS.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>{c.label} — {c.hint}</SelectItem>
+                    <SelectItem key={c.value} value={c.value}>{c.label} - {c.hint}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -205,7 +205,7 @@ function NewTeamForm() {
                   id="idea-title"
                   value={form.ideaTitle}
                   onChange={(e) => setForm({ ...form, ideaTitle: e.target.value })}
-                  placeholder="Driftwave — campus event intelligence"
+                  placeholder="Driftwave - campus event intelligence"
                 />
               </div>
               <div className="space-y-1.5">
@@ -241,7 +241,7 @@ function NewTeamForm() {
                 checked={form.lookingForIdea}
                 onCheckedChange={(v) => setForm({ ...form, lookingForIdea: !!v })}
               />
-              We have skills but no idea — open to people bringing theirs
+              We have skills but no idea - open to people bringing theirs
             </label>
           </CardContent>
         </Card>
@@ -317,7 +317,7 @@ function NewTeamForm() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Specific skills wanted</CardTitle>
-            <CardDescription>Optional — sharpens match scores for joiners.</CardDescription>
+            <CardDescription>Optional - sharpens match scores for joiners.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {[...skillsByCategory.entries()].map(([cat, list]) => (

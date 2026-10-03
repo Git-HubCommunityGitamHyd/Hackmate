@@ -15,7 +15,7 @@ function slugify(name: string) {
     .slice(0, 60);
 }
 
-/** GET /api/hackathons — list with filters (public). */
+/** GET /api/hackathons - list with filters (public). */
 export async function GET(req: NextRequest) {
   const rl = rateLimit(req, { key: "hackathons", limit: 60, windowMs: 60_000 });
   if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
@@ -30,8 +30,8 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** POST /api/hackathons — create a hackathon listing (ADMIN ONLY).
- *  Admins are accounts whose email is listed in ADMIN_EMAILS — see src/lib/admin.ts. */
+/** POST /api/hackathons - create a hackathon listing (ADMIN ONLY).
+ *  Admins are accounts whose email is listed in ADMIN_EMAILS - see src/lib/admin.ts. */
 export async function POST(req: NextRequest) {
   return withAdmin(async (user) => {
     const body = await req.json();

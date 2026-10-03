@@ -1,18 +1,18 @@
-# HackMate — Security Report (what was implemented and tested)
+# HackMate - Security Report (what was implemented and tested)
 
 ## 1. Security controls in the codebase
 
 ### HTTP security headers (`next.config.ts`)
 Every response ships with:
-- **Content-Security-Policy** — `default-src 'self'`, `object-src 'none'`,
+- **Content-Security-Policy** - `default-src 'self'`, `object-src 'none'`,
   `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'`;
   `unsafe-eval` only in development (Turbopack HMR needs it, production drops it);
   `connect-src` limited to self + https/wss for Pusher chat.
-- **Strict-Transport-Security** — `max-age=63072000; includeSubDomains; preload`
+- **Strict-Transport-Security** - `max-age=63072000; includeSubDomains; preload`
 - **X-Frame-Options: DENY** and CSP `frame-ancestors 'none'` (clickjacking)
 - **X-Content-Type-Options: nosniff** (MIME sniffing)
 - **Referrer-Policy: strict-origin-when-cross-origin`
-- **Permissions-Policy** — camera, microphone, geolocation, interest-cohort all disabled
+- **Permissions-Policy** - camera, microphone, geolocation, interest-cohort all disabled
 
 ### Authentication and sessions
 - Auth.js v5 with **database sessions** (Drizzle adapter), not JWTs in cookies.
@@ -52,7 +52,7 @@ Every response ships with:
 
 ### GitHub contributions proxy (`/api/github-contributions`)
 - New with the profile contribution calendar. Username is validated against
-  `^[a-zA-Z0-9-]{1,39}$` (400 otherwise — injection and traversal payloads
+  `^[a-zA-Z0-9-]{1,39}$` (400 otherwise - injection and traversal payloads
   included), rate-limited 30/min/IP, 6-hour in-memory cache per username,
   8s upstream timeout, and upstream errors surface as a clean 502 with no
   internal detail. The upstream (default
@@ -72,7 +72,7 @@ Every response ships with:
     reviewer and reviewee must share an active team for that hackathon.
   - **UUID validation on query strings**: `?userId=not-a-uuid` returns 404
     instead of the raw Postgres "invalid input syntax" 500 the endpoints
-    shipped with (a real finding — fixed in the HTTP edge of all three).
+    shipped with (a real finding - fixed in the HTTP edge of all three).
   - **Error sanitization**: entrypoints wrap the (unit-testable) core logic
     in try/catch and return a generic 500, matching `withUser` semantics.
   - **Query-amplifier cap in find-equal**: each scored candidate costs one
@@ -97,13 +97,13 @@ Every response ships with:
 ## 2. Penetration testing
 
 Automated suite in `scripts/pentest/`:
-- `pentest.py` — auth enforcement, authorization semantics, injection probes
+- `pentest.py` - auth enforcement, authorization semantics, injection probes
   (SQLi strings, `pg_sleep` timing attack, XSS reflection, SSTI `{{7*7}}` /
   `${7*7}`, path traversal), security header verification, PII/enum checks,
   pagination abuse, rate-limit tripwire.
-- `api-verify.py` — API contract verification against the live dev server.
-- `vlm-audit.py` — visual audit of rendered pages.
-- `report.json` — machine-readable results.
+- `api-verify.py` - API contract verification against the live dev server.
+- `vlm-audit.py` - visual audit of rendered pages.
+- `report.json` - machine-readable results.
 
 **Latest run: 61 pass, 0 fail, 1 warning.**
 
@@ -116,7 +116,7 @@ Highlights of what the suite verified:
   template injection probes are inert.
 - Idea-first team names are not reflected as HTML (XSS).
 - Search and find-equal rate limits trip (429 observed).
-- Malformed and unknown UUIDs produce 4xx, never 500 — including on the
+- Malformed and unknown UUIDs produce 4xx, never 500 - including on the
   new track-record endpoints (`?userId=not-a-uuid` etc.).
 - Method enforcement (PUT on attendance, PATCH on reviews rejected).
 - Directory responses contain no email/PII and respect row caps.
@@ -135,7 +135,7 @@ Findings found and fixed during testing:
    queries per request -> UUID guards + rate limits + scoring cap added; all
    covered by new pentest section 9 (61 checks total).
 6. **Solo-team result recording 500'd** (`values() must be called with at least
-   one value` — Drizzle insert of an empty notification list) -> insert guarded;
+   one value` - Drizzle insert of an empty notification list) -> insert guarded;
    also made badge re-awarding idempotent (`onConflictDoNothing`) under the new
    `(user_id, badge_id)` unique index so repeat teammates can't 500 the route.
 

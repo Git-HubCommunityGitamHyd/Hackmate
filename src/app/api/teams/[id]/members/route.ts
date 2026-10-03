@@ -6,8 +6,8 @@ import { ok, fail, isUuid, requireUser } from "@/lib/api";
 import { recordCancellationOnLeave } from "@/app/api/cancellations/route";
 
 /**
- * DELETE /api/teams/:id/members — leave team (self) or remove member (admin).
- * Body: { userId?: string } — defaults to self.
+ * DELETE /api/teams/:id/members - leave team (self) or remove member (admin).
+ * Body: { userId?: string } - defaults to self.
  */
 export async function DELETE(
   req: NextRequest,

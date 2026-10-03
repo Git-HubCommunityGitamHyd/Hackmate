@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- HackMate logo mark — debossed ink-glass tile + jade bolt.
+<!-- HackMate logo mark - debossed ink-glass tile + jade bolt.
      ONE file drives the header, footer, login page AND the favicon
      (layout.tsx points metadata.icons here). To swap in your own logo,
-     just replace this file — see LOGO.md at the repo root. -->
+     just replace this file - see LOGO.md at the repo root. -->
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
     <!-- Tile body: darker at the top (pressed-in shadow), lifted at the bottom -->

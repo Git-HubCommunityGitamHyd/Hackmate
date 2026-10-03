@@ -31,24 +31,24 @@ import { cn } from "@/lib/utils";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /**
- * LoginBackdrop — the sign-in page's FULL-PAGE living ground.
+ * LoginBackdrop - the sign-in page's FULL-PAGE living ground.
  *
  * NOT confined behind the text: the breathing jade GrainGradient
- * (WebGL, its INBUILT film grain left ON at the default 0.32 — that
+ * (WebGL, its INBUILT film grain left ON at the default 0.32 - that
  * grain is part of the component's look) fills the entire login page,
- * FLIPPED — mirrored horizontally AND vertically (scale(-1, -1), the
+ * FLIPPED - mirrored horizontally AND vertically (scale(-1, -1), the
  * 180° turn) so the gradient's breathing sweep and brightest corner
- * run opposite to the component's default — and is BLENDED into the
+ * run opposite to the component's default - and is BLENDED into the
  * black ribbed wall two ways:
  *
  *   1. the wall's own flutes are re-drawn OVER the gradient, so the
- *      ribs continue through it — one continuous ribbed ground;
+ *      ribs continue through it - one continuous ribbed ground;
  *   2. an ink vignette melts the edges (and the area under the
  *      floating navbar dock) back into the page's near-black, so the
  *      gradient never reads as a pasted rectangle.
  *
  * The colored jade cursor wake (CursorField) sits above this backdrop
- * and below the content. NO 3D objects, NO magnet-lines — the page's
+ * and below the content. NO 3D objects, NO magnet-lines - the page's
  * motion is the breathing gradient and the cursor wake.
  */
 function LoginBackdrop() {
@@ -57,9 +57,9 @@ function LoginBackdrop() {
       aria-hidden="true"
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
     >
-      {/* 1 — the breathing jade gradient: the whole page's ground.
+      {/* 1 - the breathing jade gradient: the whole page's ground.
           FLIPPED horizontally + vertically (the 180° turn) via an
-          outer CSS transform — the component itself stays VERBATIM.
+          outer CSS transform - the component itself stays VERBATIM.
           The INBUILT film grain stays ON (default 0.32): it is the
           texture of the gradient itself, not a bolted-on noise layer.
           Never disable it. */}
@@ -75,17 +75,18 @@ function LoginBackdrop() {
         speed={1}
       />
 
-      {/* 2 — the wall's flutes, re-drawn OVER the gradient: the ribbed
-          background continues through it (the blend). */}
+      {/* 2 - the wall's flutes, re-drawn OVER the gradient (fainter
+          than the body wall): the ribbed background continues through
+          it (the blend), kept subtle so the gradient breathes. */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            "repeating-linear-gradient(90deg, oklch(1 0 0 / 0.03) 0px, oklch(1 0 0 / 0.03) 1px, transparent 1px, transparent 11px)",
+            "repeating-linear-gradient(90deg, oklch(1 0 0 / 0.02) 0px, oklch(1 0 0 / 0.02) 1px, transparent 1px, transparent 11px)",
         }}
       />
 
-      {/* 3 — ink vignette: the gradient melts into the page's black at
+      {/* 3 - ink vignette: the gradient melts into the page's black at
           the edges and under the floating dock. */}
       <div
         className="absolute inset-0"
@@ -140,7 +141,7 @@ function ProjectInfo() {
           />
         </h2>
 
-        {/* Ink brush stroke — animated with anime.js on mount. The single
+        {/* Ink brush stroke - animated with anime.js on mount. The single
             jade flourish of the ink-wash page. */}
         <InkBrush className="mt-1 mb-1 -rotate-1" width={220} height={12} />
 
@@ -259,13 +260,13 @@ export function LoginClient() {
 
   return (
     <div className="relative pt-10 pb-12">
-      {/* The FULL-PAGE living ground — the breathing jade gradient
+      {/* The FULL-PAGE living ground - the breathing jade gradient
           (inbuilt grain ON, flipped 180°) blended into the black
           ribbed wall. Covers the entire login page, not just the
           hero. */}
       <LoginBackdrop />
 
-      {/* The jade pixel wake — the sign-in hero page's own cursor
+      {/* The jade pixel wake - the sign-in hero page's own cursor
           effect. COLORED (jade, not black-and-white) pixels that wake
           and brighten under the pointer, then sink back. ONLY this
           page carries it; every other page runs on the plain fluted
@@ -293,22 +294,22 @@ export function LoginClient() {
             against each other, so the text sits at the vertical middle of
             the card's side. */}
         <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-14 lg:items-center max-w-6xl mx-auto">
-          {/* Desktop: the hero — animated copy on the full-page living
+          {/* Desktop: the hero - animated copy on the full-page living
               ground. No 3D object: the breathing gradient and the
               text's own reveal motion carry the page. */}
           <div className="hidden lg:flex flex-col justify-center">
             <ProjectInfo />
           </div>
 
-          {/* Sign-in — a pane of TRANSLUCENT FROSTED GLASS, debossed
-              into the wall. 10px blur applied DIRECTLY on the pane
+          {/* Sign-in - a pane of TRANSLUCENT FROSTED GLASS, debossed
+              deep into the wall. 10px blur applied DIRECTLY on the pane
               (same pattern as every card in the app), so the gradient's
-              glow, the animated ribs and the cursor's jade wake smear
-              through it as soft streaks — the frost read. The pane
-              carries the fluting; the pointer tilt settles on a soft
-              spring; and the whole card lands on the page via the
-              shared anime.js damped-spring entrance. Radius is the one
-              shared radius. */}
+              glow and the cursor's jade wake smear through it as soft
+              streaks (the frost read). The pane's ground is CLEAN frost
+              with no lines; the page behind it keeps the fluting. The
+              pointer tilt settles on a soft spring, and the whole card
+              lands on the page via the shared anime.js damped-spring
+              entrance. Radius is the one shared radius. */}
           <div className="w-full max-w-md mx-auto lg:mx-0">
             <SplineReveal drop={30} tilt={0} className="w-full">
               <FlutedGlass
@@ -403,13 +404,13 @@ export function LoginClient() {
                         Send magic link
                       </Button>
 
-                      {/* LinkedIn copy — non-developer track. */}
+                      {/* LinkedIn copy - non-developer track. */}
                       <p className="text-[11px] text-muted-foreground text-center leading-relaxed mt-1">
                         <span className="inline-flex items-center gap-1 text-foreground/90">
                           <Linkedin className="h-3 w-3" /> LinkedIn-ready
                         </span>
                         <br />
-                        For designers, PMs and pitching specialists — no
+                        For designers, PMs and pitching specialists; no
                         GitHub needed. After you sign in, paste your LinkedIn
                         profile URL once and we fill your headline, experience
                         and education for you.
@@ -441,7 +442,7 @@ export function LoginClient() {
                             <FlaskConical className="h-4 w-4 mr-2" />
                           )}
 
-                          Quick dev sign-in — admin (local only)
+                          Quick dev sign-in · admin (local only)
                         </Button>
                       </motion.div>
                     )}
@@ -473,7 +474,7 @@ export function LoginClient() {
             </p>
           </div>
 
-          {/* Mobile: the hero below the card — the same animated copy
+          {/* Mobile: the hero below the card - the same animated copy
               on the living ground. */}
           <div className="lg:hidden">
             <ProjectInfo />

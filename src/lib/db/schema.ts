@@ -16,7 +16,7 @@ import { sql } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 /* ------------------------------------------------------------------ */
-/* Auth.js v5 tables (Drizzle adapter) — user table is extended below  */
+/* Auth.js v5 tables (Drizzle adapter) - user table is extended below  */
 /* ------------------------------------------------------------------ */
 
 export const users = pgTable(
@@ -64,7 +64,7 @@ export const users = pgTable(
     emergencyAvailableUntil: timestamp("emergency_available_until", {
       withTimezone: true,
     }),
-    /** Cached karma from computeKarma() — a denormalised copy kept only so
+    /** Cached karma from computeKarma() - a denormalised copy kept only so
      *  listings can ORDER BY it. Recomputed from source rows on every
      *  GET /api/reputation, so treat it as stale-tolerant and never as the
      *  source of truth. */
@@ -387,7 +387,7 @@ export const teamMembers = pgTable(
   ],
 );
 
-/** Roles the team wants to fill — powers the completeness meter + gap analysis. */
+/** Roles the team wants to fill - powers the completeness meter + gap analysis. */
 export const teamRolesNeeded = pgTable(
   "team_role_needed",
   {

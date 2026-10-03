@@ -32,7 +32,7 @@ agent-browser open http://localhost:3000/
 sleep 8
 agent-browser screenshot $OUT/r7-discover.png --full
 
-# ---- 5. Peek: hover a hackathon card — the hub window covers the card ----
+# ---- 5. Peek: hover a hackathon card - the hub window covers the card ----
 agent-browser move 720 500
 sleep 1.2
 agent-browser screenshot $OUT/r7-peek-open.png

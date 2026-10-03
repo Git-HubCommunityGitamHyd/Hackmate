@@ -9,7 +9,7 @@ import { hackathonSchema } from "@/lib/validations";
 import { ok, fail, withPublic, withAdmin, requireUser } from "@/lib/api";
 
 /**
- * GET /api/hackathons/:idOrSlug — the Hackathon Hub payload:
+ * GET /api/hackathons/:idOrSlug - the Hackathon Hub payload:
  * event info + people looking for teams + teams recruiting + viewer context.
  */
 export async function GET(
@@ -66,7 +66,7 @@ export async function GET(
   });
 }
 
-/** POST /api/hackathons/:idOrSlug — mark me as "looking for a team" for this event. */
+/** POST /api/hackathons/:idOrSlug - mark me as "looking for a team" for this event. */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ idOrSlug: string }> },
@@ -115,7 +115,7 @@ export async function POST(
   return ok({ status: "active" }, { status: 201 });
 }
 
-/** PUT /api/hackathons/:idOrSlug — edit a listing (ADMIN ONLY). */
+/** PUT /api/hackathons/:idOrSlug - edit a listing (ADMIN ONLY). */
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ idOrSlug: string }> },
@@ -158,7 +158,7 @@ export async function PUT(
   });
 }
 
-/** DELETE /api/hackathons/:idOrSlug — remove a listing (ADMIN ONLY).
+/** DELETE /api/hackathons/:idOrSlug - remove a listing (ADMIN ONLY).
  *  Cascades: teams, profiles, bookmarks and messages attached to it are removed. */
 export async function DELETE(
   _req: NextRequest,

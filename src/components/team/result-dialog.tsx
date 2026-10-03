@@ -27,8 +27,8 @@ import { api } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
 
 const PLACEMENTS: { value: string; label: string; numeric: number | null }[] = [
-  { value: "none", label: "Participated — no placement", numeric: null },
-  { value: "1", label: "1st — Winner", numeric: 1 },
+  { value: "none", label: "Participated · no placement", numeric: null },
+  { value: "1", label: "1st · Winner", numeric: 1 },
   { value: "2", label: "2nd place", numeric: 2 },
   { value: "3", label: "3rd place", numeric: 3 },
   { value: "5", label: "Top 5", numeric: 5 },
@@ -37,7 +37,7 @@ const PLACEMENTS: { value: string; label: string; numeric: number | null }[] = [
 ];
 
 /**
- * Record what the team shipped — the post-hackathon write path.
+ * Record what the team shipped - the post-hackathon write path.
  * One submission writes result rows, attendance, badges and karma for
  * every member (see POST /api/teams/:id/result).
  */
@@ -82,7 +82,7 @@ export function ResultDialog({
     },
     onSuccess: (data) => {
       toast.success(
-        `Result recorded — ${data.recorded} teammates got history, ${data.badgesAwarded} badges awarded`,
+        `Result recorded: ${data.recorded} teammates got history, ${data.badgesAwarded} badges awarded`,
         { icon: <PartyPopper className="h-4 w-4 text-primary" /> },
       );
       setOpen(false);
@@ -113,7 +113,7 @@ export function ResultDialog({
           <DialogDescription>
             {hackathonName ? `Closing out ${hackathonName}. ` : ""}This writes everyone&apos;s
             hackathon history, marks attendance, awards badges (Completed, Built Project,
-            Finalist, Winner, Worked Together) and updates karma. One shot — make it count.
+            Finalist, Winner, Worked Together) and updates karma. One shot, make it count.
           </DialogDescription>
         </DialogHeader>
 

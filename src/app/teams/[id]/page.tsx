@@ -95,7 +95,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
           </Link>
         ) : (
           <Link href="/#teams">
-            <ArrowLeft className="h-4 w-4 mr-1" /> Idea-first — event not chosen yet
+            <ArrowLeft className="h-4 w-4 mr-1" /> Idea-first - event not chosen yet
           </Link>
         )}
       </Button>
@@ -157,7 +157,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                     <div>
                       <p className="font-semibold text-sm">{team.ideaTitle ?? "Anonymous idea"}</p>
                       <p className="text-sm text-muted-foreground italic mt-0.5">
-                        Domain: {team.ideaDomain ?? "undisclosed"} — full details revealed to members and
+                        Domain: {team.ideaDomain ?? "undisclosed"} - full details revealed to members and
                         accepted requesters.
                       </p>
                     </div>
@@ -198,7 +198,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                   </Button>
                 ) : team.viewer.hasPendingInvite ? (
                   <Button asChild className="font-semibold">
-                    <Link href="/notifications">You have an invite — respond</Link>
+                    <Link href="/notifications">You have an invite - respond</Link>
                   </Button>
                 ) : (
                   <Button

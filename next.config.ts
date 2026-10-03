@@ -8,7 +8,7 @@ import type { NextConfig } from "next";
  * 'unsafe-eval'. Styles need 'unsafe-inline' (Tailwind + inline style
  * attributes from animation libraries). Pusher realtime chat connects over
  * wss:, and avatars/hackathon images load from https:, so both are allowed
- * narrowly. The app is intentionally 3D-free — no WebGL runtimes beyond
+ * narrowly. The app is intentionally 3D-free - no WebGL runtimes beyond
  * the login page's own GrainGradient shader canvas.
  */
 const isDev = process.env.NODE_ENV === "development";

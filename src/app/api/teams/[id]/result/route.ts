@@ -7,7 +7,7 @@ import { computeKarma } from "@/lib/reputation";
 import { ok, fail, requireUser } from "@/lib/api";
 
 /**
- * POST /api/teams/:id/result — the post-hackathon write path.
+ * POST /api/teams/:id/result - the post-hackathon write path.
  *
  * The team admin records what the team shipped. One call:
  *   1. inserts a hackathon_result row for every member (history + karma source)
@@ -16,7 +16,7 @@ import { ok, fail, requireUser } from "@/lib/api";
  *      finalist (placement 2-3), winner (placement 1), worked-together (pairwise)
  *   4. closes the team, refreshes every member's karma cache and notifies them
  *
- * Idempotency: one result per team, ever — re-recording is rejected with 409.
+ * Idempotency: one result per team, ever - re-recording is rejected with 409.
  */
 export async function POST(
   req: NextRequest,
@@ -114,7 +114,7 @@ export async function POST(
   }
   /* onConflictDoNothing: user_badge has a (user_id, badge_id) unique
      index, so a second hackathon with the same teammates would collide
-     on "worked-together" — the badge simply already exists. */
+     on "worked-together" - the badge simply already exists. */
   if (awards.length > 0)
     await db.insert(schema.userBadges).values(awards).onConflictDoNothing();
 
@@ -196,7 +196,7 @@ export async function POST(
           : placement
             ? `placed ${placement}`
             : "submitted";
-  /* Solo teams filter down to zero rows — Drizzle's values([]) throws
+  /* Solo teams filter down to zero rows - Drizzle's values([]) throws
      "must be called with at least one value", which used to 500 the
      whole result recording for one-person teams. Guard the insert. */
   const notifRows = members
@@ -205,7 +205,7 @@ export async function POST(
       userId: m.userId,
       type: "team_update" as const,
       title: `Result recorded for "${detail.name}"`,
-      body: `${data.projectName} — ${placementLabel}. Badges and karma updated on your profile.`,
+      body: `${data.projectName} - ${placementLabel}. Badges and karma updated on your profile.`,
       link: "/my-team",
     }));
   if (notifRows.length > 0) {

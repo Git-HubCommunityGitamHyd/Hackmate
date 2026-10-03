@@ -236,7 +236,7 @@ export async function listTeams(
 }
 
 /* ------------------------------------------------------------------ */
-/* Team detail — with full Composition Intelligence                    */
+/* Team detail - with full Composition Intelligence                    */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -501,7 +501,7 @@ export async function getTeamMatchesForUser(userId: string, limit = 12) {
   const mySkillIds = signal.skills.map((s) => s.skillId);
   const myRoleIds = signal.roles.map((r) => r.roleId);
 
-  /* SQL prefilter — recruiting teams whose wanted skills overlap the user's
+  /* SQL prefilter - recruiting teams whose wanted skills overlap the user's
      skills OR whose needed roles overlap the user's roles. */
   const skillMatch =
     mySkillIds.length > 0
@@ -619,7 +619,7 @@ export async function getPeopleMatchesForTeam(teamId: string, limit = 8) {
     limit: 30,
   });
 
-  /* Compatibility answers for the candidate pool — the engine's 6th signal. */
+  /* Compatibility answers for the candidate pool - the engine's 6th signal. */
   const compatRows =
     candidates.length > 0
       ? await db

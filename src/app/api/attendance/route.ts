@@ -90,7 +90,7 @@ export async function recordAttendance(
 
   const { userId, hackathonId, status } = parsed.data;
 
-  /* Rule: Self-marking is strictly rejected — only a peer teammate can mark attendance */
+  /* Rule: Self-marking is strictly rejected - only a peer teammate can mark attendance */
   if (caller.id === userId) {
     return { status: 400, error: "You cannot mark your own attendance; a teammate must mark it" };
   }
@@ -205,7 +205,7 @@ export async function getAttendance(
  * POST /api/attendance
  * Next.js App Router entrypoint. Rate-limited and error-sanitized: the
  * testable core logic stays pure (see recordAttendance above), while the
- * HTTP edge gets the same hardening every other route has — a malformed
+ * HTTP edge gets the same hardening every other route has - a malformed
  * payload or a driver error can never leak an internal stack.
  */
 export async function POST(req: NextRequest) {
@@ -235,7 +235,7 @@ export async function GET(req: NextRequest) {
   const caller = await requireUser();
   if (!caller) return fail("Unauthorized", 401);
   const targetUserId = req.nextUrl.searchParams.get("userId") || caller.id;
-  /* Malformed ids must 404 here — a bad uuid would otherwise surface as a
+  /* Malformed ids must 404 here - a bad uuid would otherwise surface as a
      Postgres "invalid input syntax" 500 (found by the pentest suite). */
   if (!isUuid(targetUserId)) return fail("User not found", 404);
   try {

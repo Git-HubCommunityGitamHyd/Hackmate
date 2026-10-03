@@ -49,7 +49,7 @@ export function KarmaPill({
   }
 
   /* A failed reputation lookup is not worth an error state next to someone's
-     name — the pill is supplementary, so it simply doesn't render. */
+     name - the pill is supplementary, so it simply doesn't render. */
   if (isError || !data) return null;
 
   const earned = data.breakdown.filter((entry) => entry.count > 0);
@@ -74,7 +74,7 @@ export function KarmaPill({
       </TooltipTrigger>
       <TooltipContent className="max-w-60">
         {earned.length === 0 ? (
-          <p>No hackathon history yet — karma starts at 0.</p>
+          <p>No hackathon history yet. Karma starts at 0.</p>
         ) : (
           <div className="space-y-1">
             <p className="font-semibold">{data.score} karma</p>

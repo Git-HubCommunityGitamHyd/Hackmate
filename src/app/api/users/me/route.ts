@@ -10,7 +10,7 @@ import { PROCESSING_STALE_AFTER_MS } from "@/lib/verification/constants";
 import { deleteCollegeIdImage } from "@/lib/verification/storage";
 import { ROLE_TAXONOMY, SKILLS } from "@/lib/constants";
 
-/** GET /api/users/me — full own profile + my active team. */
+/** GET /api/users/me - full own profile + my active team. */
 export async function GET() {
   return withUser(async (user) => {
     const staleBefore = new Date(Date.now() - PROCESSING_STALE_AFTER_MS);
@@ -86,7 +86,7 @@ export async function GET() {
   });
 }
 
-/** PUT /api/users/me — upsert profile (skills junctions, availability, compat). */
+/** PUT /api/users/me - upsert profile (skills junctions, availability, compat). */
 export async function PUT(req: NextRequest) {
   return withUser(async (user) => {
     const body = await req.json();

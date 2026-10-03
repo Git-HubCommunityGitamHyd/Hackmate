@@ -11,7 +11,7 @@ const buttonVariants = cva(
       variant: {
         /* Filled variants carry their deboss recess via
            [data-variant] rules in globals.css (base layer), so no
-           shadow-* utilities here — utilities would out-rank them. */
+           shadow-* utilities here - utilities would out-rank them. */
         default:
           "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive:
@@ -22,11 +22,11 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        /* Debossed well — pressed INTO the surface (dark ceiling lip,
+        /* Debossed well - pressed INTO the surface (dark ceiling lip,
            faint light catch on the bottom edge via the .debossed
            utility in globals.css). Frosted translucency comes from
            bg-muted/30 over whatever glass the parent carries.
-           "embossed" stays as a legacy alias — same recess. */
+           "embossed" stays as a legacy alias - same recess. */
         debossed:
           "debossed border border-border/60 bg-muted/30 text-muted-foreground shadow-none hover:text-foreground hover:bg-muted/60 dark:bg-white/[0.04] dark:border-white/10 dark:hover:bg-white/[0.07]",
         embossed:

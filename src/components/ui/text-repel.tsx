@@ -21,13 +21,13 @@ interface TextRepelProps {
     radius?: number;
     /** Maximum displacement strength in pixels */
     strength?: number;
-    /** Interaction mode — push letters away or pull them toward the cursor */
+    /** Interaction mode - push letters away or pull them toward the cursor */
     mode?: "repel" | "attract";
-    /** Spring stiffness — higher = snappier return */
+    /** Spring stiffness - higher = snappier return */
     stiffness?: number;
-    /** Spring damping — lower = bouncier return */
+    /** Spring damping - lower = bouncier return */
     damping?: number;
-    /** Spring mass — higher = heavier feel */
+    /** Spring mass - higher = heavier feel */
     mass?: number;
     /** Animate letters in on mount before becoming interactive */
     animateIn?: boolean;

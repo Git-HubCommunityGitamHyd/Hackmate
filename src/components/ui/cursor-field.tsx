@@ -3,7 +3,7 @@
 import { PixelCanvas } from "./pixel-canvas";
 
 /**
- * CursorField — the login page's own cursor effect. LOGIN ONLY.
+ * CursorField - the login page's own cursor effect. LOGIN ONLY.
  *
  * A field of JADE ink pixels (no black-and-white: the wake glows in
  * the app's jade-green palette) that light up and brighten toward

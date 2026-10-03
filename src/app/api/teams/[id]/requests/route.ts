@@ -7,7 +7,7 @@ import { joinRequestSchema } from "@/lib/validations";
 import { sendEmail, emailTemplates } from "@/lib/email";
 import { ok, fail, requireUser } from "@/lib/api";
 
-/** GET /api/teams/:id/requests — pending requests (admin only). */
+/** GET /api/teams/:id/requests - pending requests (admin only). */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -45,7 +45,7 @@ export async function GET(
   })));
 }
 
-/** POST /api/teams/:id/requests — send a join request with a short message. */
+/** POST /api/teams/:id/requests - send a join request with a short message. */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -144,7 +144,7 @@ export async function POST(
   return ok({ status: "sent" }, { status: 201 });
 }
 
-/** PATCH /api/teams/:id/requests — accept or decline (admin only). */
+/** PATCH /api/teams/:id/requests - accept or decline (admin only). */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -176,7 +176,7 @@ export async function PATCH(
       userId: request.userId,
       type: "request_declined",
       title: `Your request to join ${detail.name} wasn't accepted`,
-      body: "Keep browsing — there are more teams recruiting.",
+      body: "Keep browsing - there are more teams recruiting.",
       link: "/discover",
     });
     return ok({ status: "declined" });

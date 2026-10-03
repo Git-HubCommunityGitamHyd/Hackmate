@@ -1,5 +1,5 @@
 /**
- * Deterministic matching engine — NO AI in v1, by design.
+ * Deterministic matching engine - NO AI in v1, by design.
  *
  * Pipeline: SQL prefilter (narrow to plausible candidates) → TypeScript
  * weighted scoring (below) over ~50 candidates.
@@ -23,7 +23,7 @@ const COMMITMENT_ORDER: Commitment[] = [
 ];
 const EXPERIENCE_ORDER: ExperienceLevel[] = ["beginner", "intermediate", "advanced"];
 
-/** Compatibility answers — collected in profile edit, finally put to work. */
+/** Compatibility answers - collected in profile edit, finally put to work. */
 export interface PersonCompatInput {
   workStyle: "plan_first" | "build_first" | "hybrid" | null;
   comfortablePresenting: boolean;
@@ -184,16 +184,16 @@ export function scorePersonForTeam(
   else if (hoursRatio >= 0.6) reasons.push("Close to the team's expected hours");
   if (commitmentFit === 1) reasons.push("Same commitment level as the team");
   if (roleFit === 1) reasons.push("Fills an open role");
-  if (person.emergencyAvailable) reasons.push("Emergency available — can join now");
+  if (person.emergencyAvailable) reasons.push("Emergency available - can join now");
   if (broughtSkills.length > 0) {
     reasons.push(`Brings ${broughtSkills.length} strong skill${broughtSkills.length > 1 ? "s" : ""} the team listed`);
   }
   if (person.compat?.comfortablePresenting && openRoles.has("pitching"))
-    reasons.push("Comfortable presenting — can own the pitch");
+    reasons.push("Comfortable presenting - can own the pitch");
   if (person.compat?.openToIdeaSwaps && team.lookingForIdea)
-    reasons.push("Open to idea swaps — fits a team still exploring");
+    reasons.push("Open to idea swaps - fits a team still exploring");
   if (person.compat?.workStyle === "hybrid" && compatFit >= 0.85)
-    reasons.push("Flexible work style — plans or builds, as needed");
+    reasons.push("Flexible work style - plans or builds, as needed");
 
   return {
     score: Math.round(total * 100),

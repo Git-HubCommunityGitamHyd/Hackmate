@@ -55,7 +55,7 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
 
   let userIds = userRows.map((r) => r.u.id);
 
-  /* Hackathon-profile filter — also surfaces the per-event signal
+  /* Hackathon-profile filter - also surfaces the per-event signal
    * (role, motivation, idea) so hub pages can render why someone is looking. */
   const hackathonProfileByUser = new Map<
     string,
@@ -176,7 +176,7 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
     hackathonProfile: hackathonProfileByUser.get(u.id),
   }));
 
-  /* Skill/category filters (post-filter after batch fetch — keeps it simple + correct) */
+  /* Skill/category filters (post-filter after batch fetch - keeps it simple + correct) */
   if (filters.skillIds && filters.skillIds.length > 0) {
     const wanted = new Set(filters.skillIds);
     list = list.filter((p) =>
@@ -202,7 +202,7 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
  * Returns null for a missing user and does not apply discovery visibility filters.
  */
 export async function getProfile(userId: string): Promise<ProfileDTO | null> {
-  /* NOTE: fetch the user directly — do NOT reuse people() filters here,
+  /* NOTE: fetch the user directly - do NOT reuse people() filters here,
      otherwise members whose status became team_full / not_looking would
      404 on their own profile. */
   const [userRow] = await db

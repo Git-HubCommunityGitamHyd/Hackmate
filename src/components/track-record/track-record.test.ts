@@ -57,8 +57,8 @@ test("4. review rating formatting formats numbers to 1 decimal place", () => {
   assert.equal(formatAverageRating(3.3333), "3.3");
 });
 
-test("5. review rating formatting returns dash fallback for null average rating", () => {
-  assert.equal(formatAverageRating(null), "—");
+test("5. review rating formatting returns N/A fallback for null average rating", () => {
+  assert.equal(formatAverageRating(null), "N/A");
 });
 
 // ==========================================

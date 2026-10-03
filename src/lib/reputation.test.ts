@@ -108,7 +108,7 @@ test("hostile counts degrade to 0 instead of poisoning the total", () => {
   assert.ok(result.breakdown.every((b) => Number.isFinite(b.points)));
 });
 
-test("computeKarma is pure — same input, same output, no mutation", () => {
+test("computeKarma is pure - same input, same output, no mutation", () => {
   const input = counts({ attendancePresent: 2, ratingCount: 1, avgRating: 3 });
   const snapshot = { ...input };
   assert.deepEqual(computeKarma(input), computeKarma(input));

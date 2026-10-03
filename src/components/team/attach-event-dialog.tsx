@@ -54,7 +54,7 @@ export function AttachEventDialog({
         body: JSON.stringify({ hackathonId }),
       }),
     onSuccess: () => {
-      toast.success("Event attached — the team is now part of it");
+      toast.success("Event attached. The team is now part of it");
       setOpen(false);
       qc.invalidateQueries({ queryKey: ["me"] });
       qc.invalidateQueries({ queryKey: ["my-team"] });
@@ -75,7 +75,7 @@ export function AttachEventDialog({
         <DialogHeader>
           <DialogTitle>Pick your event</DialogTitle>
           <DialogDescription>
-            The idea led, the team clicked — now anchor it to a hackathon. Everyone&apos;s
+            The idea led, the team clicked. Now anchor it to a hackathon. Everyone&apos;s
             schedules, deadlines and the submission checklist light up.
           </DialogDescription>
         </DialogHeader>
@@ -92,7 +92,7 @@ export function AttachEventDialog({
           </Select>
           {(hackathons.data ?? []).length === 0 && !hackathons.isLoading && (
             <p className="text-xs text-muted-foreground">
-              No upcoming events posted yet — check back soon.
+              No upcoming events posted yet. Check back soon.
             </p>
           )}
         </div>

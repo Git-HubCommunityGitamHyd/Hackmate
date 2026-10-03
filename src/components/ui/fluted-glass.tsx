@@ -20,26 +20,29 @@ interface FlutedGlassProps {
 }
 
 /**
- * FlutedGlass — a pane of TRANSLUCENT FROSTED GLASS, debossed into the
- * page.
+ * FlutedGlass - a pane of TRANSLUCENT FROSTED GLASS, debossed DEEP
+ * into the page.
  *
  * The 10px backdrop blur is applied DIRECTLY on the pane itself (the
  * exact same pattern as every [data-slot="card"] in the app), so
- * whatever moves behind it — the breathing gradient, the jade cursor
- * wake — smears through as soft streaks. This direct-application
+ * whatever moves behind it (the breathing gradient, the jade cursor
+ * wake) smears through as soft streaks. This direct-application
  * pattern is the one that reliably renders in every browser; layering
  * the blur on an inner element mutes the frost.
  *
- * POINTER TILT — twitch-free by construction:
+ * The pane's own ground is CLEAN frost: no ribbing, no lines inside
+ * the card. Only the page behind it carries the fluted lines.
+ *
+ * POINTER TILT - twitch-free by construction:
  *   - while the pointer is over the pane, the tilt tracks it 1:1
- *     (rAF-throttled writes, transition DISABLED — no rubber-banding,
+ *     (rAF-throttled writes, transition DISABLED, no rubber-banding,
  *     no overshoot jitter on every mousemove);
  *   - on pointer leave, the `.settle` class re-enables one soft spring
  *     transition back to rest.
- * The subtree is FLAT (no preserve-3d / translateZ) — 3D contexts
- * inside a backdrop-filter element cause Chrome rendering artifacts.
- * NO noise layers, NO SVG refraction filters — the blur and the ribs
- * ARE the frost.
+ * The subtree is FLAT (no preserve-3d / translateZ), because 3D
+ * contexts inside a backdrop-filter element cause Chrome rendering
+ * artifacts. NO noise layers, NO SVG refraction filters: the blur IS
+ * the frost.
  */
 export function FlutedGlass({
   children,
@@ -80,7 +83,7 @@ export function FlutedGlass({
     }
 
     const element = event.currentTarget;
-    /* Tracking mode: no transition — the pane follows the pointer
+    /* Tracking mode: no transition - the pane follows the pointer
        exactly, one write per frame. (Also clears any leftover settle
        from a previous leave.) */
     element.classList.remove(styles.settle);
@@ -112,7 +115,7 @@ export function FlutedGlass({
     }
 
     /* Settle mode: drop tracking (re-enables the soft spring
-       transition), then reset — ONE smooth ease back to rest. The
+       transition), then reset - ONE smooth ease back to rest. The
        settle class is removed once the transition lands so tracking
        mode is always clean on the next hover. */
     element.classList.remove(styles.tracking);
@@ -135,7 +138,7 @@ export function FlutedGlass({
         background,
         borderRadius,
         minHeight,
-        /* THE FROST — 10px backdrop blur written as an INLINE style on
+        /* THE FROST - 10px backdrop blur written as an INLINE style on
            purpose: the production CSS minifier mangles
            `backdrop-filter: blur(var(--glass-blur, ...))` into an
            invalid declaration, so the blur MUST NOT live in the
@@ -149,10 +152,7 @@ export function FlutedGlass({
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
     >
-      {/* Very subtle flute structure — ribbing the frost smears */}
-      <div className={styles.flutes} />
-
-      {/* Content */}
+      {/* Content - sits directly on the clean frost. */}
       <div className={styles.content}>
         {children}
       </div>

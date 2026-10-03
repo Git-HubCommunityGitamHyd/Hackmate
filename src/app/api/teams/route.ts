@@ -7,7 +7,7 @@ import { teamSchema } from "@/lib/validations";
 import { DEFAULT_TASKS } from "@/lib/constants";
 import { ok, fail, withUser, withPublic, requireUser } from "@/lib/api";
 
-/** GET /api/teams — list teams (viewer-aware match scores). */
+/** GET /api/teams - list teams (viewer-aware match scores). */
 export async function GET(req: NextRequest) {
   return withPublic(async () => {
     const params = req.nextUrl.searchParams;
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST /api/teams — create a team with idea, needed roles, wanted skills,
+ * POST /api/teams - create a team with idea, needed roles, wanted skills,
  * and the default workspace checklist. Creator becomes admin member.
  */
 export async function POST(req: NextRequest) {

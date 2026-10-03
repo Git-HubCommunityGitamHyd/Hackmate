@@ -63,7 +63,7 @@ const colorSchemas = {
         level3: "bg-orange-400 dark:bg-orange-500",
         level4: "bg-orange-500 dark:bg-orange-400",
     },
-    /* Ink wash: paper density instead of hue — the busiest days are the
+    /* Ink wash: paper density instead of hue - the busiest days are the
        lightest, like ink loaded onto paper. Built for the black theme. */
     ink: {
         level0: "bg-zinc-100 dark:bg-zinc-900/90",
@@ -150,7 +150,7 @@ export function GithubCalendar({
     if (error) {
         return (
             <div className={cn("rounded-[4px] border border-border bg-muted/40 p-4 text-sm text-muted-foreground", className)}>
-                Contribution graph is unavailable right now — the server
+                Contribution graph is unavailable right now. The server
                 could not reach the public GitHub data upstream (offline or
                 rate-limited). The verified GitHub stats below are unaffected.
             </div>
@@ -196,7 +196,7 @@ export function GithubCalendar({
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 5, scale: 0.9 }}
                             transition={{ duration: 0.2 }}
-                            className="absolute z-50 pointer-events-none px-3 py-1.5 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-xs rounded-md shadow-xl whitespace-nowrap"
+                            className="absolute z-50 pointer-events-none px-3 py-1.5 rounded-md text-xs whitespace-nowrap bg-popover/90 text-popover-foreground backdrop-blur-[10px] debossed"
                             style={{
                                 left: mousePos.x,
                                 top: mousePos.y - 40,
@@ -204,7 +204,7 @@ export function GithubCalendar({
                             }}
                         >
                             <span className="font-bold mr-1">{hoveredCount}</span>
-                            <span className="text-zinc-400 dark:text-zinc-500">contributions on {hoveredDate}</span>
+                            <span className="text-muted-foreground">contributions on {hoveredDate}</span>
                         </motion.div>
                     )}
                 </AnimatePresence>

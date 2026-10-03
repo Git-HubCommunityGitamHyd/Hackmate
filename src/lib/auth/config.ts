@@ -23,11 +23,11 @@ function resendProvider() {
 export const providers: Provider[] = [githubProvider(), resendProvider()];
 
 /**
- * Edge-safe provider config (no adapter / no node deps) — shared by the
+ * Edge-safe provider config (no adapter / no node deps) - shared by the
  * full server config in src/lib/auth/index.ts.
  *
  * Only OAuth providers here: email (Resend) login requires a database
- * adapter for its verification tokens — registering it in an edge context
+ * adapter for its verification tokens - registering it in an edge context
  * trips Auth.js' "MissingAdapter" assertion on every request. The full
  * server config in src/lib/auth/index.ts overrides `providers` with the
  * complete set (GitHub + Resend).
