@@ -26,8 +26,8 @@ EXCLUDE_DIRS = {
 EXCLUDE_DIRS.discard("drizzle")
 
 EXCLUDE_FILES = {
-    ".env", ".env.local", ".env.production", "dev.log", "worklog.md",
-    ".DS_Store", "tsconfig.tsbuildinfo", ".prod",
+    ".env", ".env.local", ".env.production", "dev.log", "prod.log",
+    "worklog.md", ".DS_Store", "tsconfig.tsbuildinfo", ".prod",
 }
 EXCLUDE_PREFIX = ("scripts/pgbin",)
 
