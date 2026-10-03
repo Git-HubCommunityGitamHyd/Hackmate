@@ -112,11 +112,11 @@ export function TeamChat({ teamId, teamName }: { teamId: string; teamName: strin
                       mine
                         ? "bg-primary text-primary-foreground"
                         : /* Incoming bubble: translucent frosted glass with
-                             the 10px backdrop blur AND the deep inset
+                             the 5px backdrop blur AND the deep inset
                              deboss (white light catch at the interior
                              bottom-right edge), same as every other
                              translucent surface in the app. */
-                          "bg-muted/60 backdrop-blur-[10px] debossed",
+                          "bg-muted/60 backdrop-blur-[5px] debossed",
                     )}
                   >
                     {m.content}

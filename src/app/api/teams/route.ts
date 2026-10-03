@@ -6,6 +6,7 @@ import { listTeams, getTeamDetail } from "@/lib/queries/teams";
 import { teamSchema } from "@/lib/validations";
 import { DEFAULT_TASKS } from "@/lib/constants";
 import { ok, fail, withUser, withPublic, requireUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 /** GET /api/teams - list teams (viewer-aware match scores). */
 export async function GET(req: NextRequest) {
@@ -27,6 +28,9 @@ export async function GET(req: NextRequest) {
  * and the default workspace checklist. Creator becomes admin member.
  */
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(req, { key: "teams-create", limit: 10, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   return withUser(async (user) => {
     const body = await req.json();
     const parsed = teamSchema.safeParse(body);

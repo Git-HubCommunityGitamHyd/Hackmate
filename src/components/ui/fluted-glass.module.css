@@ -17,12 +17,12 @@
     rotateX(var(--tilt-x, 0deg))
     rotateY(var(--tilt-y, 0deg));
 
-  /* THE FROST - 10px backdrop blur. The REAL declaration is set as an
+  /* THE FROST - 5px backdrop blur. The REAL declaration is set as an
      INLINE style by the tsx (minifiers mangle var()-driven
      backdrop-filter in stylesheets); this static declaration is only a
      same-value stylesheet-level default for the no-JS/SSR paint. */
-  -webkit-backdrop-filter: blur(10px) saturate(120%);
-  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(5px) saturate(120%);
+  backdrop-filter: blur(5px) saturate(120%);
 
   /* NO transition here by default. Tracking (pointer over) writes the
      tilt 1:1 per frame - a transition would rubber-band every write

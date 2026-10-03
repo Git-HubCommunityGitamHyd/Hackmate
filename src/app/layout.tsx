@@ -52,10 +52,10 @@ export default function RootLayout({
               <body> itself (see globals.css): near-black ink, fine
               vertical lines, one jade bloom top-right. Fixed-attachment,
               pixel-identical everywhere. The AmbientLayer (a whisper
-              of film grain + the soft cursor glow that reveals the
-              frosted surfaces' translucency) runs on every page EXCEPT
-              the sign-in hero, which carries its own living ground
-              (GrainGradient + the jade pixel wake). */}
+              of film grain + the tiny 5-to-6-pixel jade trail that
+              reveals the frosted surfaces' translucency) runs on every
+              page EXCEPT the sign-in hero, which carries its own
+              living ground (GrainGradient + the wide jade pixel wake). */}
           <AmbientLayer />
           <Navbar />
           <main id="main-content" className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pb-16">

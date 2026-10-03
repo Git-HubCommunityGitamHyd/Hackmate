@@ -33,6 +33,9 @@ export async function GET(req: NextRequest) {
 /** POST /api/hackathons - create a hackathon listing (ADMIN ONLY).
  *  Admins are accounts whose email is listed in ADMIN_EMAILS - see src/lib/admin.ts. */
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(req, { key: "hackathon-create", limit: 12, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   return withAdmin(async (user) => {
     const body = await req.json();
     const parsed = hackathonSchema.safeParse(body);

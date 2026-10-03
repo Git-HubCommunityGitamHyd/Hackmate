@@ -19,6 +19,7 @@ SHOTS = os.path.join(ROOT, "download", "screenshots")
 EXCLUDE_DIRS = {
     "node_modules", ".next", ".pgdata", "pgbin", "download", ".git",
     "agent-ctx", ".turbo", ".vercel", "certs", "skills",
+    "tool-results", "upload",
 }
 # drizzle migrations ARE shipped (needed to create the schema); the exclusion
 # above refers to nothing -- remove it to be safe:
@@ -26,7 +27,7 @@ EXCLUDE_DIRS.discard("drizzle")
 
 EXCLUDE_FILES = {
     ".env", ".env.local", ".env.production", "dev.log", "worklog.md",
-    ".DS_Store", "tsconfig.tsbuildinfo",
+    ".DS_Store", "tsconfig.tsbuildinfo", ".prod",
 }
 EXCLUDE_PREFIX = ("scripts/pgbin",)
 

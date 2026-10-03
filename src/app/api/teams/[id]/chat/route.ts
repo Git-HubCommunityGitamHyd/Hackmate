@@ -5,6 +5,7 @@ import { schema } from "@/lib/db";
 import { messageSchema } from "@/lib/validations";
 import { triggerTeamMessage } from "@/lib/pusher-server";
 import { ok, fail, isUuid, requireUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { createHmac } from "crypto";
 
 /** GET /api/teams/:id/chat - message history (members only). */
@@ -51,6 +52,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const rl = rateLimit(req, { key: "chat-send", limit: 30, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;

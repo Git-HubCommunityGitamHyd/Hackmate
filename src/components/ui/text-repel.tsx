@@ -41,6 +41,7 @@ function RepelLetter({
     index,
     mouseX,
     mouseY,
+    originVersion,
     radius,
     strength,
     mode,
@@ -55,6 +56,9 @@ function RepelLetter({
     index: number;
     mouseX: MotionValue<number>;
     mouseY: MotionValue<number>;
+    /** Bumped by the container whenever layout shifts (scroll, resize),
+     *  so each letter lazily re-captures its rest position. */
+    originVersion: MotionValue<number>;
     radius: number;
     strength: number;
     mode: "repel" | "attract";
@@ -85,17 +89,24 @@ function RepelLetter({
             if (!container) return;
             const cr = container.getBoundingClientRect();
             const lr = ref.current.getBoundingClientRect();
-            originX.current = lr.left - cr.left + lr.width / 2;
-            originY.current = lr.top - cr.top + lr.height / 2;
+            /* Subtract the CURRENT displacement so a capture taken while
+               the letters are repelled (e.g. a scroll mid-hover) still
+               lands on the letter's rest position, not its pushed one. */
+            originX.current = lr.left - cr.left + lr.width / 2 - x.get();
+            originY.current = lr.top - cr.top + lr.height / 2 - y.get();
         };
 
         const raf = requestAnimationFrame(capture);
+        /* Layout shifts (scroll, resize) invalidate every letter's rest
+           position; re-capture on the container's version bump. */
+        const unsubVersion = originVersion.on("change", capture);
         window.addEventListener("resize", capture);
         return () => {
             cancelAnimationFrame(raf);
+            unsubVersion();
             window.removeEventListener("resize", capture);
         };
-    }, []);
+    }, [originVersion, x, y]);
 
     // React to cursor position changes via motion value subscriptions
     useEffect(() => {
@@ -170,6 +181,32 @@ export function TextRepel({
     const containerRef = useRef<HTMLDivElement>(null);
     const mouseX = useMotionValue(-9999);
     const mouseY = useMotionValue(-9999);
+    /* Bumped on scroll/resize: tells every letter to re-capture its
+       rest position (pages scroll, cached origins go stale). */
+    const originVersion = useMotionValue(0);
+    /* Cached container rect (invalidated on layout shifts) + one
+       pending pointer sample: the pointer coordinates are written to
+       the motion values at most ONCE PER FRAME. High-polling mice
+       fire hundreds of mousemoves a second; unthrottled, every one of
+       them re-runs the repel math of every letter. */
+    const rectRef = useRef<DOMRect | null>(null);
+    const pendingRef = useRef<{ x: number; y: number } | null>(null);
+    const rafRef = useRef(0);
+
+    useEffect(() => {
+        const invalidate = () => {
+            rectRef.current = null;
+            originVersion.set(originVersion.get() + 1);
+        };
+        window.addEventListener("resize", invalidate);
+        window.addEventListener("scroll", invalidate, { passive: true });
+        return () => {
+            window.removeEventListener("resize", invalidate);
+            window.removeEventListener("scroll", invalidate);
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            rafRef.current = 0;
+        };
+    }, [originVersion]);
 
     const words = text.split(/(\s+)/);
     let unitIndex = 0;
@@ -183,12 +220,29 @@ export function TextRepel({
                 className
             )}
             onMouseMove={(e) => {
-                const rect = containerRef.current?.getBoundingClientRect();
-                if (!rect) return;
-                mouseX.set(e.clientX - rect.left);
-                mouseY.set(e.clientY - rect.top);
+                /* Latest sample wins; applied once per frame. */
+                pendingRef.current = { x: e.clientX, y: e.clientY };
+                if (rafRef.current) return;
+                rafRef.current = requestAnimationFrame(() => {
+                    rafRef.current = 0;
+                    const pending = pendingRef.current;
+                    pendingRef.current = null;
+                    const el = containerRef.current;
+                    if (!pending || !el) return;
+                    if (!rectRef.current) {
+                        rectRef.current = el.getBoundingClientRect();
+                    }
+                    const rect = rectRef.current;
+                    mouseX.set(pending.x - rect.left);
+                    mouseY.set(pending.y - rect.top);
+                });
             }}
             onMouseLeave={() => {
+                if (rafRef.current) {
+                    cancelAnimationFrame(rafRef.current);
+                    rafRef.current = 0;
+                }
+                pendingRef.current = null;
                 mouseX.set(-9999);
                 mouseY.set(-9999);
             }}
@@ -212,6 +266,7 @@ export function TextRepel({
                             index={currentIndex}
                             mouseX={mouseX}
                             mouseY={mouseY}
+                            originVersion={originVersion}
                             radius={radius}
                             strength={strength}
                             mode={mode}
@@ -236,6 +291,7 @@ export function TextRepel({
                                     index={currentIndex}
                                     mouseX={mouseX}
                                     mouseY={mouseY}
+                                    originVersion={originVersion}
                                     radius={radius}
                                     strength={strength}
                                     mode={mode}

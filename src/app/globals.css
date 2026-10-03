@@ -63,7 +63,7 @@
 /* object never casts an outer shadow.                                */
 /*                                                                     */
 /* Frosted glass is TRANSLUCENT + GLOSSY: every pane is see-through    */
-/* with a 10px backdrop blur (the wall's flutes smear into soft        */
+/* with a 5px backdrop blur (the wall's flutes smear into soft        */
 /* streaks behind it) and a glossy specular sheen catching the top     */
 /* edge. The ONE texture in the app is the GrainGradient's own        */
 /* inbuilt film grain on the login page - never disable it.            */
@@ -91,7 +91,7 @@
   --background: oklch(0.11 0.004 90);
   --foreground: oklch(0.94 0.004 90);
   /* Frost panes are genuinely translucent: the fluted wall and the
-     ink pixel trail behind them bleed through the 10px blur. */
+     ink pixel trail behind them bleed through the 5px blur. */
   --card: oklch(0.17 0.004 90 / 46%);
   --card-foreground: oklch(0.94 0.004 90);
   --popover: oklch(0.13 0.003 90 / 88%);
@@ -301,24 +301,24 @@
      A slab of rough frost recessed into the ink canvas: the crisp
      ceiling lip shades its top, one hairline of light catches the
      bottom edge, and a soft AO pool deepens the floor of the recess.
-     10px blur - the wall's flutes smear to streaks behind it. */
+     5px blur - the wall's flutes smear to streaks behind it. */
   .deboss-dock,
   .emboss-dock {
     background: color-mix(in oklch, var(--background) 62%, transparent);
-    -webkit-backdrop-filter: blur(10px) saturate(150%);
-    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
     border: 1px solid oklch(1 0 0 / 0.08);
     box-shadow: var(--deboss-2);
   }
 
   /* ---- The footer tray ----
      The bottom counterpart of the dock: a floating slab pressed into
-     the page the same way, same width rhythm, same 10px frost. */
+     the page the same way, same width rhythm, same 5px frost. */
   .deboss-tray,
   .embossed-tray {
     background: color-mix(in oklch, var(--background) 55%, transparent);
-    -webkit-backdrop-filter: blur(10px) saturate(150%);
-    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
     border: 1px solid oklch(1 0 0 / 0.07);
     border-radius: var(--radius);
     box-shadow: var(--deboss-2);
@@ -332,22 +332,22 @@
     position: relative;
     overflow: hidden;
     background: color-mix(in oklch, var(--popover) 90%, transparent);
-    -webkit-backdrop-filter: blur(10px) saturate(150%);
-    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
     border: 1px solid oklch(1 0 0 / 0.08);
     border-radius: calc(var(--radius) - 1px);
     box-shadow: var(--deboss-1);
   }
 
   /* ---- Nav pills - the header's pressed-in text buttons ----
-     Each link is a shallow translucent well (10px frost - every
+     Each link is a shallow translucent well (5px frost - every
      translucent surface blurs); the label sits at its floor. Hover
      deepens the press a touch; the ACTIVE route is pressed deepest
      of all and tinted jade - ink pooling in the lowest well. */
   .nav-well {
     background: color-mix(in oklch, var(--background) 45%, transparent);
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
-    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(5px) saturate(140%);
+    backdrop-filter: blur(5px) saturate(140%);
     border: 1px solid oklch(1 0 0 / 0.05);
     box-shadow: var(--deboss-1);
     transition:
@@ -372,15 +372,15 @@
     color: var(--primary);
   }
 
-  /* Frosted hero panel (profile page): translucent + 10px blur + the same
+  /* Frosted hero panel (profile page): translucent + 5px blur + the same
      recess, with the fluted ribs kept - frosting smears them. */
   .fluted-panel {
     position: relative;
     overflow: hidden;
     border: 1px solid var(--border);
     background: color-mix(in oklch, var(--card) 85%, transparent);
-    -webkit-backdrop-filter: blur(10px) saturate(150%);
-    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
     border-radius: var(--radius);
     box-shadow: var(--deboss-2);
   }
@@ -405,13 +405,13 @@
 
 @layer base {
   /* Every card: a pane of TRANSLUCENT FROSTED GLASS pressed into the
-     wall. The translucency is real (46% alpha + 10px blur + saturation),
+     wall. The translucency is real (46% alpha + 5px blur + saturation),
      so the fluted lines of the ground smear into soft streaks behind
-     the pane - 10px is the sweet spot: the flutes stay legible as
+     the pane - 5px is the sweet spot: the flutes stay legible as
      streaks instead of being erased. No noise pass - clean frost. */
   [data-slot="card"] {
-    -webkit-backdrop-filter: blur(10px) saturate(150%);
-    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
     border-radius: var(--radius);
     position: relative;
     box-shadow: var(--deboss-2);
@@ -463,16 +463,16 @@
   [data-slot="command-dialog"],
   [data-slot="tooltip-content"],
   [data-slot="alert-dialog-content"] {
-    -webkit-backdrop-filter: blur(10px) saturate(150%);
-    backdrop-filter: blur(10px) saturate(150%);
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
     box-shadow: var(--deboss-2);
   }
 
   /* Tabs: the track is a recessed tray; the ACTIVE trigger is
      pressed deepest and tinted jade - a stamp sunk into the slot. */
   [data-slot="tabs-list"] {
-    -webkit-backdrop-filter: blur(10px) saturate(140%);
-    backdrop-filter: blur(10px) saturate(140%);
+    -webkit-backdrop-filter: blur(5px) saturate(140%);
+    backdrop-filter: blur(5px) saturate(140%);
     background: color-mix(in oklch, var(--background) 40%, transparent);
     box-shadow: var(--deboss-1);
   }
@@ -484,11 +484,11 @@
   }
 
   /* Inputs are wells: typed text sits at the floor of a translucent
-     frosted recess - 10px blur like every other translucent surface. */
+     frosted recess - 5px blur like every other translucent surface. */
   [data-slot="input"],
   [data-slot="textarea"] {
-    -webkit-backdrop-filter: blur(10px) saturate(130%);
-    backdrop-filter: blur(10px) saturate(130%);
+    -webkit-backdrop-filter: blur(5px) saturate(130%);
+    backdrop-filter: blur(5px) saturate(130%);
     box-shadow: var(--deboss-1);
     background: color-mix(in oklch, var(--background) 45%, transparent);
   }
@@ -527,10 +527,10 @@
 /* takeover.                                                           */
 /* ================================================================== */
 
-/* Badges - glass chips: translucent tint + 10px blur + chip recess. */
+/* Badges - glass chips: translucent tint + 5px blur + chip recess. */
 [data-slot="badge"] {
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(5px) saturate(140%);
+  backdrop-filter: blur(5px) saturate(140%);
 }
 [data-slot="badge"]:not(:focus-visible) {
   box-shadow: var(--deboss-chip);
@@ -556,8 +556,8 @@
 
 /* Alerts - full frosted panes pressed into the page. */
 [data-slot="alert"] {
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(5px) saturate(140%);
+  backdrop-filter: blur(5px) saturate(140%);
   box-shadow: var(--deboss-2);
 }
 
@@ -568,8 +568,8 @@
   box-shadow: var(--deboss-1);
 }
 [data-slot="select-trigger"] {
-  -webkit-backdrop-filter: blur(10px) saturate(130%);
-  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(5px) saturate(130%);
+  backdrop-filter: blur(5px) saturate(130%);
   background-color: color-mix(in oklch, var(--background) 45%, transparent);
 }
 
@@ -580,10 +580,10 @@
 }
 
 /* Avatars - a softly recessed frosted rim (translucent fallbacks
-   get the 10px frost too). */
+   get the 5px frost too). */
 [data-slot="avatar"] {
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
   box-shadow:
     inset 2px 3px 7px -2px oklch(0 0 0 / 0.5),
     inset -1px -2px 4px -1px oklch(1 0 0 / 0.1);
@@ -592,8 +592,8 @@
 /* Sonner toasts - floating frost (Sonner styles inline, so the
    important flag is the only way to press them into the page). */
 [data-sonner-toast] {
-  -webkit-backdrop-filter: blur(10px) saturate(140%) !important;
-  backdrop-filter: blur(10px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+  backdrop-filter: blur(5px) saturate(140%) !important;
   border: 1px solid oklch(1 0 0 / 0.08) !important;
   box-shadow: var(--deboss-2) !important;
 }
@@ -608,20 +608,20 @@
 /* ================================================================== */
 
 /* Outline / secondary / debossed buttons are panes of frost too:
-   see-through tint + the 10px blur, so whatever moves behind them
+   see-through tint + the 5px blur, so whatever moves behind them
    (the soft cursor glow, the wall's ribs) smears through. The
    primary jade stamp stays solid: the one raised-ink CTA. */
 [data-slot="button"][data-variant="outline"] {
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(5px) saturate(140%);
+  backdrop-filter: blur(5px) saturate(140%);
   background-color: color-mix(in oklch, var(--background) 55%, transparent);
 }
 [data-slot="button"][data-variant="outline"]:hover {
   background-color: color-mix(in oklch, var(--accent) 75%, transparent);
 }
 [data-slot="button"][data-variant="secondary"] {
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(5px) saturate(140%);
+  backdrop-filter: blur(5px) saturate(140%);
   background-color: color-mix(in oklch, var(--secondary) 60%, transparent);
 }
 [data-slot="button"][data-variant="secondary"]:hover {
@@ -629,12 +629,12 @@
 }
 [data-slot="button"][data-variant="debossed"],
 [data-slot="button"][data-variant="embossed"] {
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(5px) saturate(140%);
+  backdrop-filter: blur(5px) saturate(140%);
 }
 
 /* Dialogs are panes of frost, not opaque slabs: the page's glow and
-   ribs smear through the 10px blur behind them. */
+   ribs smear through the 5px blur behind them. */
 [data-slot="dialog-content"],
 [data-slot="alert-dialog-content"] {
   background-color: color-mix(in oklch, var(--popover) 92%, transparent);

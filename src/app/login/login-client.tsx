@@ -268,11 +268,12 @@ export function LoginClient() {
 
       {/* The jade pixel wake - the sign-in hero page's own cursor
           effect. COLORED (jade, not black-and-white) pixels that wake
-          and brighten under the pointer, then sink back. ONLY this
-          page carries it; every other page runs on the plain fluted
-          wall. It sits above the backdrop (DOM order) and below the
-          content, and the frosted sign-in pane blurs it as it passes
-          beneath. */}
+          and brighten under the pointer, then sink back. Only this
+          page carries the WIDE wake; every other page carries the
+          same trail scaled down to a 5-to-6-pixel whisper (see
+          AmbientLayer). It sits above the backdrop (DOM order) and
+          below the content, and the frosted sign-in pane blurs it as
+          it passes beneath. */}
       <CursorField />
 
       <div className="relative z-10">
@@ -302,7 +303,7 @@ export function LoginClient() {
           </div>
 
           {/* Sign-in - a pane of TRANSLUCENT FROSTED GLASS, debossed
-              deep into the wall. 10px blur applied DIRECTLY on the pane
+              deep into the wall. 5px blur applied DIRECTLY on the pane
               (same pattern as every card in the app), so the gradient's
               glow and the cursor's jade wake smear through it as soft
               streaks (the frost read). The pane's ground is CLEAN frost
@@ -317,7 +318,7 @@ export function LoginClient() {
                 background="rgba(14, 16, 15, 0.45)"
                 borderRadius={16}
                 minHeight={0}
-                blur={10}
+                blur={5}
                 className="w-full"
               >
               <div

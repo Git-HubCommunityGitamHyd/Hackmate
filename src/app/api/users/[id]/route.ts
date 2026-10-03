@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { getProfile } from "@/lib/queries/people";
-import { ok, fail, withPublic } from "@/lib/api";
+import { ok, fail, isUuid, withPublic } from "@/lib/api";
 
 /** GET /api/users/:id - public profile with badges, history, teammate graph. */
 export async function GET(
@@ -9,6 +9,8 @@ export async function GET(
 ) {
   return withPublic(async () => {
     const { id } = await params;
+    /* Malformed ids must produce a clean 404, never reach Postgres. */
+    if (!isUuid(id)) return fail("User not found", 404);
     const profile = await getProfile(id);
     if (!profile) return fail("User not found", 404);
     /* Don't leak private email/links to strangers. */

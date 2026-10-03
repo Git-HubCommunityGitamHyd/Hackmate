@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build",
+    "build": "next build && node scripts/strip-source-maps.js",
     "start": "next start -p 3000",
     "lint": "eslint .",
     "test": "node --import dotenv/config --import tsx --test src/lib/verification/verification.test.ts src/app/api/attendance/attendance.test.ts src/app/api/reviews/reviews.test.ts src/app/api/cancellations/cancellations.test.ts src/components/track-record/track-record.test.ts src/app/my-team/my-team-integration.test.ts",

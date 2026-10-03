@@ -2,8 +2,11 @@
 # Starts the local embedded PostgreSQL (mirrors CockroachDB's wire protocol for dev).
 # Used ONLY for the sandbox/dev preview. In production, DATABASE_URL points to
 # CockroachDB Serverless (see README).
+# Binaries come from the node_modules install (initdb / pg_ctl / postgres;
+# createdb does not ship with the embedded build - `bun run db:create` does it
+# with plain SQL instead).
 export LD_LIBRARY_PATH=/home/z/my-project/scripts/pglib:$LD_LIBRARY_PATH
-PGBIN=/home/z/my-project/scripts/pgbin/node_modules/@embedded-postgres/linux-x64/native/bin
+PGBIN=/home/z/my-project/node_modules/@embedded-postgres/linux-x64/native/bin
 PGDATA=/home/z/my-project/.pgdata
 
 if $PGBIN/pg_ctl -D "$PGDATA" status >/dev/null 2>&1; then

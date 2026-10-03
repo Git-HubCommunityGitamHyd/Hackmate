@@ -21,9 +21,24 @@ Every response ships with:
   proxy deliberately only checks cookie presence; real session validation always
   happens server-side via `auth()` in route handlers and server components, so
   a forged/stale cookie gets you nothing.
+- **Cross-origin mutation guard (r12)**: the same proxy also guards every
+  `POST`/`PUT`/`PATCH`/`DELETE` under `/api/*` (Auth.js's own CSRF-protected
+  endpoints and the bearer-token `/api/cron` excepted): any request carrying a
+  browser `Origin` header must match the app's own host (Host,
+  x-forwarded-host and AUTH_URL aware, so proxied/preview deploys keep
+  working). Foreign origins get a JSON 403 before business logic runs;
+  non-browser clients send no Origin and pass. On top of the `sameSite=lax`
+  session cookie this means a page on another origin, a sandboxed iframe or a
+  devtools-forged cross-origin fetch cannot mutate anything - verified by
+  pentest section 10.
 - `requireUser` / `withUser` / `withAdmin` helpers enforce 401 (signed out) and
   403 (not admin, role checked in the DB) consistently across every API route.
 - Admin access is an email allow-list (`ADMIN_EMAILS`) evaluated at sign-in.
+- **Demo sign-in is impersonation-proof (r12)**: `POST /api/auth/demo` ignores
+  its request body entirely (a forged `{"email": ...}` signs in as the fixed
+  dev admin account and nothing else), is rate-limited 10/min/IP, is rejected
+  cross-origin by the proxy guard, and only exists when the dev flags are set
+  (404 in production).
 
 ### Input validation
 - **Zod 4 schemas** on every write endpoint: profile, teams, join requests,
@@ -49,6 +64,10 @@ Every response ships with:
   are the cheapest reputation-brigading vector), GET endpoints 60/min/IP,
   and `GET /api/find-equal` 12/min/IP because it runs the match engine and
   fans out profile queries (see the query-amplifier note below).
+- **Every heavy mutation (r12)**: chat messages 30/min, team creation 10/min,
+  profile writes 12/min, hackathon creation 12/min (admin), emergency toggle
+  20/min, college-ID verification uploads 6/min, LinkedIn imports 6/min,
+  demo login 10/min.
 
 ### GitHub contributions proxy (`/api/github-contributions`)
 - New with the profile contribution calendar. Username is validated against
@@ -94,18 +113,31 @@ Every response ships with:
   store outcomes, not the raw documents.
 - Vercel Cron requests are authenticated with `CRON_SECRET`.
 
+### Client bundle hygiene (r12)
+- Production builds run `scripts/strip-source-maps.js` after `next build`:
+  no `.map` file is ever served from `.next/static` (Turbopack emits one for
+  the legacy polyfill chunk even with browser maps disabled).
+- The pentest scans every client chunk for the `AUTH_SECRET` value and for any
+  `process.env.<SERVER_ONLY_VAR>` reference (`AUTH_SECRET`, `AUTH_GITHUB_SECRET`,
+  `PUSHER_APP_SECRET`, `RESEND_API_KEY`, `CRON_SECRET`, `DATABASE_URL`,
+  `ALLOW_DEMO_LOGIN`, `ADMIN_EMAILS`) - server secrets must never reach the
+  browser. Only `NEXT_PUBLIC_*` values are inlined, by design.
+
 ## 2. Penetration testing
 
 Automated suite in `scripts/pentest/`:
 - `pentest.py` - auth enforcement, authorization semantics, injection probes
   (SQLi strings, `pg_sleep` timing attack, XSS reflection, SSTI `{{7*7}}` /
   `${7*7}`, path traversal), security header verification, PII/enum checks,
-  pagination abuse, rate-limit tripwire.
+  pagination abuse, rate-limit tripwire, the cross-origin mutation guard,
+  demo-login impersonation, and client-bundle hygiene (secrets + source maps).
 - `api-verify.py` - API contract verification against the live dev server.
 - `vlm-audit.py` - visual audit of rendered pages.
 - `report.json` - machine-readable results.
 
-**Latest run: 61 pass, 0 fail, 1 warning.**
+**Latest run: 68 pass, 0 fail, 1 warning (production build; 66/0 in dev mode).**
+The warning is intentional: `ALLOW_DEMO_LOGIN` is on locally by design and must
+stay unset in production.
 
 Highlights of what the suite verified:
 - Unauthenticated calls to bookmarks, notifications, matches, attendance,
@@ -125,7 +157,7 @@ Highlights of what the suite verified:
   reviews with rating 99 are 422; find-equal validates and rate-limits.
 
 Findings found and fixed during testing:
-1. Malformed UUIDs reached Postgres and caused 500s -> fixed centrally via `isUuid`.
+1. Malformed UUIDs reached Postgres and caused 500s -> fixed centrally via `isUuid` (r12: extended to `GET /api/users/:id`).
 2. Internal error details could reach clients -> replaced with generic 500 + server-side logging.
 3. Search and the public directory had no rate limit -> limiter added.
 4. Demo login flag mismatch made the route 404 while the button showed -> fixed; the remaining warning is intentional: `ALLOW_DEMO_LOGIN` must stay unset in production.
@@ -138,6 +170,13 @@ Findings found and fixed during testing:
    one value` - Drizzle insert of an empty notification list) -> insert guarded;
    also made badge re-awarding idempotent (`onConflictDoNothing`) under the new
    `(user_id, badge_id)` unique index so repeat teammates can't 500 the route.
+7. **r12 hardening round** (the "can't hack through the browser devtools"
+   pass): cross-site/foreign-origin mutations were only stopped by cookie
+   sameSite, not by the app -> origin guard added to the proxy and verified;
+   the demo sign-in accepted an arbitrary `email` body (dev-flag
+   impersonation) -> body now ignored; most heavy POST endpoints had no rate
+   limit -> limits added; one polyfill source map shipped in production ->
+   post-build strip added; sections 10/11 (12 new checks) cover all of it.
 
 ## 3. Remaining recommendations
 - Keep `ALLOW_DEMO_LOGIN` / `NEXT_PUBLIC_ALLOW_DEMO_LOGIN` unset in production (the dev seed script is the only place they are used).

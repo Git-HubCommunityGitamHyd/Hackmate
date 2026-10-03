@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import type { CSSProperties } from "react";
+
+import { PixelCanvas } from "./pixel-canvas";
 
 /**
  * AmbientLayer - the quiet atmosphere of every page EXCEPT the sign-in
  * hero. (The login page has its own living ground: the GrainGradient
- * with its inbuilt film grain and the jade pixel wake.)
+ * with its inbuilt film grain and the wide jade pixel wake.)
  *
  * Two layers, both fixed at NEGATIVE z (above the fluted wall painted
  * on <body>, below all page content) and both pointer-events-none:
@@ -18,13 +19,16 @@ import type { CSSProperties } from "react";
  *      login page's grain is the GrainGradient's inbuilt shader grain;
  *      this is its faint echo on the plain-wall pages.
  *
- *   2. SOFT CURSOR GLOW - a faint jade halo that follows the pointer
- *      (rAF-lerped, so it drifts instead of snapping). Its ONLY job
- *      is to demonstrate translucency: as it passes behind a frosted
- *      card, button or chat bubble, the 10px blur smears it into a
- *      soft streak, so those surfaces read as genuinely see-through.
- *      On the bare wall it is nearly invisible. Fine-pointer devices
- *      only; reduced-motion users get an instant snap-follow.
+ *   2. INK PIXEL TRAIL - the hero's jade pixel wake, scaled down to a
+ *      whisper. NO cursor glow anymore: the halo is gone. Instead the
+ *      SAME trail effect and the SAME 11px grid as the hero, but the
+ *      wake radius is so small that only about 5 to 6 pixels ever
+ *      light around the pointer. Its only job is to demonstrate
+ *      translucency: as the handful of jade pixels passes behind a
+ *      frosted card, button or chat bubble, the 5px blur smears them
+ *      into soft streaks, so those surfaces read as genuinely
+ *      see-through. On the bare wall it is nearly invisible. The
+ *      canvas loop idles at ZERO frames until the pointer moves.
  */
 
 /* Monochrome fractal noise tile (SVG data URI): the grain texture.
@@ -39,80 +43,12 @@ const grainStyle: CSSProperties = {
   mixBlendMode: "overlay",
 };
 
-/* The halo: a wide soft jade radial that sits at the pointer. Written
-   as CSS variables so the rAF loop only touches --glow-x/--glow-y. */
-const glowStyle: CSSProperties = {
-  background:
-    "radial-gradient(26rem circle at var(--glow-x, 50vw) var(--glow-y, 40vh), oklch(0.78 0.13 158 / 0.13), transparent 65%)",
-  opacity: 0,
-  transition: "opacity 0.8s ease",
-};
+/* Same jade ink palette as the hero wake - the trail is the hero's
+   effect, just 5 to 6 pixels wide instead of a field. */
+const JADE_PIXELS = ["#13261d", "#1e5240", "#43a984", "#b2f7d8"];
 
 export function AmbientLayer() {
   const pathname = usePathname();
-  const glowRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (pathname === "/login") return;
-    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-      return;
-    }
-
-    const el = glowRef.current;
-    if (!el) return;
-
-    const reduceMotion = window
-      .matchMedia("(prefers-reduced-motion: reduce)")
-      .matches;
-
-    let targetX = -1;
-    let targetY = -1;
-    let x = 0;
-    let y = 0;
-    let raf = 0;
-
-    const write = () => {
-      el.style.setProperty("--glow-x", `${x.toFixed(1)}px`);
-      el.style.setProperty("--glow-y", `${y.toFixed(1)}px`);
-    };
-
-    const tick = () => {
-      if (targetX < 0) {
-        raf = 0;
-        return;
-      }
-      if (reduceMotion) {
-        x = targetX;
-        y = targetY;
-        write();
-        raf = 0;
-        return;
-      }
-      x += (targetX - x) * 0.14;
-      y += (targetY - y) * 0.14;
-      write();
-      /* Keep drifting only while the halo is still catching up. */
-      if (Math.abs(targetX - x) + Math.abs(targetY - y) > 0.5) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        raf = 0;
-      }
-    };
-
-    const onMove = (event: PointerEvent) => {
-      targetX = event.clientX;
-      targetY = event.clientY;
-      if (el.style.opacity !== "1") el.style.opacity = "1";
-      if (raf === 0) raf = requestAnimationFrame(tick);
-    };
-
-    window.addEventListener("pointermove", onMove, { passive: true });
-
-    return () => {
-      window.removeEventListener("pointermove", onMove);
-      if (raf !== 0) cancelAnimationFrame(raf);
-    };
-  }, [pathname]);
 
   if (pathname === "/login") return null;
 
@@ -125,13 +61,20 @@ export function AmbientLayer() {
         style={grainStyle}
       />
 
-      {/* 2 - the soft cursor glow, drifting under the frosted
-          surfaces to reveal their translucency. */}
-      <div
-        ref={glowRef}
-        aria-hidden="true"
+      {/* 2 - the tiny jade pixel trail: the hero's wake at whisper
+          scale. radius 16 with the 11px grid wakes only the cell under
+          the pointer plus its 4 orthogonal neighbors - about 5 to 6
+          pixels, same 11 gap as the flutes. */}
+      <PixelCanvas
         className="pointer-events-none fixed inset-0 -z-10"
-        style={glowStyle}
+        variant="trail"
+        gap={11}
+        radius={16}
+        speed={0.05}
+        maxAlpha={0.7}
+        // Module-level constant: stable identity so the canvas effect
+        // never tears down and re-initializes on re-renders.
+        colors={JADE_PIXELS}
       />
     </>
   );

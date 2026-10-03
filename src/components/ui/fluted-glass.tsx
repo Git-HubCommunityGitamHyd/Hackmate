@@ -23,7 +23,7 @@ interface FlutedGlassProps {
  * FlutedGlass - a pane of TRANSLUCENT FROSTED GLASS, debossed DEEP
  * into the page.
  *
- * The 10px backdrop blur is applied DIRECTLY on the pane itself (the
+ * The 5px backdrop blur is applied DIRECTLY on the pane itself (the
  * exact same pattern as every [data-slot="card"] in the app), so
  * whatever moves behind it (the breathing gradient, the jade cursor
  * wake) smears through as soft streaks. This direct-application
@@ -50,7 +50,7 @@ export function FlutedGlass({
   background = "rgba(255, 255, 255, 0.035)",
   borderRadius = 16,
   minHeight = 0,
-  blur = 10,
+  blur = 5,
   className = "",
   style,
 }: FlutedGlassProps) {
@@ -138,7 +138,7 @@ export function FlutedGlass({
         background,
         borderRadius,
         minHeight,
-        /* THE FROST - 10px backdrop blur written as an INLINE style on
+        /* THE FROST - 5px backdrop blur written as an INLINE style on
            purpose: the production CSS minifier mangles
            `backdrop-filter: blur(var(--glass-blur, ...))` into an
            invalid declaration, so the blur MUST NOT live in the

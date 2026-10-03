@@ -70,28 +70,48 @@ contribution calendar; upstream configurable via `GITHUB_CONTRIB_API`),
 - **Reputation** - post-hackathon results feed karma, badges and track record (`lib/reputation.ts`, tested in `reputation.test.ts`).
 - **Verification** - college ID image -> OCR extraction -> claim matching -> decision, with a manual admin fallback and a private Blob store for the documents.
 
-### Design language: Ink Wash (sumi-e) minimalist maximalism
+### Design language: Fluted Ink (final, rounds 1-12)
 
-Pure-black canvas, warm paper-white text, frosted/fluted glass everywhere,
-and a single vermilion seal-red accent (`--primary`). Interactive surfaces
-paint an accented edge highlight that follows the mouse:
+Near-black ink canvas (`oklch(0.11 0.004 90)`) ruled with faint vertical
+flutes (1px every 11px) plus one jade bloom, frosted 5px-blur translucent
+surfaces everywhere, everything DEBOSSED (deep, soft, all-INSET shadows -
+nothing floats, nothing glows), and jade (`--primary`) as the single accent.
+The authoritative, per-rule spec lives in `HANDOVER.md` ("THE ART SYSTEM"),
+which encodes 12 rounds of user feedback - treat it as canonical:
 
-- `InkEdgeProvider` (layout-level) runs one delegated rAF-throttled
-  `pointermove` listener and writes `--ink-mx/--ink-my` on the hovered
-  surface (cards, `.fluted-panel`, `.liquid-glass`, `.ink-edge`).
-- `globals.css` renders a 2px vermilion ring (masked radial gradient) plus
-  a faint interior ink wash on hover - no per-component JS.
-- Discover cards also carry a `CardPeek` hover window: a small glass panel
-  that pops in (anime.js) showing the card's components - members, open
-  roles, missing skills, dates, prize - without leaving the grid.
-- The header is a detached floating pill dock (`.emboss-dock`): frosted,
-  minimally embossed (light top edge, dark bottom edge, deep float shadow),
-  with the Spline 3D emblem as the brand mark.
+- Login page: full-page user-supplied `GrainGradient` WebGL ground (inbuilt
+  film grain ON, flipped 180 degrees) + the wide jade pixel wake
+  (`CursorField`, an 11px-grid `PixelCanvas`); the sign-in pane is a clean
+  frost with rAF 1:1 pointer tilt (soft spring settle on leave only).
+- Every other page: the fluted wall + a whisper of film grain (0.045
+  overlay) + the TINY jade pixel trail - the hero's wake scaled down so
+  only about 5 to 6 pixels light around the pointer (same 11px grid,
+  `radius 16`). No cursor glow, no magnet-lines, no 3D anywhere.
+- Discover cards also carry a `CardPeek` hover window: a frosted panel that
+  covers the card showing the hub/profile preview without leaving the grid.
+- The header is a detached floating pill dock, frosted and debossed like
+  every other surface.
 - The login page is the hero/landing page (unauthenticated visitors are
-  redirected there by `src/proxy.ts`): opaque black fluted-glass sign-in
-  card with mouse-reactive ink edge, anime.js ink brush stroke under the
-  headline, grayscale ink pixel canvas, and LinkedIn copy for the
-designers/PMs sign-in track.
+  redirected there by `src/proxy.ts`), with the anime.js ink brush stroke
+  under the headline and LinkedIn copy for the designers/PMs sign-in track.
+
+### Client-side performance architecture (r12)
+
+- `PixelCanvas` (both the login wake and the ambient trail) never scans the
+  grid: an AWAKE LIST holds cells that are lit or still decaying, a box
+  test wakes cells near the pointer each frame, and only awake cells are
+  simulated and drawn. When the pointer leaves and every pixel has faded,
+  the rAF loop stops outright; the next pointermove restarts it. A page
+  with no mouse movement runs zero animation frames.
+- `TextRepel` writes pointer coordinates to framer-motion values at most
+  once per frame (latest-sample-wins rAF throttle), caches its container
+  rect (invalidated on scroll/resize), and re-captures letter origins
+  lazily via a version bump that subtracts current displacement.
+- `SplineReveal` (anime.js spring entrance + tilt) is rAF-throttled per
+  element with the transition disabled while tracking.
+- All translucent surfaces blur at 5px (cheaper to composite than 10px);
+  the login WebGL shader and the ambient layers are the only always-on
+  paint, and both idle at zero JS cost.
 
 ## Development commands
 
