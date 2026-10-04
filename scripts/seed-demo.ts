@@ -256,20 +256,20 @@ async function main() {
     console.log("· creating the dev account (dev@hackmate.local)…");
     [dev] = await db
       .insert(schema.users)
-      .values({ email: "dev@hackmate.local", name: "Dev Sharma" })
+      .values({ email: "dev@hackmate.local", name: "D Pratham Reddy" })
       .returning();
   }
   await db
     .update(schema.users)
     .set({
-      name: "Dev Sharma",
-      username: "devsharma",
+      name: "D Pratham Reddy",
+      username: "Prathamreddy888",
       bio: "Local dev account. Building HackMate itself.",
       experienceLevel: "intermediate",
       commitment: "aiming_to_win",
       recruitmentStatus: "partially_formed",
       onboarded: true,
-      githubUsername: "devsharma",
+      githubUsername: "Prathamreddy888",
     })
     .where(sql`id = ${dev.id}`);
   await db
