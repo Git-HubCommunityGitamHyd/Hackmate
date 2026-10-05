@@ -162,17 +162,30 @@ export interface ProfileDTO extends PersonCardDTO {
   } | null;
   skills: SkillDTO[];
   badges: { slug: string; name: string; description: string | null; icon: string; category: string; hackathonName: string | null }[];
-  history: {
-    hackathonName: string;
-    hackathonId: string;
-    projectName: string | null;
-    placement: number | null;
-    repoUrl: string | null;
-    technologies: string[];
-    teamId: string | null;
-    teammates: string[];
-  }[];
+  history: HackathonHistoryDTO[];
+  bestWork: BestWorkDTO | null;
   previousTeammates: { id: string; name: string; image: string | null; count: number }[];
   collegeName: string | null;
   graduationYear: number | null;
 }
+
+export interface HackathonHistoryDTO {
+  id: string;
+  projectName: string | null;
+  hackathonName: string;
+  hackathonId: string;
+  placement: number | null;
+  projectUrl: string | null;
+  devpostUrl: string | null;
+  repoUrl: string | null;
+  technologies: string[];
+  isBestWork: boolean;
+  teamId: string | null;
+  teammates: string[];
+}
+
+export type BestWorkDTO = Omit<HackathonHistoryDTO, "hackathonName" | "hackathonId"> & {
+  hackathonName: string | null;
+  hackathonId: string | null;
+  projectDescription: string | null;
+};

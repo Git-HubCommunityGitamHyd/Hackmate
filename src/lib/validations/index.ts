@@ -48,6 +48,22 @@ export const profileSchema = z.object({
   }),
 });
 
+export const bestWorkSchema = z.object({
+  resultId: z.string().uuid().nullable().optional(),
+  githubProject: z
+    .object({
+      title: z.string().trim().min(1).max(120),
+      description: z.string().trim().min(1).max(600),
+      repoUrl: z.string().url().regex(/^https:\/\/github\.com\/[^/]+\/[^/#?]+\/?$/, "Enter a public GitHub repository URL"),
+      technologies: z.array(z.string().trim().min(1).max(40)).min(1).max(12),
+    })
+    .optional(),
+}).refine(
+  (value) =>
+    (value.resultId !== undefined) !== (value.githubProject !== undefined),
+  { message: "Choose exactly one best-work option" },
+);
+
 export const hackathonSchema = z.object({
   name: z.string().min(3).max(120),
   tagline: z.string().max(160).optional().or(z.literal("")),
@@ -146,5 +162,3 @@ export const reviewPostSchema = z.object({
     .optional()
     .or(z.literal("")),
 });
-
-

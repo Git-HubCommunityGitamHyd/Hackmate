@@ -174,6 +174,42 @@ export function useProfile(id: string | null) {
   return useApi<ProfileDTO>(["profile", id], id ? `/api/users/${id}` : null);
 }
 
+export function useBestWork(userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      resultId?: string | null;
+      githubProject?: {
+        title: string;
+        description: string;
+        repoUrl: string;
+        technologies: string[];
+      };
+    }) =>
+      api<{ bestWork: ProfileDTO["bestWork"] }>("/api/profile/best-work", {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: ({ bestWork }) => {
+      qc.setQueryData<ProfileDTO>(["profile", userId], (profile) =>
+        profile
+          ? {
+              ...profile,
+              bestWork,
+              history: profile.history.map((result) => ({
+                ...result,
+                isBestWork: bestWork?.id === result.id,
+              })),
+            }
+          : profile,
+      );
+      qc.invalidateQueries({ queryKey: ["profile", userId] });
+      toast.success(bestWork ? "Best work updated" : "Best work unpinned");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+}
+
 /* ------------------------------------------------------------------ */
 /* Chat (Pusher when configured, polling fallback otherwise)           */
 /* ------------------------------------------------------------------ */
