@@ -22,10 +22,21 @@ export async function PATCH(req: NextRequest) {
       const repoPath = new URL(parsed.data.githubProject.repoUrl).pathname
         .replace(/^\/|\/$/g, "")
         .split("/");
-      const githubResponse = await fetch(
-        `https://api.github.com/repos/${repoPath[0]}/${repoPath[1]}`,
-        { headers: { Accept: "application/vnd.github+json" } },
-      );
+      let githubResponse: Response;
+      try {
+        githubResponse = await fetch(
+          `https://api.github.com/repos/${repoPath[0]}/${repoPath[1]}`,
+          {
+            headers: { Accept: "application/vnd.github+json" },
+            signal: AbortSignal.timeout(5000),
+          },
+        );
+      } catch {
+        return fail("GitHub is temporarily unavailable. Please retry.", 503);
+      }
+      if (githubResponse.status === 403 || githubResponse.status === 429) {
+        return fail("GitHub is temporarily unavailable. Please retry.", 503);
+      }
       if (!githubResponse.ok) {
         return fail("That GitHub repository was not found or is private.", 422);
       }

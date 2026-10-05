@@ -174,9 +174,13 @@ export function LoginClient() {
       const responseText = await res.text();
       let data: { error?: string; email?: string };
       try {
-        data = responseText
-          ? (JSON.parse(responseText) as { error?: string; email?: string })
-          : {};
+        const parsed: unknown = responseText ? JSON.parse(responseText) : null;
+        data =
+          typeof parsed === "object" &&
+          parsed !== null &&
+          !Array.isArray(parsed)
+            ? (parsed as { error?: string; email?: string })
+            : {};
       } catch {
         data = {};
       }
