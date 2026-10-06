@@ -73,7 +73,7 @@ export function JoinRequestDialog({
               id="join-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={`e.g. "I'm a backend dev — FastAPI + Postgres + AWS, available all through the event. Your gap analysis literally describes me."`}
+              placeholder={`e.g. "I'm a backend dev: FastAPI + Postgres + AWS, available all through the event. Your gap analysis literally describes me."`}
               rows={4}
               maxLength={500}
             />

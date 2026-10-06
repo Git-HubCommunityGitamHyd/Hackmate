@@ -4,6 +4,18 @@ import { getUserRole } from "@/lib/admin";
 
 /** Standard JSON API helpers with auth guard. */
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Route params are user input. A malformed id must produce a clean 404,
+ * never reach Postgres (which would 500 on "invalid input syntax for
+ * type uuid"). Found by the pentest suite; fixed centrally here.
+ */
+export function isUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
 export function ok<T>(data: T, init?: ResponseInit) {
   return NextResponse.json(data as any, init);
 }
@@ -42,8 +54,12 @@ export async function withUser<T>(
     if (result instanceof NextResponse) return result;
     return ok(result);
   } catch (err: any) {
+    /* Full detail goes to the server log only. The client gets a generic
+       message: thrown errors here are internal invariants ("AUTH_SECRET is
+       not configured", driver errors, …) - leaking them exposes schema,
+       file paths and env state. */
     console.error("[api:error]", err);
-    return fail(err?.message ?? "Internal server error", 500);
+    return fail("Internal server error", 500);
   }
 }
 
@@ -54,7 +70,7 @@ export async function withPublic<T>(handler: () => Promise<T>) {
     return ok(result);
   } catch (err: any) {
     console.error("[api:error]", err);
-    return fail(err?.message ?? "Internal server error", 500);
+    return fail("Internal server error", 500);
   }
 }
 
@@ -64,7 +80,7 @@ export async function withAdmin<T>(
 ) {
   const session = await auth();
   const id = session?.user?.id;
-  if (!id) return fail("Unauthorized — sign in first", 401);
+  if (!id) return fail("Unauthorized - sign in first", 401);
   const role = await getUserRole(id);
   if (role !== "admin") {
     return fail(

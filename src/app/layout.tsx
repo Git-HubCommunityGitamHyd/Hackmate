@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Navbar } from "@/components/layout/navbar";
 import { SiteFooter } from "@/components/layout/footer";
+import { AmbientLayer } from "@/components/ui/ambient-layer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "HackMate — Find your hackathon team",
+    default: "HackMate · Find your hackathon team",
     template: "%s · HackMate",
   },
   description:
@@ -29,6 +30,11 @@ export const metadata: Metadata = {
     "teammates",
     "team matching",
   ],
+  /* Favicon = the same /public/logo.svg the navbar, footer and login
+     page render. Replace that one file and the favicon follows. */
+  icons: {
+    icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({
@@ -42,8 +48,17 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
         <Providers>
+          {/* The ground of EVERY page is the FLUTED WALL, painted on
+              <body> itself (see globals.css): near-black ink, fine
+              vertical lines, one jade bloom top-right. Fixed-attachment,
+              pixel-identical everywhere. The AmbientLayer (a whisper
+              of film grain + the tiny 5-to-6-pixel jade trail that
+              reveals the frosted surfaces' translucency) runs on every
+              page EXCEPT the sign-in hero, which carries its own
+              living ground (GrainGradient + the wide jade pixel wake). */}
+          <AmbientLayer />
           <Navbar />
-          <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pb-16">
+          <main id="main-content" className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 pb-16">
             {children}
           </main>
           <SiteFooter />

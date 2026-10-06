@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, isNull, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { getTeamDetail } from "@/lib/queries/teams";
@@ -7,9 +7,9 @@ import { inviteSchema } from "@/lib/validations";
 import { sendEmail, emailTemplates } from "@/lib/email";
 import { ok, fail, requireUser } from "@/lib/api";
 
-/** GET /api/teams/:id/invites — invites I received (for workspace view). */
+/** GET /api/teams/:id/invites - invites I received (for workspace view). */
 
-/** POST /api/teams/:id/invites — direct invite from a team admin. */
+/** POST /api/teams/:id/invites - direct invite from a team admin. */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -35,7 +35,8 @@ export async function POST(
     .limit(1);
   if (!target) return fail("User not found", 404);
 
-  /* Target must not be on another team in this hackathon. */
+  /* Target must not be on another team in this hackathon (idea-first
+   * teams occupy their own slot). */
   const [busy] = await db
     .select({ teamId: schema.teamMembers.teamId })
     .from(schema.teamMembers)
@@ -43,12 +44,20 @@ export async function POST(
     .where(
       and(
         eq(schema.teamMembers.userId, target.id),
-        eq(schema.teams.hackathonId, detail.hackathonId),
+        detail.hackathonId
+          ? eq(schema.teams.hackathonId, detail.hackathonId)
+          : isNull(schema.teams.hackathonId),
         ne(schema.teams.status, "disbanded"),
       ),
     )
     .limit(1);
-  if (busy) return fail(`${target.name ?? "They"} already has a team for this hackathon`, 409);
+  if (busy)
+    return fail(
+      detail.hackathonId
+        ? `${target.name ?? "They"} already has a team for this hackathon`
+        : `${target.name ?? "They"} already has an idea-first team`,
+      409,
+    );
 
   const [existing] = await db
     .select({ status: schema.invites.status })
@@ -86,17 +95,25 @@ export async function POST(
     userId: target.id,
     type: "invite",
     title: `${user.name ?? "Someone"} invited you to join "${detail.name}"`,
-    body: parsed.data.message?.slice(0, 140) ?? `Team for ${detail.hackathonName}`,
+    body:
+      parsed.data.message?.slice(0, 140) ??
+      (detail.hackathonName
+        ? `Team for ${detail.hackathonName}`
+        : "Idea-first team, event still being picked"),
     link: "/notifications",
   });
 
-  const tpl = emailTemplates.invite(detail.name, detail.hackathonName, user.name ?? "A team lead");
+  const tpl = emailTemplates.invite(
+    detail.name,
+    detail.hackathonName ?? "an upcoming event",
+    user.name ?? "A team lead",
+  );
   sendEmail({ to: target.email, ...tpl });
 
   return ok({ status: "sent" }, { status: 201 });
 }
 
-/** PATCH /api/teams/:id/invites — respond to an invite I received. */
+/** PATCH /api/teams/:id/invites - respond to an invite I received. */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

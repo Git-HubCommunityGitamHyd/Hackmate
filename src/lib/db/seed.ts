@@ -1,5 +1,5 @@
 /**
- * Seed script — system taxonomies ONLY (skills, roles, badges).
+ * Seed script - system taxonomies ONLY (skills, roles, badges).
  * Run: bun run db:seed   (after bun run db:push)
  *
  * NO demo data: no example hackathons, no example people, no example teams.
@@ -8,8 +8,8 @@
  *   2. Sign in with that account (GitHub OAuth or email magic link)
  *   3. Post hackathons from /hackathons/new (or manage them at /admin)
  */
-import { config } from "dotenv";
-config({ override: true });
+import { loadEnv } from "./load-env";
+loadEnv();
 
 import { sql } from "drizzle-orm";
 import { ROLE_TAXONOMY, SKILLS, BADGE_SEED } from "@/lib/constants";

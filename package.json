@@ -4,19 +4,22 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
-    "build": "next build",
+    "build": "next build && node scripts/strip-source-maps.js",
     "start": "next start -p 3000",
     "lint": "eslint .",
     "test": "node --import dotenv/config --import tsx --test src/lib/verification/verification.test.ts src/app/api/attendance/attendance.test.ts src/app/api/reviews/reviews.test.ts src/app/api/cancellations/cancellations.test.ts src/components/track-record/track-record.test.ts src/app/my-team/my-team-integration.test.ts",
     "db:push": "tsx scripts/migrate.ts",
+    "setup": "tsx scripts/setup-env.ts",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/lib/db/seed.ts",
+    "db:seed:demo": "tsx scripts/seed-demo.ts",
     "db:seed:badges": "tsx scripts/seed-badges.ts",
     "db:create": "tsx scripts/create-db.ts",
     "db:migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.3",
+    "@embedded-postgres/linux-x64": "^18.4.0-beta.17",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -46,6 +49,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@tanstack/react-query": "^5.103.1",
     "@vercel/blob": "^2.8.0",
+    "animejs": "^4.5.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -79,6 +83,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/animejs": "^4.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.10",
@@ -88,5 +93,11 @@
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
   },
-  "description": "Student hackathon team-finding platform with Team Composition Intelligence"
+  "description": "Student hackathon team-finding platform with Team Composition Intelligence",
+  "trustedDependencies": [
+    "@embedded-postgres/linux-x64",
+    "esbuild",
+    "sharp",
+    "unrs-resolver"
+  ]
 }

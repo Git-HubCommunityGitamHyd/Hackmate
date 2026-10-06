@@ -2,6 +2,7 @@ import { and, eq, isNotNull, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { db, schema } from "@/lib/db";
 import { fail, ok, requireUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { extractCollegeIdFields, isDocumentLike } from "@/lib/verification/extraction";
 import {
   DUPLICATE_HASH_DISTANCE,
@@ -35,6 +36,9 @@ export const maxDuration = 60;
  * only while the attempt and profile identity still match.
  */
 export async function POST(request: NextRequest) {
+  const rl = rateLimit(request, { key: "verify-upload", limit: 6, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
 

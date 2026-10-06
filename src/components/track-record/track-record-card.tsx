@@ -72,7 +72,7 @@ export function formatAttendanceRate(rate: number | null): string {
 
 /** Formats average rating to 1 decimal place or fallback */
 export function formatAverageRating(averageRating: number | null): string {
-  if (averageRating === null) return "—";
+  if (averageRating === null) return "N/A";
   return averageRating.toFixed(1);
 }
 

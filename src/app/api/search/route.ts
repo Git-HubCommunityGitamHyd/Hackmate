@@ -7,15 +7,19 @@ import { listTeams } from "@/lib/queries/teams";
 import { people } from "@/lib/queries/people";
 import { parseSearchQuery, toStructuredFilters } from "@/lib/matching/search-parser";
 import { ok, withPublic, requireUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 /**
- * GET /api/search?q=… — natural-language search across everything.
+ * GET /api/search?q=… - natural-language search across everything.
  * "Need someone who knows Next.js and has ML experience for a 4-person team"
  *   → parses skills (next.js), category (ai_ml), team size (4), intent (people)
  * Postgres full-text (tsvector) used for hackathon text; structured filters
  * via junction tables for skills/roles.
  */
 export async function GET(req: NextRequest) {
+  const rl = rateLimit(req, { key: "search", limit: 20, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   return withPublic(async () => {
     const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
     if (q.length === 0) {
@@ -33,7 +37,7 @@ export async function GET(req: NextRequest) {
     const viewer = await requireUser();
 
     /* When the parser found structured signals (skills/roles), those carry
-       the intent — leftover words like "need/for/team" would over-filter.
+       the intent - leftover words like "need/for/team" would over-filter.
        Only apply free-text matching when nothing structured was found. */
     const structured = skillIds.length > 0 || filters.categories.length > 0;
     const freeText = structured ? undefined : filters.q;

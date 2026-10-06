@@ -5,6 +5,7 @@ import { schema } from "@/lib/db";
 import { listHackathons } from "@/lib/queries/hackathons";
 import { hackathonSchema } from "@/lib/validations";
 import { ok, fail, withAdmin, withPublic } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 function slugify(name: string) {
   return name
@@ -14,8 +15,11 @@ function slugify(name: string) {
     .slice(0, 60);
 }
 
-/** GET /api/hackathons — list with filters (public). */
+/** GET /api/hackathons - list with filters (public). */
 export async function GET(req: NextRequest) {
+  const rl = rateLimit(req, { key: "hackathons", limit: 60, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   return withPublic(async () => {
     const params = req.nextUrl.searchParams;
     return listHackathons({
@@ -26,9 +30,12 @@ export async function GET(req: NextRequest) {
   });
 }
 
-/** POST /api/hackathons — create a hackathon listing (ADMIN ONLY).
- *  Admins are accounts whose email is listed in ADMIN_EMAILS — see src/lib/admin.ts. */
+/** POST /api/hackathons - create a hackathon listing (ADMIN ONLY).
+ *  Admins are accounts whose email is listed in ADMIN_EMAILS - see src/lib/admin.ts. */
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(req, { key: "hackathon-create", limit: 12, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   return withAdmin(async (user) => {
     const body = await req.json();
     const parsed = hackathonSchema.safeParse(body);

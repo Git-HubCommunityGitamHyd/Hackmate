@@ -3,9 +3,9 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { taskSchema } from "@/lib/validations";
-import { ok, fail, requireUser } from "@/lib/api";
+import { ok, fail, isUuid, requireUser } from "@/lib/api";
 
-/** GET /api/teams/:id/tasks — checklist (members only). */
+/** GET /api/teams/:id/tasks - checklist (members only). */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -13,6 +13,7 @@ export async function GET(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
   if (!(await isMember(id, user.id))) return fail("Members only", 403);
 
   const rows = await db
@@ -23,7 +24,7 @@ export async function GET(
   return ok(rows.map((t) => ({ ...t, dueDate: t.dueDate?.toISOString() ?? null, createdAt: t.createdAt.toISOString() })));
 }
 
-/** POST /api/teams/:id/tasks — add a checklist item (members). */
+/** POST /api/teams/:id/tasks - add a checklist item (members). */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -31,6 +32,7 @@ export async function POST(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
   if (!(await isMember(id, user.id))) return fail("Members only", 403);
 
   const body = await req.json();
@@ -58,7 +60,7 @@ export async function POST(
   return ok({ ...task, dueDate: task.dueDate?.toISOString() ?? null, createdAt: task.createdAt.toISOString() }, { status: 201 });
 }
 
-/** PATCH /api/teams/:id/tasks — toggle done / reassign / edit. */
+/** PATCH /api/teams/:id/tasks - toggle done / reassign / edit. */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -66,6 +68,7 @@ export async function PATCH(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
   if (!(await isMember(id, user.id))) return fail("Members only", 403);
 
   const body = await req.json();

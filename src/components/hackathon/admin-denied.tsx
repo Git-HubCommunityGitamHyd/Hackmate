@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 /**
  * Shown when a signed-in non-admin opens /hackathons/new or /admin.
- * Server component — no client hooks.
+ * Server component - no client hooks.
  */
 export function AdminDenied() {
   return (
@@ -50,7 +50,7 @@ export function AdminDenied() {
               <span className="flex h-6 w-6 items-center justify-center border bg-muted/50 text-xs">3</span>
               Already signed in?
             </div>
-            <p className="text-sm text-muted-foreground">Sign out and sign in again — promotion happens at sign-in.</p>
+            <p className="text-sm text-muted-foreground">Sign out and sign in again; promotion happens at sign-in.</p>
           </div>
 
           <div className="border-t pt-4">
@@ -59,7 +59,7 @@ export function AdminDenied() {
             </div>
             <pre className="text-xs font-mono bg-muted/60 border p-3 overflow-x-auto"><code>{`UPDATE "user" SET role = 'admin' WHERE email = 'you@college.edu';`}</code></pre>
             <p className="text-xs text-muted-foreground mt-2">
-              Run it in the CockroachDB console (or any SQL client) — handy for promoting other
+              Run it in the CockroachDB console (or any SQL client). Handy for promoting other
               organizers later. Demote by setting <code className="font-mono">role = 'user'</code>.
             </p>
           </div>

@@ -73,3 +73,8 @@ screenshots/
 tool-results/
 worklog.md
 Caddyfile
+package-lock.json
+
+# local portable postgres (sandbox only, never commit)
+pg/
+persist-test.txt

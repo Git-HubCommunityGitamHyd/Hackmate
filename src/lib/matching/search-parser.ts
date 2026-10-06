@@ -1,7 +1,7 @@
 import { SKILLS, ROLE_TAXONOMY } from "@/lib/constants";
 
 /**
- * Natural-language search parser — deterministic, no AI.
+ * Natural-language search parser - deterministic, no AI.
  *
  * Understands queries like:
  *   "Need someone who knows Next.js and has ML experience for a 4-person team"

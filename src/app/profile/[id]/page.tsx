@@ -45,6 +45,7 @@ import { useBestWork, useCurrentUser, useProfile } from "@/hooks/use-api";
 import { COMMITMENT_LEVELS, EXPERIENCE_LEVELS } from "@/lib/constants";
 import { Pencil, Radar } from "lucide-react";
 import { LinkedInSections } from "@/components/profile/linkedin-sections";
+import { GithubCalendar } from "@/components/profile/github-calendar";
 import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { KarmaPill } from "@/components/reputation/karma-pill";
 import { FindEqualButton } from "@/components/profile/find-equal-button";
@@ -376,12 +377,12 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
 
           <LinkedInSections data={profile.linkedinData} linkedinUrl={profile.linkedinUrl} />
 
-          {/* GitHub verified */}
+          {/* GitHub verified + contribution calendar */}
           {profile.githubData && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Github className="h-4 w-4" /> GitHub — verified at sign-in
+                  <Github className="h-4 w-4" /> GitHub - verified at sign-in
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -418,6 +419,26 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             </Card>
           )}
 
+          {/* GitHub contribution calendar (proxy via /api/github-contributions) */}
+          {profile.githubUsername && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Github className="h-4 w-4" /> GitHub activity - last year
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                <GithubCalendar
+                  username={profile.githubUsername}
+                  variant="city-lights"
+                  colorSchema="ink"
+                  glowIntensity={4}
+                  shape="rounded"
+                />
+              </CardContent>
+            </Card>
+          )}
+
           {/* Hackathon history */}
           <Card>
             <CardHeader className="pb-2">
@@ -427,7 +448,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             </CardHeader>
             <CardContent className="space-y-4">
               {profile.history.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No hackathons recorded yet — the résumé starts at the first submission.</p>
+                <p className="text-sm text-muted-foreground">No hackathons recorded yet - the résumé starts at the first submission.</p>
               ) : (
                 profile.history.map((h, i) => (
                   <div key={h.id}>
@@ -512,14 +533,14 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
             </CardHeader>
             <CardContent>
               {profile.badges.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Badges appear after hackathons — Completed, Finalist, Winner, Worked Together.</p>
+                <p className="text-sm text-muted-foreground">Badges appear after hackathons - Completed, Finalist, Winner, Worked Together.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2">
                   {profile.badges.map((b, i) => {
                     const Icon = BADGE_ICONS[b.slug] ?? Award;
                     return (
                       <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg border bg-muted/30">
-                        <Icon className="h-4 w-4 text-amber-500 shrink-0" />
+                        <Icon className="h-4 w-4 text-primary shrink-0" />
                         <div className="min-w-0">
                           <div className="text-xs font-semibold truncate">{b.name}</div>
                           {b.hackathonName && (
@@ -549,7 +570,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                   ["Remote only", profile.availability.remoteOnly],
                 ].map(([label, yes]) => (
                   <div key={label as string} className="flex items-center gap-2">
-                    <span className={`h-1.5 w-1.5 rounded-full ${yes ? "bg-emerald-500" : "bg-muted-foreground/30"}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full ${yes ? "bg-primary" : "bg-muted-foreground/30"}`} />
                     <span className={yes ? "" : "text-muted-foreground/70 line-through"}>{label}</span>
                   </div>
                 ))}

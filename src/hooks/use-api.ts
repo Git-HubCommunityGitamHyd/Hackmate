@@ -266,7 +266,7 @@ export interface NotificationsData {
     id: string;
     teamId: string;
     teamName: string;
-    hackathonName: string;
+    hackathonName: string | null;
     inviterName: string;
     message: string | null;
     createdAt: string;
@@ -275,7 +275,7 @@ export interface NotificationsData {
     id: string;
     teamId: string;
     teamName: string;
-    hackathonName: string;
+    hackathonName: string | null;
     message: string | null;
     createdAt: string;
   }[];

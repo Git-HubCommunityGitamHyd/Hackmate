@@ -3,7 +3,7 @@ import { getTeamMatchesForUser, getPeopleMatchesForTeam } from "@/lib/queries/te
 import { ok, fail, withUser } from "@/lib/api";
 
 /**
- * GET /api/matches — deterministic matching for the signed-in viewer.
+ * GET /api/matches - deterministic matching for the signed-in viewer.
  *   ?type=teams            → ranked teams for me
  *   ?type=people&teamId=…  → gap-driven people for my team (admin)
  */

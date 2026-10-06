@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { analyzeComposition, type CandidateSignal, type MemberSignal } from "@/lib/matching/composition";
 import { scorePersonForTeam, HOURS_BY_COMMITMENT } from "@/lib/matching/engine";
+import { isUuid } from "@/lib/api";
 import { getUserSignal, getUserTeamForHackathon, iso } from "./context";
 import { ROLE_TAXONOMY } from "@/lib/constants";
 import type { TeamCardDTO, TeamDetailDTO } from "./types";
@@ -121,7 +122,7 @@ export async function listTeams(
       )`,
     })
     .from(schema.teams)
-    .innerJoin(schema.hackathons, eq(schema.teams.hackathonId, schema.hackathons.id))
+    .leftJoin(schema.hackathons, eq(schema.teams.hackathonId, schema.hackathons.id))
     .where(and(...where))
     .orderBy(desc(schema.teams.createdAt))
     .limit(60);
@@ -166,7 +167,9 @@ export async function listTeams(
       missingSkills,
       completeness:
         needed.length === 0
-          ? 100
+          ? /* No roles declared: fall back to roster fullness so a 1/4
+             * team never shows "100% complete" next to "3 spots left". */
+            Math.min(100, Math.round((Number(memberCount) / Math.max(t.targetSize, 1)) * 100))
           : Math.round((filledRoles.length / needed.length) * 100),
       memberNames: members.map((m) => m.name ?? "Anonymous"),
       createdAt: iso(t.createdAt),
@@ -207,6 +210,7 @@ export async function listTeams(
             commitment: signal.user.commitment ?? null,
             experienceLevel: signal.user.experienceLevel ?? null,
             emergencyAvailable: signal.emergencyAvailable,
+            compat: signal.compat,
           },
           {
             teamId: card.id,
@@ -218,6 +222,7 @@ export async function listTeams(
             openRoles: openRoleSlugs,
             wantedSkillIds: wanted.map((w) => w.skillId),
             memberSkillIds: memberSkillRows.map((s) => s.skillId),
+            lookingForIdea: card.lookingForIdea,
           },
         );
         card.matchScore = result.score;
@@ -231,7 +236,7 @@ export async function listTeams(
 }
 
 /* ------------------------------------------------------------------ */
-/* Team detail — with full Composition Intelligence                    */
+/* Team detail - with full Composition Intelligence                    */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -242,6 +247,8 @@ export async function getTeamDetail(
   teamId: string,
   viewerId?: string | null,
 ): Promise<TeamDetailDTO | null> {
+  /* Malformed ids must 404, never reach Postgres as a 500. */
+  if (!isUuid(teamId)) return null;
   const [teamRow] = await db
     .select({
       t: schema.teams,
@@ -249,7 +256,7 @@ export async function getTeamDetail(
       hackathonSlug: schema.hackathons.slug,
     })
     .from(schema.teams)
-    .innerJoin(schema.hackathons, eq(schema.teams.hackathonId, schema.hackathons.id))
+    .leftJoin(schema.hackathons, eq(schema.teams.hackathonId, schema.hackathons.id))
     .where(eq(schema.teams.id, teamId))
     .limit(1);
   if (!teamRow) return null;
@@ -369,6 +376,7 @@ export async function getTeamDetail(
             commitment: signal.user.commitment ?? null,
             experienceLevel: signal.user.experienceLevel ?? null,
             emergencyAvailable: signal.emergencyAvailable,
+            compat: signal.compat,
           },
           {
             teamId,
@@ -378,6 +386,7 @@ export async function getTeamDetail(
             openRoles: openRoleSlugs,
             wantedSkillIds: wanted.map((w) => w.skillId),
             memberSkillIds: memberSkillRows.map((s) => s.skillId),
+            lookingForIdea: t.lookingForIdea,
           },
         );
         viewer.matchScore = match.score;
@@ -398,7 +407,7 @@ export async function getTeamDetail(
           memberSignals,
           needed.map((n) => ({ roleSlug: n.slug, priority: n.priority })),
           [candidate],
-          hackathonName,
+          hackathonName ?? undefined,
         );
       }
     }
@@ -492,7 +501,7 @@ export async function getTeamMatchesForUser(userId: string, limit = 12) {
   const mySkillIds = signal.skills.map((s) => s.skillId);
   const myRoleIds = signal.roles.map((r) => r.roleId);
 
-  /* SQL prefilter — recruiting teams whose wanted skills overlap the user's
+  /* SQL prefilter - recruiting teams whose wanted skills overlap the user's
      skills OR whose needed roles overlap the user's roles. */
   const skillMatch =
     mySkillIds.length > 0
@@ -561,6 +570,7 @@ export async function getTeamMatchesForUser(userId: string, limit = 12) {
         commitment: signal.user.commitment ?? null,
         experienceLevel: signal.user.experienceLevel ?? null,
         emergencyAvailable: signal.emergencyAvailable,
+        compat: signal.compat,
       },
       {
         teamId: card.id,
@@ -570,6 +580,7 @@ export async function getTeamMatchesForUser(userId: string, limit = 12) {
         openRoles: openRoleSlugs,
         wantedSkillIds: wanted.map((w) => w.skillId),
         memberSkillIds: memberSkillRows.map((s) => s.skillId),
+        lookingForIdea: card.lookingForIdea,
       },
     );
     return { ...card, matchScore: match.score, matchReasons: match.reasons, matchBreakdown: undefined };
@@ -604,9 +615,19 @@ export async function getPeopleMatchesForTeam(teamId: string, limit = 8) {
   const candidates = await people({
     skillIds: wantedSkillIds.length > 0 ? wantedSkillIds : undefined,
     categories: gapCategories.size > 0 ? [...gapCategories] : undefined,
-    excludeTeamHackathonId: detail.hackathonId,
+    excludeTeamHackathonId: detail.hackathonId ?? undefined,
     limit: 30,
   });
+
+  /* Compatibility answers for the candidate pool - the engine's 6th signal. */
+  const compatRows =
+    candidates.length > 0
+      ? await db
+          .select()
+          .from(schema.compatAnswers)
+          .where(inArray(schema.compatAnswers.userId, candidates.map((c) => c.id)))
+      : [];
+  const compatByUser = new Map(compatRows.map((r) => [r.userId, r]));
 
   const memberSignal = detail.members.map((m) => ({
     userId: m.userId,
@@ -644,6 +665,7 @@ export async function getPeopleMatchesForTeam(teamId: string, limit = 8) {
         commitment: c.commitment ?? null,
         experienceLevel: c.experienceLevel ?? null,
         emergencyAvailable: c.emergencyAvailable,
+        compat: compatByUser.get(c.id) ?? null,
       },
       {
         teamId,
@@ -653,6 +675,7 @@ export async function getPeopleMatchesForTeam(teamId: string, limit = 8) {
         openRoles: neededButOpen,
         wantedSkillIds: [...wantedIds],
         memberSkillIds: [], // covered skills excluded at card level
+        lookingForIdea: detail.lookingForIdea,
       },
     );
     void openRoleSlugs;
@@ -672,7 +695,7 @@ export async function getPeopleMatchesForTeam(teamId: string, limit = 8) {
     memberSignal,
     detail.rolesNeeded.map((r) => ({ roleSlug: r.slug, priority: r.priority })),
     candidateSignals,
-    hackathonName,
+    hackathonName ?? undefined,
   );
 
   const byId = new Map(candidates.map((c) => [c.id, c]));

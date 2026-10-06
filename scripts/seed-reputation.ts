@@ -11,9 +11,8 @@
  * Every row it creates is tagged with the REPDEMO slug/email prefix, so
  * --clean removes exactly this fixture and nothing else.
  */
-import { config } from "dotenv";
-config({ path: ".env.local", override: true });
-config({ override: true });
+import { loadEnv } from "../src/lib/db/load-env";
+loadEnv();
 
 const TAG = "repdemo";
 
@@ -41,7 +40,7 @@ async function main() {
     process.exit(1);
   }
 
-  /* Two teammates to review them — a user cannot review themselves. */
+  /* Two teammates to review them - a user cannot review themselves. */
   const reviewers = await db
     .insert(schema.users)
     .values([

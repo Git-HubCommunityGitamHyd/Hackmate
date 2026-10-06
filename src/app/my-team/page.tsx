@@ -16,6 +16,7 @@ import {
   X,
   MessageSquare,
   Crown,
+  Compass,
   History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,8 @@ import { GapAnalysisPanel } from "@/components/team/gap-analysis";
 import { TeamChat } from "@/components/team/team-chat";
 import { TaskChecklist } from "@/components/team/task-checklist";
 import { InviteDialog } from "@/components/team/invite-dialog";
+import { ResultDialog } from "@/components/team/result-dialog";
+import { AttachEventDialog } from "@/components/team/attach-event-dialog";
 import { api, useMyTeam, useCurrentUser, useNotifications, type TeamDetailDTO, type NotificationsData, type PersonRecommendation } from "@/hooks/use-api";
 
 export default function MyTeamPage() {
@@ -91,7 +94,7 @@ export default function MyTeamPage() {
         <EmptyState
           icon={Users2}
           title="You're not on a team yet"
-          description="Find a recruiting team that needs exactly your skills — or create one around your idea."
+          description="Find a recruiting team that needs exactly your skills - or create one around your idea."
           action={
             <div className="flex gap-3">
               <Button asChild><Link href="/#teams">Browse teams</Link></Button>
@@ -141,7 +144,7 @@ function TeamWorkspace({
         body: JSON.stringify({ requestId, action }),
       }),
     onSuccess: (_d, vars) => {
-      toast.success(vars.action === "accepted" ? "Request accepted — they're in! 🎉" : "Request declined");
+      toast.success(vars.action === "accepted" ? "Request accepted - they're in! 🎉" : "Request declined");
       invalidate();
     },
     onError: (err: Error) => toast.error(err.message),
@@ -171,11 +174,37 @@ function TeamWorkspace({
 
   return (
     <div className="pt-8 pb-4">
-      <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2 text-muted-foreground">
-        <Link href={`/hackathons/${team.hackathonSlug}`}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> {team.hackathonName}
-        </Link>
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className="mb-4 -ml-2 text-muted-foreground"
+      >
+        {team.hackathonSlug ? (
+          <Link href={`/hackathons/${team.hackathonSlug}`}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> {team.hackathonName}
+          </Link>
+        ) : (
+          <Link href="/#teams">
+            <ArrowLeft className="h-4 w-4 mr-1" /> Idea-first - event not chosen yet
+          </Link>
+        )}
       </Button>
+
+      {!team.hackathonId && (
+        <div className="mb-6 rounded-xl border border-violet-500/30 bg-violet-500/5 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold flex items-center gap-1.5 text-violet-700 dark:text-violet-300">
+            <Compass className="h-4 w-4 shrink-0" /> Idea-first team
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              You&apos;re floating in Discover by idea. Attach an event to unlock deadlines,
+              the submission checklist and result recording.
+            </p>
+          </div>
+          {isAdmin && <AttachEventDialog teamId={team.id} />}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
@@ -196,12 +225,15 @@ function TeamWorkspace({
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {isAdmin && !team.hackathonId && (
+            <AttachEventDialog teamId={team.id} triggerClassName="border-violet-500/40 text-violet-700 dark:text-violet-300 hover:bg-violet-500/10" />
+          )}
           {isAdmin && team.status === "recruiting" && (
             <Button variant="outline" onClick={() => setStatus.mutate("full")} disabled={setStatus.isPending}>
               Mark team full
             </Button>
           )}
-          {isAdmin && team.status === "full" && (
+          {isAdmin && team.status === "full" && team.hackathonId && (
             <Button variant="outline" onClick={() => setStatus.mutate("recruiting")} disabled={setStatus.isPending}>
               Reopen recruitment
             </Button>
@@ -210,6 +242,9 @@ function TeamWorkspace({
             <Button onClick={() => setInviteOpen(true)} className="font-semibold">
               <UserPlus className="h-4 w-4 mr-2" /> Invite people
             </Button>
+          )}
+          {isAdmin && team.hackathonId && team.status !== "disbanded" && (
+            <ResultDialog teamId={team.id} teamName={team.name} hackathonName={team.hackathonName} />
           )}
           {team.chatUrl && (
             <Button asChild variant="outline">

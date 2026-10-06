@@ -8,7 +8,7 @@ import { AdminDenied } from "@/components/hackathon/admin-denied";
 
 export const metadata = { title: "Edit hackathon" };
 
-/** Edit a hackathon listing — ADMIN ONLY. Accepts slug or UUID. */
+/** Edit a hackathon listing - ADMIN ONLY. Accepts slug or UUID. */
 export default async function EditHackathonPage({
   params,
 }: {
@@ -32,7 +32,7 @@ export default async function EditHackathonPage({
         </h1>
         <p className="text-muted-foreground mt-1">
           Updating <span className="font-semibold text-foreground">{hackathon.name}</span>. Teams and
-          members are untouched — only the listing details change.
+          members are untouched - only the listing details change.
         </p>
       </div>
 

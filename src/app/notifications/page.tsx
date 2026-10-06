@@ -36,7 +36,7 @@ export default function NotificationsPage() {
     mutationFn: ({ teamId, action }: { teamId: string; action: "accepted" | "declined" }) =>
       api(`/api/teams/${teamId}/invites`, { method: "PATCH", body: JSON.stringify({ action }) }),
     onSuccess: (_d, vars) => {
-      toast.success(vars.action === "accepted" ? "Invite accepted — welcome to the team! 🎉" : "Invite declined");
+      toast.success(vars.action === "accepted" ? "Invite accepted - welcome to the team! 🎉" : "Invite declined");
       qc.invalidateQueries();
     },
     onError: (err: Error) => toast.error(err.message),
@@ -89,7 +89,7 @@ export default function NotificationsPage() {
                     {i.inviterName} invited you to join <span className="text-primary">{i.teamName}</span>
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {i.hackathonName} · {new Date(i.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                    {i.hackathonName ?? "Idea-first team"} · {new Date(i.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                   </p>
                   {i.message && <p className="text-sm text-muted-foreground mt-1.5 italic">&ldquo;{i.message}&rdquo;</p>}
                 </div>
@@ -151,6 +151,7 @@ export default function NotificationsPage() {
               icon={Inbox}
               title="Nothing yet"
               description="Join requests, invites and deadline reminders will show up here."
+              action={<Button asChild variant="outline"><Link href="/#teams">Browse teams</Link></Button>}
             />
           ) : (
             notifications.map((n) => (

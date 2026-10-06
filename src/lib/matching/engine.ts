@@ -1,15 +1,16 @@
 /**
- * Deterministic matching engine — NO AI in v1, by design.
+ * Deterministic matching engine - NO AI in v1, by design.
  *
  * Pipeline: SQL prefilter (narrow to plausible candidates) → TypeScript
  * weighted scoring (below) over ~50 candidates.
  *
  * Weights (product decision, easy to tune):
- *   skill overlap      40%
- *   availability       20%
- *   commitment         15%
- *   experience delta   15%
+ *   skill overlap      36%
+ *   availability       18%
+ *   commitment         13%
+ *   experience delta   13%
  *   role fit           10%
+ *   compatibility       10%  (work style, presenting, idea swaps)
  */
 
 import type { Commitment, ExperienceLevel } from "@/lib/db/schema";
@@ -21,6 +22,13 @@ const COMMITMENT_ORDER: Commitment[] = [
   "aiming_to_win",
 ];
 const EXPERIENCE_ORDER: ExperienceLevel[] = ["beginner", "intermediate", "advanced"];
+
+/** Compatibility answers - collected in profile edit, finally put to work. */
+export interface PersonCompatInput {
+  workStyle: "plan_first" | "build_first" | "hybrid" | null;
+  comfortablePresenting: boolean;
+  openToIdeaSwaps: boolean;
+}
 
 export interface PersonMatchInput {
   userId: string;
@@ -36,6 +44,7 @@ export interface PersonMatchInput {
   commitment?: Commitment | null;
   experienceLevel?: ExperienceLevel | null;
   emergencyAvailable?: boolean;
+  compat?: PersonCompatInput | null;
 }
 
 export interface TeamMatchInput {
@@ -46,6 +55,7 @@ export interface TeamMatchInput {
   openRoles: string[]; // role slugs still unfilled
   wantedSkillIds: string[]; // skills the team explicitly wants
   memberSkillIds: string[]; // skills already covered by members
+  lookingForIdea?: boolean; // team has skills but no idea yet
 }
 
 export interface MatchBreakdown {
@@ -54,6 +64,7 @@ export interface MatchBreakdown {
   commitmentFit: number;
   experienceFit: number;
   roleFit: number;
+  compatFit: number;
 }
 
 export interface MatchResult {
@@ -62,7 +73,7 @@ export interface MatchResult {
   reasons: string[]; // human explanation for UI transparency
 }
 
-const WEIGHTS = { skill: 0.4, availability: 0.2, commitment: 0.15, experience: 0.15, role: 0.1 };
+const WEIGHTS = { skill: 0.36, availability: 0.18, commitment: 0.13, experience: 0.13, role: 0.1, compat: 0.1 };
 
 export const HOURS_BY_COMMITMENT: Record<Commitment, number> = {
   casual: 8,
@@ -140,12 +151,30 @@ export function scorePersonForTeam(
     roleFit = 0.7;
   }
 
+  /* --- 6. Compatibility answers (10%) ----------------------------- */
+  // "Half of hackathon team problems are not technical." These self-reported
+  // answers are cheap to collect and surprisingly predictive, so they get a
+  // real slice of the score rather than sitting unused in the profile.
+  let compatFit = 0.5; // unanswered → neutral, never punishing a newcomer
+  if (person.compat) {
+    const parts: number[] = [];
+    // Teams that still need a pitcher value confident presenters.
+    const needsPitcher = openRoles.has("pitching");
+    parts.push(needsPitcher ? (person.compat.comfortablePresenting ? 1 : 0.2) : 0.6);
+    // A team still hunting for its idea wants flexible minds.
+    parts.push(team.lookingForIdea ? (person.compat.openToIdeaSwaps ? 1 : 0.3) : 0.6);
+    // Hybrid collaborators clash with nobody; strong preferences fit same-style teams.
+    parts.push(person.compat.workStyle === "hybrid" ? 1 : 0.75);
+    compatFit = parts.reduce((a, b) => a + b, 0) / parts.length;
+  }
+
   const total =
     WEIGHTS.skill * skillFit +
     WEIGHTS.availability * availabilityFit +
     WEIGHTS.commitment * commitmentFit +
     WEIGHTS.experience * experienceFit +
-    WEIGHTS.role * roleFit;
+    WEIGHTS.role * roleFit +
+    WEIGHTS.compat * compatFit;
 
   /* --- Human-readable reasons ------------------------------------ */
   const reasons: string[] = [];
@@ -155,10 +184,16 @@ export function scorePersonForTeam(
   else if (hoursRatio >= 0.6) reasons.push("Close to the team's expected hours");
   if (commitmentFit === 1) reasons.push("Same commitment level as the team");
   if (roleFit === 1) reasons.push("Fills an open role");
-  if (person.emergencyAvailable) reasons.push("Emergency available — can join now");
+  if (person.emergencyAvailable) reasons.push("Emergency available - can join now");
   if (broughtSkills.length > 0) {
     reasons.push(`Brings ${broughtSkills.length} strong skill${broughtSkills.length > 1 ? "s" : ""} the team listed`);
   }
+  if (person.compat?.comfortablePresenting && openRoles.has("pitching"))
+    reasons.push("Comfortable presenting - can own the pitch");
+  if (person.compat?.openToIdeaSwaps && team.lookingForIdea)
+    reasons.push("Open to idea swaps - fits a team still exploring");
+  if (person.compat?.workStyle === "hybrid" && compatFit >= 0.85)
+    reasons.push("Flexible work style - plans or builds, as needed");
 
   return {
     score: Math.round(total * 100),
@@ -168,6 +203,7 @@ export function scorePersonForTeam(
       commitmentFit: round2(commitmentFit),
       experienceFit: round2(experienceFit),
       roleFit: round2(roleFit),
+      compatFit: round2(compatFit),
     },
     reasons: reasons.slice(0, 4),
   };

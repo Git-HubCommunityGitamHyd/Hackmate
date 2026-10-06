@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
-/* Initials avatar with deterministic hue — no external requests,
+/* Initials avatar with deterministic hue - no external requests,
    which also keeps the demo free of broken images. */
 export function UserAvatar({
   name,
