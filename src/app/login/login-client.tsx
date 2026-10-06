@@ -238,13 +238,23 @@ export function LoginClient() {
         body: JSON.stringify({}),
       });
 
-      if (!res.ok) {
-        throw new Error(
-          (await res.json()).error ?? "Dev sign-in failed"
-        );
+      const responseText = await res.text();
+      let data: { error?: string; email?: string };
+      try {
+        const parsed: unknown = responseText ? JSON.parse(responseText) : null;
+        data =
+          typeof parsed === "object" &&
+          parsed !== null &&
+          !Array.isArray(parsed)
+            ? (parsed as { error?: string; email?: string })
+            : {};
+      } catch {
+        data = {};
       }
 
-      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? `Dev sign-in failed (${res.status})`);
+      }
 
       toast.success(
         `Signed in as ${data.email ?? "dev account"} (admin)`

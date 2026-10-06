@@ -217,7 +217,7 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
   if (!userRow) return null;
   const u = userRow.u;
 
-  const [badgeRows, historyRows, availRows, compatRows, roleRows] = await Promise.all([
+  const [badgeRows, historyRows, githubProjectRows, availRows, compatRows, roleRows] = await Promise.all([
     db
       .select({
         slug: schema.badges.slug,
@@ -233,18 +233,27 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
       .where(eq(schema.userBadges.userId, userId)),
     db
       .select({
+        id: schema.hackathonResults.id,
         hackathonName: schema.hackathons.name,
         hackathonId: schema.hackathons.id,
         projectName: schema.hackathonResults.projectName,
+        projectUrl: schema.hackathonResults.projectUrl,
+        devpostUrl: schema.hackathonResults.devpostUrl,
         placement: schema.hackathonResults.placement,
         repoUrl: schema.hackathonResults.repoUrl,
         technologies: schema.hackathonResults.technologies,
+        isBestWork: schema.hackathonResults.isBestWork,
         teamId: schema.hackathonResults.teamId,
       })
       .from(schema.hackathonResults)
       .innerJoin(schema.hackathons, eq(schema.hackathonResults.hackathonId, schema.hackathons.id))
       .where(eq(schema.hackathonResults.userId, userId))
       .orderBy(desc(schema.hackathons.startsAt)),
+    db
+      .select()
+      .from(schema.githubProjects)
+      .where(eq(schema.githubProjects.userId, userId))
+      .limit(1),
     db.select().from(schema.availability).where(eq(schema.availability.userId, userId)).limit(1),
     db.select().from(schema.compatAnswers).where(eq(schema.compatAnswers.userId, userId)).limit(1),
     db
@@ -377,15 +386,56 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
       hackathonName: b.hackathonName ?? null,
     })),
     history: historyRows.map((h) => ({
+      id: h.id,
       hackathonName: h.hackathonName,
       hackathonId: h.hackathonId,
       projectName: h.projectName,
       placement: h.placement,
+      projectUrl: h.projectUrl,
+      devpostUrl: h.devpostUrl,
       repoUrl: h.repoUrl,
       technologies: h.technologies ?? [],
+      isBestWork: h.isBestWork,
       teamId: h.teamId,
       teammates: teammatesByTeam.get(h.teamId ?? "") ?? [],
     })),
+    bestWork: (() => {
+      const best = historyRows.find((h) => h.isBestWork);
+      const githubBest = githubProjectRows.find((project) => project.isBestWork);
+      return best
+        ? {
+            id: best.id,
+            hackathonName: best.hackathonName,
+            hackathonId: best.hackathonId,
+            projectName: best.projectName,
+            projectDescription: null,
+            placement: best.placement,
+            projectUrl: best.projectUrl,
+            devpostUrl: best.devpostUrl,
+            repoUrl: best.repoUrl,
+            technologies: best.technologies ?? [],
+            isBestWork: best.isBestWork,
+            teamId: best.teamId,
+            teammates: teammatesByTeam.get(best.teamId ?? "") ?? [],
+          }
+        : githubBest
+          ? {
+              id: githubBest.id,
+              hackathonName: null,
+              hackathonId: null,
+              projectName: githubBest.title,
+              projectDescription: githubBest.description,
+              placement: null,
+              projectUrl: null,
+              devpostUrl: null,
+              repoUrl: githubBest.repoUrl,
+              technologies: githubBest.technologies,
+              isBestWork: true,
+              teamId: null,
+              teammates: [],
+            }
+          : null;
+    })(),
     previousTeammates: [...prevTeammateCounts.entries()]
       .map(([id, v]) => ({ id, ...v }))
       .sort((a, b) => b.count - a.count)

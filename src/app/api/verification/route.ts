@@ -24,7 +24,7 @@ import {
   reserveVerificationClaim,
   type VerificationClaimKind,
 } from "@/lib/verification/claims";
-import { recognizeWithSurya } from "@/lib/verification/surya-client";
+import { recognizeWithDatalab } from "@/lib/verification/datalab-client";
 import { deleteCollegeIdImage, storeCollegeIdImage } from "@/lib/verification/storage";
 
 export const runtime = "nodejs";
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
   const claimsCreated: { kind: VerificationClaimKind; value: string }[] = [];
   try {
     newImagePath = await storeCollegeIdImage(image.buffer);
-    const ocr = await recognizeWithSurya(image.buffer);
+    const ocr = await recognizeWithDatalab(image.buffer);
     const extracted = extractCollegeIdFields(ocr.blocks);
     const imageHash = await perceptualImageHash(image.buffer);
     const authSecret = process.env.AUTH_SECRET;

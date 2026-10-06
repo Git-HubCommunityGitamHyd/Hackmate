@@ -584,6 +584,7 @@ export const hackathonResults = pgTable(
     repoUrl: text("repo_url"),
     placement: integer("placement"),
     technologies: jsonb("technologies").$type<string[]>().notNull().default([]),
+    isBestWork: boolean("is_best_work").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -591,8 +592,26 @@ export const hackathonResults = pgTable(
   (t) => [
     index("hackathon_result_user_idx").on(t.userId),
     index("hackathon_result_team_idx").on(t.teamId),
+    uniqueIndex("hackathon_result_one_best_work_per_user_idx")
+      .on(t.userId)
+      .where(sql`${t.isBestWork} = true`),
   ],
 );
+
+export const githubProjects = pgTable("github_project", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  repoUrl: text("repo_url").notNull(),
+  technologies: jsonb("technologies").$type<string[]>().notNull().default([]),
+  isBestWork: boolean("is_best_work").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 /* ------------------------------------------------------------------ */
 /* Bookmarks + notifications                                           */

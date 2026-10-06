@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import {
   Github,
@@ -20,6 +20,8 @@ import {
   Users,
   ExternalLink,
   Sparkles,
+  Pin,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +29,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import {
   SkillBadge,
@@ -36,7 +41,7 @@ import {
   EmergencyBadge,
 } from "@/components/shared/badges";
 import { EmptyState } from "@/components/shared/empty-state";
-import { useCurrentUser, useProfile } from "@/hooks/use-api";
+import { useBestWork, useCurrentUser, useProfile } from "@/hooks/use-api";
 import { COMMITMENT_LEVELS, EXPERIENCE_LEVELS } from "@/lib/constants";
 import { Pencil, Radar } from "lucide-react";
 import { LinkedInSections } from "@/components/profile/linkedin-sections";
@@ -64,6 +69,14 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
   const { id } = use(params);
   const { user, isAuthenticated } = useCurrentUser();
   const { data: profile, isLoading, error } = useProfile(id);
+  const bestWorkMutation = useBestWork(id);
+  const [showGithubForm, setShowGithubForm] = useState(false);
+  const [githubProject, setGithubProject] = useState({
+    title: "",
+    description: "",
+    repoUrl: "",
+    technologies: "",
+  });
 
   if (isLoading) {
     return (
@@ -189,6 +202,159 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
         </div>
       )}
 
+      {(isOwnProfile || profile.bestWork) && (
+        <Card className="mb-6 border-primary/30 bg-primary/[0.04]">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" /> Best Work
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {profile.bestWork ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl font-bold">{profile.bestWork.projectName ?? "Untitled project"}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {profile.bestWork.hackathonName ?? "GitHub project"}
+                    </p>
+                  </div>
+                  {profile.bestWork.placement && (
+                    <Badge className="gap-1 font-semibold shrink-0">
+                      <Medal className="h-3 w-3" /> #{profile.bestWork.placement}
+                    </Badge>
+                  )}
+                </div>
+                {profile.bestWork.projectDescription && (
+                  <p className="text-sm text-muted-foreground">{profile.bestWork.projectDescription}</p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {profile.bestWork.repoUrl && (
+                    <Button asChild size="sm" variant="outline">
+                      <a href={profile.bestWork.repoUrl} target="_blank" rel="noopener noreferrer">
+                        <Github className="h-3.5 w-3.5 mr-1.5" /> Repository
+                      </a>
+                    </Button>
+                  )}
+                  {profile.bestWork.projectUrl && (
+                    <Button asChild size="sm" variant="outline">
+                      <a href={profile.bestWork.projectUrl} target="_blank" rel="noopener noreferrer">
+                        <Globe className="h-3.5 w-3.5 mr-1.5" /> Project
+                      </a>
+                    </Button>
+                  )}
+                  {profile.bestWork.devpostUrl && (
+                    <Button asChild size="sm" variant="outline">
+                      <a href={profile.bestWork.devpostUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Devpost
+                      </a>
+                    </Button>
+                  )}
+                </div>
+                {profile.bestWork.technologies.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.bestWork.technologies.map((technology) => (
+                      <Badge key={technology} variant="outline" className="text-[10px]">{technology}</Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Choose a project from your hackathon history, or feature a public GitHub repository.
+                </p>
+                {isOwnProfile && (
+                  <>
+                    {profile.history.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Use the <strong>Pin as best work</strong> button on any history row.
+                      </p>
+                    )}
+                    {!showGithubForm ? (
+                      <Button type="button" variant="outline" onClick={() => setShowGithubForm(true)}>
+                        <Github className="h-4 w-4 mr-1.5" /> Add a GitHub project
+                      </Button>
+                    ) : (
+                      <form
+                        className="space-y-3 rounded-lg border p-4"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          bestWorkMutation.mutate({
+                            githubProject: {
+                              title: githubProject.title,
+                              description: githubProject.description,
+                              repoUrl: githubProject.repoUrl,
+                              technologies: githubProject.technologies
+                                .split(",")
+                                .map((technology) => technology.trim())
+                                .filter(Boolean),
+                            },
+                          });
+                        }}
+                      >
+                        <div className="space-y-1.5">
+                          <Label htmlFor="best-work-title">Project title</Label>
+                          <Input
+                            id="best-work-title"
+                            value={githubProject.title}
+                            onChange={(event) => setGithubProject({ ...githubProject, title: event.target.value })}
+                            required
+                            maxLength={120}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="best-work-repo">Public GitHub repository URL</Label>
+                          <Input
+                            id="best-work-repo"
+                            type="url"
+                            placeholder="https://github.com/owner/repository"
+                            value={githubProject.repoUrl}
+                            onChange={(event) => setGithubProject({ ...githubProject, repoUrl: event.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="best-work-description">Short description</Label>
+                          <Textarea
+                            id="best-work-description"
+                            value={githubProject.description}
+                            onChange={(event) => setGithubProject({ ...githubProject, description: event.target.value })}
+                            required
+                            maxLength={600}
+                            rows={3}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="best-work-technologies">Skills used</Label>
+                          <Input
+                            id="best-work-technologies"
+                            placeholder="React, TypeScript, PostgreSQL"
+                            value={githubProject.technologies}
+                            onChange={(event) => setGithubProject({ ...githubProject, technologies: event.target.value })}
+                            required
+                          />
+                          <p className="text-xs text-muted-foreground">Separate skills with commas.</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button type="submit" disabled={bestWorkMutation.isPending}>
+                            {bestWorkMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                            Feature GitHub project
+                          </Button>
+                          <Button type="button" variant="ghost" onClick={() => setShowGithubForm(false)}>
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Skills */}
@@ -285,7 +451,7 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                 <p className="text-sm text-muted-foreground">No hackathons recorded yet - the résumé starts at the first submission.</p>
               ) : (
                 profile.history.map((h, i) => (
-                  <div key={i}>
+                  <div key={h.id}>
                     {i > 0 && <Separator className="mb-4" />}
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -317,6 +483,35 @@ export default function ProfilePage({ params }: { params: Promise<{ id: string }
                           >
                             repo <ExternalLink className="h-3 w-3" />
                           </a>
+                        )}
+                        {isOwnProfile && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={h.isBestWork ? "default" : "outline"}
+                            className="mt-2"
+                            aria-label={h.isBestWork ? `Unpin ${h.projectName ?? "project"} as best work` : `Pin ${h.projectName ?? "project"} as best work`}
+                            disabled={bestWorkMutation.isPending}
+                            onClick={() => {
+                              if (
+                                !h.isBestWork &&
+                                profile.bestWork?.hackathonName === null &&
+                                !window.confirm(
+                                  "A GitHub project is already pinned as your Best Work. Pinning this hackathon project will permanently remove that GitHub project from your profile. Continue?",
+                                )
+                              ) {
+                                return;
+                              }
+                              bestWorkMutation.mutate({ resultId: h.isBestWork ? null : h.id });
+                            }}
+                          >
+                            {bestWorkMutation.isPending ? (
+                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                            ) : (
+                              <Pin className="h-3.5 w-3.5 mr-1.5" />
+                            )}
+                            {h.isBestWork ? "Pinned" : "Pin as best work"}
+                          </Button>
                         )}
                       </div>
                     </div>
