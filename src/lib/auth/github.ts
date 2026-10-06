@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { users, type GithubSummary } from "@/lib/db/schema";
 
 /**
- * GitHub verification import — runs at OAuth callback.
+ * GitHub verification import - runs at OAuth callback.
  * Aggregates repos, languages and recent activity so profiles can show
  * verified signals ("knows Python, 12 repos, active this year").
  */

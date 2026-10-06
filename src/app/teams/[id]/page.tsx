@@ -89,9 +89,15 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
   return (
     <div className="pt-8 pb-4">
       <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2 text-muted-foreground">
-        <Link href={`/hackathons/${team.hackathonSlug}`}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> {team.hackathonName}
-        </Link>
+        {team.hackathonSlug ? (
+          <Link href={`/hackathons/${team.hackathonSlug}`}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> {team.hackathonName}
+          </Link>
+        ) : (
+          <Link href="/#teams">
+            <ArrowLeft className="h-4 w-4 mr-1" /> Idea-first - event not chosen yet
+          </Link>
+        )}
       </Button>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -104,8 +110,8 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
                     <Badge variant="outline" className={
                       team.status === "recruiting"
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 font-semibold"
-                        : "text-zinc-500"
+                        ? "bg-primary/10 text-primary border-primary/40 font-semibold"
+                        : "text-muted-foreground"
                     }>
                       {team.status === "recruiting" ? `${team.targetSize - team.memberCount} spot${team.targetSize - team.memberCount > 1 ? "s" : ""} left` : team.status}
                     </Badge>
@@ -151,7 +157,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                     <div>
                       <p className="font-semibold text-sm">{team.ideaTitle ?? "Anonymous idea"}</p>
                       <p className="text-sm text-muted-foreground italic mt-0.5">
-                        Domain: {team.ideaDomain ?? "undisclosed"} — full details revealed to members and
+                        Domain: {team.ideaDomain ?? "undisclosed"} - full details revealed to members and
                         accepted requesters.
                       </p>
                     </div>
@@ -192,7 +198,7 @@ export default function TeamPage({ params }: { params: Promise<{ id: string }> }
                   </Button>
                 ) : team.viewer.hasPendingInvite ? (
                   <Button asChild className="font-semibold">
-                    <Link href="/notifications">You have an invite — respond</Link>
+                    <Link href="/notifications">You have an invite - respond</Link>
                   </Button>
                 ) : (
                   <Button

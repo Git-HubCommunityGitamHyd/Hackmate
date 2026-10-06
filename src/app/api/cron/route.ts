@@ -6,13 +6,13 @@ import { sendEmail, emailTemplates } from "@/lib/email";
 import { ok, fail } from "@/lib/api";
 
 /**
- * Vercel Cron endpoint (Hobby plan: 2 jobs/day — see vercel.json).
+ * Vercel Cron endpoint (Hobby plan: 2 jobs/day - see vercel.json).
  * Secured by the CRON_SECRET bearer token that Vercel injects.
  *
  * Jobs:
- *   1. deadline reminders  — registration/submission deadlines within 48h
- *   2. emergency expiry    — expire emergency availability windows
- *   3. keep-alive ping     — SELECT 1 against CockroachDB
+ *   1. deadline reminders  - registration/submission deadlines within 48h
+ *   2. emergency expiry    - expire emergency availability windows
+ *   3. keep-alive ping     - SELECT 1 against CockroachDB
  */
 async function runDailyJobs() {
   const results: Record<string, unknown> = {};

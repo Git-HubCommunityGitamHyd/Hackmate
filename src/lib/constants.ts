@@ -1,7 +1,7 @@
 import type { SkillCategory } from "./db/schema";
 
 /* ------------------------------------------------------------------ */
-/* Role taxonomy — powers gap analysis / Team Composition Intelligence */
+/* Role taxonomy - powers gap analysis / Team Composition Intelligence */
 /* ------------------------------------------------------------------ */
 
 export interface RoleDef {

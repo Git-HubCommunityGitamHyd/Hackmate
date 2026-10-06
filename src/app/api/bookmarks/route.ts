@@ -7,7 +7,7 @@ import { getProfile } from "@/lib/queries/people";
 import { listHackathons } from "@/lib/queries/hackathons";
 import { ok, fail, withUser } from "@/lib/api";
 
-/** GET /api/bookmarks — saved people/teams/hackathons with hydrated cards. */
+/** GET /api/bookmarks - saved people/teams/hackathons with hydrated cards. */
 export async function GET() {
   return withUser(async (user) => {
     const rows = await db
@@ -34,7 +34,7 @@ export async function GET() {
   });
 }
 
-/** POST /api/bookmarks — toggle a bookmark. Body: { targetType, targetId }. */
+/** POST /api/bookmarks - toggle a bookmark. Body: { targetType, targetId }. */
 export async function POST(req: NextRequest) {
   return withUser(async (user) => {
     const body = await req.json();

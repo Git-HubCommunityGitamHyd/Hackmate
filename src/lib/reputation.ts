@@ -1,5 +1,5 @@
 /**
- * Reputation scoring — Reddit-karma style.
+ * Reputation scoring - Reddit-karma style.
  *
  * `computeKarma` is deliberately PURE: no database, no clock, no I/O. Every
  * input arrives as a plain count so the scoring rules can be read, reviewed
@@ -13,7 +13,7 @@
  *   average peer rating                avg(1–5) × 10, clamped to 0–50
  *   last-minute cancellation           −30 each
  *
- * The total is floored at 0 — karma never goes negative, so a single rough
+ * The total is floored at 0 - karma never goes negative, so a single rough
  * patch can't brand somebody permanently, and there's no incentive to
  * abandon an account and start over.
  */
@@ -38,7 +38,7 @@ export type KarmaFactor =
   | "rating"
   | "cancellations";
 
-/** The five counts the score is built from — all non-negative integers. */
+/** The five counts the score is built from - all non-negative integers. */
 export interface KarmaCounts {
   /** Attendance rows with status "present" ("late" and "absent" earn nothing). */
   attendancePresent: number;
@@ -67,7 +67,7 @@ export interface KarmaBreakdownEntry {
 }
 
 export interface KarmaResult {
-  /** The published score — `rawScore` floored at 0. */
+  /** The published score - `rawScore` floored at 0. */
   score: number;
   /** Sum of every contribution before the floor; negative when trust is poor. */
   rawScore: number;
@@ -157,7 +157,7 @@ export function computeKarma(counts: KarmaCounts): KarmaResult {
 /**
  * What GET /api/reputation returns: the score, the breakdown that explains
  * it, and the counts it was derived from. Declared here rather than in the
- * route so the route and the pill agree on one type — importing it is
+ * route so the route and the pill agree on one type - importing it is
  * type-only, so no server code follows it into the client bundle.
  */
 export interface ReputationDTO extends KarmaResult {

@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { AdminDenied } from "@/components/hackathon/admin-denied";
 import { AdminHackathonsTable } from "@/components/hackathon/admin-hackathons-table";
 
-export const metadata = { title: "Admin — hackathons" };
+export const metadata = { title: "Admin - hackathons" };
 
 /**
- * Organizer console — ADMIN ONLY. List / edit / delete every hackathon
+ * Organizer console - ADMIN ONLY. List / edit / delete every hackathon
  * listing and post new ones. Gate is server-side; APIs re-check the role.
  */
 export default async function AdminPage() {

@@ -11,9 +11,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
 /**
- * Temporary team chat — enough to align before moving to WhatsApp/Discord.
+ * Temporary team chat - enough to align before moving to WhatsApp/Discord.
  * - Realtime via Pusher when NEXT_PUBLIC_PUSHER_KEY is set (subscribes on
- *   open, disconnects on unmount — per free-tier connection budget).
+ *   open, disconnects on unmount - per free-tier connection budget).
  * - Polling fallback (4s) otherwise, so dev + preview still work.
  */
 export function TeamChat({ teamId, teamName }: { teamId: string; teamName: string }) {
@@ -50,7 +50,7 @@ export function TeamChat({ teamId, teamName }: { teamId: string; teamName: strin
       });
     })();
 
-    /* Disconnect on close — free tier: 100 concurrent connections. */
+    /* Disconnect on close - free tier: 100 concurrent connections. */
     return () => {
       cancelled = true;
       if (channel) channel.unbind_all();
@@ -90,7 +90,7 @@ export function TeamChat({ teamId, teamName }: { teamId: string; teamName: strin
         ) : !messages || messages.length === 0 ? (
           <div className="h-full grid place-items-center text-center">
             <p className="text-sm text-muted-foreground">
-              No messages yet. Break the ice — say what you&apos;re building this week.
+              No messages yet. Break the ice. Say what you&apos;re building this week.
             </p>
           </div>
         ) : (
@@ -109,7 +109,14 @@ export function TeamChat({ teamId, teamName }: { teamId: string; teamName: strin
                   <div
                     className={cn(
                       "inline-block rounded-xl px-3 py-2 text-sm text-left",
-                      mine ? "bg-primary text-primary-foreground" : "bg-muted",
+                      mine
+                        ? "bg-primary text-primary-foreground"
+                        : /* Incoming bubble: translucent frosted glass with
+                             the 5px backdrop blur AND the deep inset
+                             deboss (white light catch at the interior
+                             bottom-right edge), same as every other
+                             translucent surface in the app. */
+                          "bg-muted/60 backdrop-blur-[5px] debossed",
                     )}
                   >
                     {m.content}

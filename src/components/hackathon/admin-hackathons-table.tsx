@@ -78,7 +78,7 @@ export function AdminHackathonsTable() {
       <EmptyState
         icon={Trophy}
         title="No hackathons posted yet"
-        description="You're the organizer — post the first hackathon so students can start forming teams."
+        description="You're the organizer. Post the first hackathon so students can start forming teams."
         action={
           <Button asChild>
             <Link href="/hackathons/new">

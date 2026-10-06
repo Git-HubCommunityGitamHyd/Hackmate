@@ -13,7 +13,7 @@ import type { CompositionReport } from "@/lib/matching/composition";
 import type { PersonRecommendation } from "@/hooks/use-api";
 
 /**
- * Team Composition Intelligence panel — the standout feature.
+ * Team Composition Intelligence panel - the standout feature.
  * Narrative + coverage map + gap-driven candidate recommendations.
  */
 export function GapAnalysisPanel({

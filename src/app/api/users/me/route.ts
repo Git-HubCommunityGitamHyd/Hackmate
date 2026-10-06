@@ -6,11 +6,12 @@ import { profileSchema } from "@/lib/validations";
 import { getProfile } from "@/lib/queries/people";
 import type { TeamDetailDTO } from "@/lib/queries/types";
 import { ok, fail, withUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { PROCESSING_STALE_AFTER_MS } from "@/lib/verification/constants";
 import { deleteCollegeIdImage } from "@/lib/verification/storage";
 import { ROLE_TAXONOMY, SKILLS } from "@/lib/constants";
 
-/** GET /api/users/me — full own profile + my active team. */
+/** GET /api/users/me - full own profile + my active team. */
 export async function GET() {
   return withUser(async (user) => {
     const staleBefore = new Date(Date.now() - PROCESSING_STALE_AFTER_MS);
@@ -86,8 +87,11 @@ export async function GET() {
   });
 }
 
-/** PUT /api/users/me — upsert profile (skills junctions, availability, compat). */
+/** PUT /api/users/me - upsert profile (skills junctions, availability, compat). */
 export async function PUT(req: NextRequest) {
+  const rl = rateLimit(req, { key: "profile-write", limit: 12, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   return withUser(async (user) => {
     const body = await req.json();
     const parsed = profileSchema.safeParse(body);

@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Github, Clock, MapPin } from "lucide-react";
+import { Github, Clock, MapPin, Compass, Lightbulb, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { VerifiedBadge } from "@/components/shared/verified-badge";
+import { BookmarkButton } from "@/components/shared/bookmark-button";
+import { CardPeek, PeekRow } from "@/components/shared/card-peek";
+import { SplineReveal } from "@/components/ui/spline-reveal";
 import {
   SkillBadge,
   RecruitmentBadge,
@@ -14,6 +17,7 @@ import {
   EmergencyBadge,
 } from "@/components/shared/badges";
 import { MatchRing } from "@/components/shared/match-ring";
+import { ROLE_TAXONOMY } from "@/lib/constants";
 import type { PersonCardDTO } from "@/lib/queries/types";
 
 /** Render a discovery profile card with skills, verification status, and optional match and action controls. */
@@ -22,14 +26,45 @@ export function PersonCard({
   showMatch,
   showKarma,
   action,
+  delay = 0,
 }: {
   person: PersonCardDTO;
   showMatch?: boolean;
   showKarma?: boolean;
   action?: React.ReactNode;
+  /** Seconds to wait before the spring entrance (list stagger). */
+  delay?: number;
 }) {
   return (
-    <Card className="group hover:shadow-md hover:border-primary/40 transition-all">
+    <SplineReveal delay={delay} className="h-full">
+    <Card className="group relative hover:border-primary/40 transition-all duration-300">
+      {/* Peek window - hover the card and the hub preview covers it. */}
+      <CardPeek>
+        {person.topSkills.length > 0 && (
+          <PeekRow icon={<Zap className="text-primary" />}>
+            {person.topSkills
+              .slice(0, 3)
+              .map((s) => `${s.name} L${s.level ?? "?"}`)
+              .join(" · ")}
+          </PeekRow>
+        )}
+        {person.roles.length > 0 && (
+          <PeekRow icon={<Compass />}>
+            {person.roles
+              .slice(0, 2)
+              .map((r) => r.name)
+              .join(" · ")}
+          </PeekRow>
+        )}
+        <PeekRow icon={<Clock />}>
+          {person.hoursPerWeek ? `${person.hoursPerWeek}h/week · ` : ""}
+          {(person.commitment ?? "commitment unset").replace(/_/g, " ")}
+        </PeekRow>
+        {person.collegeName && (
+          <PeekRow icon={<MapPin />}>{person.collegeName}</PeekRow>
+        )}
+      </CardPeek>
+
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
           <Link href={`/profile/${person.id}`} className="shrink-0">
@@ -96,6 +131,29 @@ export function PersonCard({
               )}
             </div>
 
+            {person.hackathonProfile && (
+              <div className="mt-3 rounded-lg border border-primary/35 bg-primary/[0.08] px-3 py-2">
+                <p className="text-xs flex items-center gap-1.5 font-medium text-primary">
+                  <Compass className="h-3.5 w-3.5 shrink-0" />
+                  For this event:
+                  {person.hackathonProfile.preferredRoleSlug
+                    ? ` building as ${ROLE_TAXONOMY.find((r) => r.slug === person.hackathonProfile?.preferredRoleSlug)?.name ?? person.hackathonProfile.preferredRoleSlug}`
+                    : " open to any role"}
+                </p>
+                {person.hackathonProfile.motivation && (
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    {person.hackathonProfile.motivation}
+                  </p>
+                )}
+                {person.hackathonProfile.ideaBlurb && (
+                  <p className="text-xs text-primary/90 mt-1 flex items-start gap-1.5">
+                    <Lightbulb className="h-3.5 w-3.5 shrink-0 mt-px" />
+                    <span className="line-clamp-2">{person.hackathonProfile.ideaBlurb}</span>
+                  </p>
+                )}
+              </div>
+            )}
+
             {person.matchReasons && person.matchReasons.length > 0 && (
               <ul className="mt-3 space-y-0.5">
                 {person.matchReasons.slice(0, 2).map((r) => (
@@ -111,14 +169,18 @@ export function PersonCard({
             {showMatch && person.matchScore !== undefined && (
               <MatchRing score={person.matchScore} />
             )}
-            {action ?? (
-              <Button asChild size="sm" variant="outline" className="text-xs">
-                <Link href={`/profile/${person.id}`}>View profile</Link>
-              </Button>
-            )}
+            <div className="flex items-center gap-1">
+              <BookmarkButton targetType="person" targetId={person.id} />
+              {action ?? (
+                <Button asChild size="sm" variant="outline" className="text-xs">
+                  <Link href={`/profile/${person.id}`}>View profile</Link>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>
     </Card>
+    </SplineReveal>
   );
 }

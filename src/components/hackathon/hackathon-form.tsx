@@ -66,7 +66,7 @@ function isoToLocal(iso?: string | null): string {
 }
 
 /**
- * Create/edit hackathon form — admin only (the pages that render this gate
+ * Create/edit hackathon form - admin only (the pages that render this gate
  * access server-side; the API re-checks the role).
  */
 export function HackathonForm({ initial }: { initial?: Partial<HackathonFormValues> }) {
@@ -203,7 +203,7 @@ export function HackathonForm({ initial }: { initial?: Partial<HackathonFormValu
               maxLength={100}
             />
             <p className="text-xs text-muted-foreground">
-              Free text — prizes aren&apos;t always money. Internships, goodies, credits all welcome.
+              Free text. Prizes aren&apos;t always money. Internships, goodies, credits all welcome.
             </p>
           </div>
           <div className="space-y-1.5 sm:col-span-2">

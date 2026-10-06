@@ -21,7 +21,7 @@ import { SkillBadge } from "@/components/shared/badges";
 import { VerifiedBadge } from "@/components/shared/verified-badge";
 import { api, type PersonRecommendation, type PersonCardDTO } from "@/hooks/use-api";
 
-/** Direct invite dialog for team leaders — shows gap-ranked candidates first. */
+/** Direct invite dialog for team leaders - shows gap-ranked candidates first. */
 export function InviteDialog({
   open,
   onOpenChange,
@@ -84,7 +84,7 @@ export function InviteDialog({
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Optional note — e.g. 'We need someone who can own the backend for the last 24h. You in?'"
+            placeholder="Optional note - e.g. 'We need someone who can own the backend for the last 24h. You in?'"
             rows={2}
             maxLength={300}
           />
@@ -99,7 +99,7 @@ export function InviteDialog({
           {recs.data && recs.data.length > 0 && (
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                Smart picks — fill your gaps
+                Smart picks - fill your gaps
               </h4>
               <div className="space-y-2">
                 {recs.data.map(({ person, rec }) => (

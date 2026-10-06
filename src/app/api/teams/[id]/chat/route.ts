@@ -4,10 +4,11 @@ import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { messageSchema } from "@/lib/validations";
 import { triggerTeamMessage } from "@/lib/pusher-server";
-import { ok, fail, requireUser } from "@/lib/api";
+import { ok, fail, isUuid, requireUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { createHmac } from "crypto";
 
-/** GET /api/teams/:id/chat — message history (members only). */
+/** GET /api/teams/:id/chat - message history (members only). */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -15,6 +16,7 @@ export async function GET(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
 
   if (!(await isTeamMember(id, user.id))) return fail("Only team members can read chat", 403);
 
@@ -45,14 +47,18 @@ export async function GET(
   );
 }
 
-/** POST /api/teams/:id/chat — send a message (members only, triggers Pusher). */
+/** POST /api/teams/:id/chat - send a message (members only, triggers Pusher). */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const rl = rateLimit(req, { key: "chat-send", limit: 30, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
 
   if (!(await isTeamMember(id, user.id))) return fail("Only team members can chat", 403);
 
@@ -79,7 +85,7 @@ export async function POST(
 }
 
 /**
- * PUT /api/teams/:id/chat — Pusher private-channel auth endpoint.
+ * PUT /api/teams/:id/chat - Pusher private-channel auth endpoint.
  * pusher-js POSTs form-encoded socket_id + channel_name; members only.
  */
 export async function PUT(
@@ -89,6 +95,7 @@ export async function PUT(
   const user = await requireUser();
   if (!user) return fail("Unauthorized", 401);
   const { id } = await params;
+  if (!isUuid(id)) return fail("Team not found", 404);
 
   if (!(await isTeamMember(id, user.id))) return fail("Not a team member", 403);
 

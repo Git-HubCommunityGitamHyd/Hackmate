@@ -8,7 +8,7 @@ import { AdminDenied } from "@/components/hackathon/admin-denied";
 export const metadata = { title: "Post a hackathon" };
 
 /**
- * Post a hackathon — ADMIN ONLY (email allow-listed in ADMIN_EMAILS).
+ * Post a hackathon - ADMIN ONLY (email allow-listed in ADMIN_EMAILS).
  * Server-side gate; the POST /api/hackathons route re-checks the role.
  */
 export default async function NewHackathonPage() {
@@ -25,7 +25,7 @@ export default async function NewHackathonPage() {
           <Trophy className="h-6 w-6 text-primary" /> Post a hackathon
         </h1>
         <p className="text-muted-foreground mt-1">
-          Club fest, college event or national hackathon — list it so teams can form here.
+          Club fest, college event or national hackathon - list it so teams can form here.
           You&apos;re signed in as an organizer.
         </p>
       </div>

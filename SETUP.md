@@ -45,27 +45,97 @@ Prerequisites:
 - A local Postgres 14+ instance, or a free CockroachDB Serverless cluster
   (the app code is identical for both)
 
-```bash
-Step 1: Initialize the Local PostgreSQL ServerEnsure your local PostgreSQL 18 server is running in the background. If it ever stops, you can start it by running PowerShell as Administrator and executing:powershellStart-Process powershell -Verb runAs -ArgumentList "Start-Service -Name postgresql-x64-18"
-Use code with caution.
+### Windows shortcut (one command)
 
-Step 2: Set Up Your Configuration FileEnsure you have a file named .env.example in the root of your project folder containing the exact blocks below:
-envDATABASE_URL=postgres://postgres:your_password@127.0.0.1:5432/hackmate
+Windows PowerShell 5.1 does not support `&&`, and `#` is not a comment in
+cmd.exe - so do not paste multi-command bash blocks. Instead, open PowerShell
+inside the extracted `hackmate` folder and run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\first-run.ps1
+```
+
+With a local Postgres password:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\first-run.ps1 -PgPassword "mypassword"
+```
+
+`first-run.ps1` auto-detects bun (or falls back to npm), installs
+dependencies, creates `.env.local`, creates the database, migrates, seeds,
+and starts the dev server. It stops at the first failure with a specific fix
+suggestion (e.g. starting the Postgres service).
+
+### Step 1: Start your local PostgreSQL server
+
+Ensure PostgreSQL 14+ is running in the background. If it ever stops on
+Windows, start it from an Administrator PowerShell:
+
+```powershell
+Start-Process powershell -Verb runAs -ArgumentList "Start-Service -Name postgresql-x64-18"
+```
+
+(Adjust the service name if you installed a different major version.)
+
+### Step 2: Create your configuration file (one command)
+
+```bash
+bun run setup                # no-password local Postgres (trust auth)
+bun run setup -- mypassword  # if your postgres user has a password
+bun run setup -- cockroach   # or: get a commented CockroachDB template instead
+```
+
+This generates `.env.local` with a random `AUTH_SECRET`, your local
+`DATABASE_URL`, dev demo-login flags and sensible defaults. It never
+overwrites an existing file. Prefer manual? Copy `.env.example` to
+`.env.local` and fill in at least `DATABASE_URL`, `AUTH_SECRET` and
+`ADMIN_EMAILS`:
+
+```
+DATABASE_URL=postgres://postgres:your_password@127.0.0.1:5432/hackmate
 AUTH_SECRET=any-long-random-string
 AUTH_URL=http://localhost:3000
 ADMIN_EMAILS=your_college_email_id
 ALLOW_DEMO_LOGIN=true
 NEXT_PUBLIC_ALLOW_DEMO_LOGIN=true
-Use code with caution.
-
-Step 3: Install DependenciesOpen your standard PowerShell window inside the project directory and run Bun to verify all structural packages are synchronized: bun install
-
-Step 4: Run the Database MigrationsPush the database schema structures directly into your local PostgreSQL hackmate instance. Since tsx handles module resolution strictly, use Bun to trigger the execution script natively:powershellbun scripts/migrate.ts
-
-Step 5: Boot Up the Development ServerFire up the local development interface using the primary runtime script:powershellbun run dev
-
-Step 6: Log In as AdministratorOpen your web browser and navigate to http://localhost:3000.Locate the landing screen and click the "Quick dev sign-in" action element.You will be automatically signed in as preddy5@student.gitam.edu with absolute administrative layout control (posting hackathons, forming teams, managing registrations, etc.).
 ```
+
+Create the file with a text editor (VS Code/Notepad), never PowerShell
+`echo ... >>` redirects: they rewrite the file as UTF-16 and every variable
+silently disappears.
+
+### Step 3: Install dependencies
+
+In your terminal, inside the project directory:
+
+```bash
+bun install    # or: npm install
+```
+
+### Step 4: Create the database, migrate, seed
+
+```bash
+bun run db:create        # CREATE DATABASE hackmate (no-op on CockroachDB)
+bun run db:migrate       # apply all schema migrations
+bun run db:seed          # taxonomy: 61 skills, 10 roles, 5 badges
+bun run db:seed:demo     # optional: 8 demo people, 3 hackathons, 5 teams
+```
+
+### Step 5: Boot the development server
+
+```bash
+bun run dev
+```
+
+Open http://localhost:3000. Signed-out visitors always land on the sign-in
+page (the hero page).
+
+### Step 6: Sign in
+
+Click the "Quick dev sign-in" button (shown because `ALLOW_DEMO_LOGIN=true`).
+You are signed in as your first `ADMIN_EMAILS` account (or
+`dev@hackmate.local`) with admin rights, so you can post hackathons and build
+teams before GitHub OAuth is configured.
 
 Optional integrations, the app degrades gracefully without them:
 

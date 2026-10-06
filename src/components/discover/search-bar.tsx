@@ -54,7 +54,7 @@ export function SearchBar({
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 150)}
           placeholder='Try: "Need someone who knows Next.js and has ML experience for a 4-person team"  (press / to focus)'
-          className="h-12 pl-10 pr-24 text-sm rounded-xl bg-card shadow-sm"
+          className="h-12 pl-10 pr-24 text-sm rounded-xl bg-card/60"
           aria-label="Search hackathons, teams and people"
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">

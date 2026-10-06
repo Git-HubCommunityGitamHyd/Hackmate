@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,12 +22,131 @@ import { PersonCard } from "@/components/discover/person-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { useCurrentUser, useHackathons, useTeams, usePeople, useSearch } from "@/hooks/use-api";
 import { KineticTextReveal } from "@/components/ui/kinetic-text-reveal";
+import { SortMenu, type SortOption } from "@/components/discover/sort-menu";
+import type { HackathonCardDTO, TeamCardDTO, PersonCardDTO } from "@/lib/queries/types";
+
+const DISCOVER_TABS = ["hackathons", "teams", "people"] as const;
+type DiscoverTab = (typeof DISCOVER_TABS)[number];
+
+/* ------------------------------------------------------------------ */
+/* Sorting - one debossed sort control per tab, the same pill on the */
+/* Emergency page. Each tab owns its keys + comparators.              */
+/* ------------------------------------------------------------------ */
+
+type HackathonSort = "starting-soon" | "prize" | "activity";
+type TeamSort = "completeness" | "match" | "spots" | "newest";
+type PeopleSort = "match" | "active" | "emergency" | "name";
+
+const HACKATHON_SORTS: ReadonlyArray<SortOption<HackathonSort>> = [
+  { value: "starting-soon", label: "Starting soon" },
+  { value: "prize", label: "Biggest prize" },
+  { value: "activity", label: "Most teams forming" },
+];
+const TEAM_SORTS: ReadonlyArray<SortOption<TeamSort>> = [
+  { value: "completeness", label: "Most complete" },
+  { value: "match", label: "Best match for me" },
+  { value: "spots", label: "Most open spots" },
+  { value: "newest", label: "Newest" },
+];
+const PEOPLE_SORTS: ReadonlyArray<SortOption<PeopleSort>> = [
+  { value: "match", label: "Best match for me" },
+  { value: "active", label: "Most available" },
+  { value: "emergency", label: "Emergency first" },
+  { value: "name", label: "A–Z" },
+];
+
+/* "$25,000" / "₹1L" / "25000" → a comparable number. */
+function parsePrize(pool: string | null): number {
+  const n = Number((pool ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
+}
+
+function sortHackathons(list: HackathonCardDTO[], sort: HackathonSort): HackathonCardDTO[] {
+  const out = [...list];
+  if (sort === "prize") {
+    out.sort((a, b) => parsePrize(b.prizePool) - parsePrize(a.prizePool));
+  } else if (sort === "activity") {
+    out.sort(
+      (a, b) =>
+        b.recruitingTeamCount + b.peopleLookingCount - (a.recruitingTeamCount + a.peopleLookingCount),
+    );
+  } else {
+    /* Starting soon: live first (ending soonest), then upcoming
+       (starting soonest), then completed (most recent first). */
+    const rank = (s: HackathonCardDTO["status"]) => (s === "ongoing" ? 0 : s === "upcoming" ? 1 : 2);
+    out.sort(
+      (a, b) =>
+        rank(a.status) - rank(b.status) ||
+        new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+    );
+  }
+  return out;
+}
+
+function sortTeams(list: TeamCardDTO[], sort: TeamSort): TeamCardDTO[] {
+  const out = [...list];
+  if (sort === "match") {
+    out.sort((a, b) => (b.matchScore ?? -1) - (a.matchScore ?? -1));
+  } else if (sort === "spots") {
+    out.sort((a, b) => b.targetSize - b.memberCount - (a.targetSize - a.memberCount));
+  } else if (sort === "newest") {
+    out.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  } else {
+    out.sort((a, b) => b.completeness - a.completeness);
+  }
+  return out;
+}
+
+function sortPeople(list: PersonCardDTO[], sort: PeopleSort): PersonCardDTO[] {
+  const out = [...list];
+  if (sort === "active") {
+    out.sort((a, b) => b.hoursPerWeek - a.hoursPerWeek);
+  } else if (sort === "emergency") {
+    out.sort((a, b) => Number(b.emergencyAvailable) - Number(a.emergencyAvailable) || b.hoursPerWeek - a.hoursPerWeek);
+  } else if (sort === "name") {
+    out.sort((a, b) => a.name.localeCompare(b.name));
+  } else {
+    out.sort((a, b) => (b.matchScore ?? -1) - (a.matchScore ?? -1));
+  }
+  return out;
+}
+
+function isDiscoverTab(value: string | null): value is DiscoverTab {
+  return (DISCOVER_TABS as readonly string[]).includes(value ?? "");
+}
 
 export default function DiscoverPage() {
+  return (
+    <Suspense>
+      <DiscoverContent />
+    </Suspense>
+  );
+}
+
+function DiscoverContent() {
   const { user, isAuthenticated } = useCurrentUser();
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
-  const [tab, setTab] = useState("hackathons");
+  const [tab, setTab] = useState<DiscoverTab>("hackathons");
+
+  /* Per-tab sort - each tab remembers its own key. "Best match" leads
+     for signed-in users (the matching engine fills matchScore); guests
+     fall back to availability without changing the key. */
+  const [hackathonSort, setHackathonSort] = useState<HackathonSort>("starting-soon");
+  const [teamSort, setTeamSort] = useState<TeamSort>("completeness");
+  const [peopleSort, setPeopleSort] = useState<PeopleSort>("match");
+
+  /* Deep-linkable tabs: /?tab=teams (set by the /teams redirect) opens
+     Discover with that tab pre-selected. Synced with the
+     adjust-state-during-render pattern (React docs) - no effect, no
+     cascading render, and the page never remounts. */
+  const tabParam = searchParams.get("tab");
+  const [lastTabParam, setLastTabParam] = useState(tabParam);
+  if (lastTabParam !== tabParam) {
+    setLastTabParam(tabParam);
+    if (isDiscoverTab(tabParam)) setTab(tabParam);
+  }
 
   const isSearching = submittedQuery.trim().length >= 2;
   const search = useSearch(isSearching ? submittedQuery : "");
@@ -47,11 +167,16 @@ export default function DiscoverPage() {
   const hackathonList = isSearching ? (search.data?.hackathons ?? []) : (hackathons.data ?? []);
   const teamList = isSearching ? (search.data?.teams ?? []) : (teams.data ?? []);
   const peopleList = isSearching ? (search.data?.people ?? []) : (people.data ?? []);
+
+  /* Sorted views feed the grids; raw lists keep their query order. */
+  const sortedHackathons = useMemo(() => sortHackathons(hackathonList, hackathonSort), [hackathonList, hackathonSort]);
+  const sortedTeams = useMemo(() => sortTeams(teamList, teamSort), [teamList, teamSort]);
+  const sortedPeople = useMemo(() => sortPeople(peopleList, peopleSort), [peopleList, peopleSort]);
   const loading = isSearching ? search.isLoading : hackathons.isLoading || teams.isLoading || people.isLoading;
 
   return (
     <div className="pt-8 pb-4">
-      {/* Compact header: actions only — project details live on the login screen */}
+      {/* Compact header: actions only - project details live on the login screen */}
       <section className="mb-6">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <h1 className="text-2xl font-extrabold tracking-tight">
@@ -78,7 +203,15 @@ export default function DiscoverPage() {
                     <Plus className="h-4 w-4 mr-1.5" /> Create a team
                   </Link>
                 </Button>
-                <Button asChild size="sm" variant="outline" className="font-medium text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950">
+                {/* Emergency stays reachable but quiet: outline + icon,
+                    red only on hover. It must not out-shout the primary
+                    actions (Search / Create) on a calm dashboard. */}
+                <Button
+                  asChild
+                  size="sm"
+                  variant="ghost"
+                  className="font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                >
                   <Link href="/emergency">
                     <ShieldAlert className="h-4 w-4 mr-1.5" /> Emergency
                   </Link>
@@ -101,22 +234,34 @@ export default function DiscoverPage() {
       </section>
 
       {/* Tabs */}
-      <Tabs value={effectiveTab} onValueChange={setTab}>
+      <Tabs value={effectiveTab} onValueChange={(v) => setTab(v as DiscoverTab)}>
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <TabsList className="h-11 bg-muted">
-            <TabsTrigger value="hackathons" className="gap-1.5 px-4 data-[state=active]:bg-background">
+          {/* max-w-full + overflow-x-auto: at phone widths the three
+              triggers don't all fit - the list swipes instead of
+              spilling out of the viewport (no horizontal overflow). */}
+          <TabsList className="h-11 bg-muted max-w-full overflow-x-auto scrollbar-slim">
+            <TabsTrigger value="hackathons" className="gap-1.5 px-3 sm:px-4 data-[state=active]:bg-background shrink-0">
               <Trophy className="h-4 w-4" /> Hackathons
               <span className="text-xs text-muted-foreground ml-1">{hackathonList.length}</span>
             </TabsTrigger>
-            <TabsTrigger value="teams" className="gap-1.5 px-4 data-[state=active]:bg-background">
+            <TabsTrigger value="teams" className="gap-1.5 px-3 sm:px-4 data-[state=active]:bg-background shrink-0">
               <Users2 className="h-4 w-4" /> Teams
               <span className="text-xs text-muted-foreground ml-1">{teamList.length}</span>
             </TabsTrigger>
-            <TabsTrigger value="people" className="gap-1.5 px-4 data-[state=active]:bg-background">
+            <TabsTrigger value="people" className="gap-1.5 px-3 sm:px-4 data-[state=active]:bg-background shrink-0">
               <Compass className="h-4 w-4" /> People
               <span className="text-xs text-muted-foreground ml-1">{peopleList.length}</span>
             </TabsTrigger>
           </TabsList>
+          {effectiveTab === "hackathons" && (
+            <SortMenu value={hackathonSort} onChange={setHackathonSort} options={HACKATHON_SORTS} ariaLabel="Sort hackathons" />
+          )}
+          {effectiveTab === "teams" && (
+            <SortMenu value={teamSort} onChange={setTeamSort} options={TEAM_SORTS} ariaLabel="Sort teams" />
+          )}
+          {effectiveTab === "people" && (
+            <SortMenu value={peopleSort} onChange={setPeopleSort} options={PEOPLE_SORTS} ariaLabel="Sort people" />
+          )}
           {isSearching && (
             <Button
               variant="ghost"
@@ -152,8 +297,8 @@ export default function DiscoverPage() {
             />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {hackathonList.map((h) => (
-                <HackathonCard key={h.id} hackathon={h} />
+              {sortedHackathons.map((h) => (
+                <HackathonCard key={h.id} hackathon={h} delay={0.04 * Math.min(8, hackathonList.indexOf(h))} />
               ))}
             </div>
           )}
@@ -179,8 +324,8 @@ export default function DiscoverPage() {
             />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {teamList.map((t) => (
-                <TeamCard key={t.id} team={t} showMatch={isAuthenticated && !isSearching} />
+              {sortedTeams.map((t) => (
+                <TeamCard key={t.id} team={t} showMatch={isAuthenticated && !isSearching} delay={0.04 * Math.min(8, teamList.indexOf(t))} />
               ))}
             </div>
           )}
@@ -197,8 +342,8 @@ export default function DiscoverPage() {
             />
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {peopleList.map((p) => (
-                <PersonCard key={p.id} person={p} showMatch={isAuthenticated && !isSearching} />
+              {sortedPeople.map((p) => (
+                <PersonCard key={p.id} person={p} showMatch={isAuthenticated && !isSearching} delay={0.04 * Math.min(8, peopleList.indexOf(p))} />
               ))}
             </div>
           )}

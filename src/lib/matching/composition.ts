@@ -1,5 +1,5 @@
 /**
- * Team Composition Intelligence — gap analysis over the role taxonomy.
+ * Team Composition Intelligence - gap analysis over the role taxonomy.
  *
  * Instead of "Rahul – 92% match", we tell teams:
  *   "Your team has strong ML and frontend coverage. You have no member with
@@ -84,7 +84,7 @@ export function analyzeComposition(
       const overlaps = role.skillCategories.some((c) => m.skillCategories.has(c));
       if (overlaps && !m.roleSlugs.includes(role.slug)) {
         // A member with backend skills but no explicit backend role still
-        // counts as partial coverage — skills are real signal.
+        // counts as partial coverage - skills are real signal.
         counts.set(role.slug, (counts.get(role.slug) ?? 0) + 0.5);
         roleMemberMap.set(role.slug, [
           ...(roleMemberMap.get(role.slug) ?? []),
@@ -135,7 +135,7 @@ export function analyzeComposition(
   const partial = coverages.filter((c) => c.coverage === "partial");
   if (missing.length === 0 && partial.length > 0) {
     parts.push(
-      `${partial.map((p) => p.roleName).join(" and ")} is only partially covered by skills — consider making it explicit`,
+      `${partial.map((p) => p.roleName).join(" and ")} is only partially covered by skills - consider making it explicit`,
     );
   }
   if (parts.length === 0) parts.push("Your team covers every role it needs. Go build.");

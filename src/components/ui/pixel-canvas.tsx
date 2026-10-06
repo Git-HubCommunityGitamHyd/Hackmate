@@ -14,6 +14,13 @@ interface PixelCanvasProps extends React.HTMLAttributes<HTMLDivElement> {
     noFocus?: boolean;
     /** Variant style */
     variant?: "default" | "trail" | "glow";
+    /** Wake radius around the pointer, in pixels. Defaults per variant:
+     *  "glow" 120, everything else 80. Pass a small radius (e.g. 16,
+     *  just past one 11px cell) to wake only a handful of pixels. */
+    radius?: number;
+    /** Draw alpha ceiling for a fully lit pixel (0 to 1, default 0.9).
+     *  Lower it for a whisper-quiet field. */
+    maxAlpha?: number;
 }
 
 interface Pixel {
@@ -23,6 +30,9 @@ interface Pixel {
     intensity: number;
     targetIntensity: number;
     colorPhase: number;
+    /** Awake flag: the pixel is lit or still decaying, so it is in the
+     *  awake list and gets simulated + drawn every frame. */
+    awake: boolean;
 }
 
 // Helper to interpolate between two hex colors
@@ -56,6 +66,8 @@ export function PixelCanvas({
     colors = ["#e879f9", "#a78bfa", "#38bdf8", "#22d3ee"],
     noFocus = false,
     variant = "default",
+    radius,
+    maxAlpha = 0.9,
     ...props
 }: PixelCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -89,21 +101,56 @@ export function PixelCanvas({
         const container = containerRef.current;
         if (!canvas || !container) return;
 
+        /* Reduced motion: the field stays asleep - a still, matte ink
+           canvas with no wake and zero animation cost. */
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
         const ctx = canvas.getContext("2d", { alpha: true });
         if (!ctx) return;
 
         let cols = 0;
         let rows = 0;
         const pixelSize = Math.max(gap, 4);
+        const wakeRadius = radius ?? (variant === "glow" ? 120 : 80);
+        /* Wake box: the band of cells around the pointer that are woken
+           each frame (box test, no square roots). One cell of padding
+           guarantees every cell whose center sits inside the radius is
+           included. */
+        const boxPad = wakeRadius + pixelSize;
+
+        /* AWAKE LIST - the performance core. Only cells that are lit or
+           still decaying are simulated and drawn; the full grid is never
+           scanned. Each frame:
+             1. wake the cells near the pointer (cheap box test),
+             2. step + draw ONLY the awake ones (the decaying trail keeps
+                them awake until they fade out).
+           A moving pointer costs a few hundred box tests and a few
+           hundred pixel steps; a resting page with the pointer gone
+           costs nothing at all (the rAF loop STOPS, see below). */
+        const awake: Pixel[] = [];
+
+        let viewW = 0;
+        let viewH = 0;
+        let rectLeft = 0;
+        let rectTop = 0;
+        let drewLast = false;
+        let running = true;
 
         const initPixels = () => {
             const rect = container.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
 
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
+            viewW = rect.width;
+            viewH = rect.height;
+            rectLeft = rect.left;
+            rectTop = rect.top;
+
+            canvas.width = Math.max(1, Math.round(rect.width * dpr));
+            canvas.height = Math.max(1, Math.round(rect.height * dpr));
             canvas.style.width = `${rect.width}px`;
             canvas.style.height = `${rect.height}px`;
+            /* Setting canvas.width resets the context transform, so the
+               scale below never compounds across re-inits. */
             ctx.scale(dpr, dpr);
 
             cols = Math.ceil(rect.width / pixelSize);
@@ -113,118 +160,165 @@ export function PixelCanvas({
             for (let i = 0; i < cols; i++) {
                 const row: Pixel[] = [];
                 for (let j = 0; j < rows; j++) {
-                    // Preserve existing intensity if pixel exists
-                    const existing = pixelsRef.current[i]?.[j];
                     row.push({
                         x: i * pixelSize,
                         y: j * pixelSize,
                         size: pixelSize - 1,
-                        intensity: existing?.intensity ?? 0,
+                        intensity: 0,
                         targetIntensity: 0,
                         colorPhase: Math.random(), // Random starting phase for color variety
+                        awake: false,
                     });
                 }
                 newPixels.push(row);
             }
             pixelsRef.current = newPixels;
+            /* Stale pixels from the previous grid (wrong positions after
+               a resize) are dropped wholesale. */
+            awake.length = 0;
+            if (drewLast) {
+                ctx.clearRect(0, 0, viewW, viewH);
+                drewLast = false;
+            }
         };
 
         const draw = (timestamp: number) => {
-            const deltaTime = timestamp - lastTimeRef.current;
+            if (!running) return;
+            const deltaTime = Math.max(0, timestamp - lastTimeRef.current);
             lastTimeRef.current = timestamp;
 
-            const rect = container.getBoundingClientRect();
-            ctx.clearRect(0, 0, rect.width, rect.height);
-
             const { x: mouseX, y: mouseY } = mouseRef.current;
-            const pixels = pixelsRef.current;
+            const offField = mouseX < -500 && mouseY < -500;
 
-            // Influence radius based on variant
-            const radius = variant === "glow" ? 120 : 80;
-            const glowPasses = variant === "glow" ? 2 : 1;
-
-            // Update pixel states
-            for (let i = 0; i < cols; i++) {
-                const col = pixels[i];
-                if (!col) continue;
-
-                for (let j = 0; j < rows; j++) {
-                    const pixel = col[j];
-                    if (!pixel) continue;
-
-                    // Calculate distance from mouse
-                    const centerX = pixel.x + pixel.size / 2;
-                    const centerY = pixel.y + pixel.size / 2;
-                    const dx = mouseX - centerX;
-                    const dy = mouseY - centerY;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-
-                    // Set target intensity based on distance
-                    if (distance < radius) {
-                        const falloff = 1 - (distance / radius);
-                        // Smooth falloff curve
-                        pixel.targetIntensity = Math.pow(falloff, 1.5);
-                    } else {
-                        pixel.targetIntensity = 0;
-                    }
-
-                    // Smooth interpolation towards target
-                    const lerpSpeed = pixel.targetIntensity > pixel.intensity
-                        ? 0.3 // Quick light up
-                        : speed; // Slow decay for trailing
-
-                    pixel.intensity += (pixel.targetIntensity - pixel.intensity) * lerpSpeed;
-
-                    // Shift color phase slowly for shimmer effect
-                    pixel.colorPhase = (pixel.colorPhase + 0.001 * (deltaTime / 16)) % 1;
-
-                    // Only draw if visible
-                    if (pixel.intensity > 0.01) {
-                        const color = getColorFromIntensity(pixel.intensity, pixel.colorPhase);
-
-                        // Glow effect: draw larger, blurred version first
-                        if (variant === "glow" && pixel.intensity > 0.2) {
-                            for (let g = glowPasses; g > 0; g--) {
-                                const glowSize = pixel.size + g * 4;
-                                const glowOffset = (glowSize - pixel.size) / 2;
-                                ctx.globalAlpha = pixel.intensity * 0.15 / g;
-                                ctx.fillStyle = color;
-                                ctx.fillRect(
-                                    pixel.x - glowOffset,
-                                    pixel.y - glowOffset,
-                                    glowSize,
-                                    glowSize
-                                );
-                            }
-                        }
-
-                        // Main pixel
-                        ctx.globalAlpha = pixel.intensity * 0.9;
-                        ctx.fillStyle = color;
-
-                        if (variant === "trail") {
-                            // Rounded pixels for trail variant
-                            const cornerRadius = pixel.size * 0.3;
-                            ctx.beginPath();
-                            ctx.roundRect(pixel.x, pixel.y, pixel.size, pixel.size, cornerRadius);
-                            ctx.fill();
-                        } else {
-                            ctx.fillRect(pixel.x, pixel.y, pixel.size, pixel.size);
+            /* 1 - WAKE the cells near the pointer (mouseRef is already
+                  in canvas-local coordinates). */
+            if (!offField) {
+                const pixels = pixelsRef.current;
+                const iMin = Math.max(0, Math.floor((mouseX - boxPad) / pixelSize));
+                const iMax = Math.min(cols - 1, Math.ceil((mouseX + boxPad) / pixelSize));
+                const jMin = Math.max(0, Math.floor((mouseY - boxPad) / pixelSize));
+                const jMax = Math.min(rows - 1, Math.ceil((mouseY + boxPad) / pixelSize));
+                for (let i = iMin; i <= iMax; i++) {
+                    const col = pixels[i];
+                    if (!col) continue;
+                    for (let j = jMin; j <= jMax; j++) {
+                        const pixel = col[j];
+                        if (pixel && !pixel.awake) {
+                            pixel.awake = true;
+                            awake.push(pixel);
                         }
                     }
                 }
             }
 
+            /* 2 - Clear last frame's ink (only when there was any). */
+            if (drewLast) {
+                ctx.clearRect(0, 0, viewW, viewH);
+            }
+
+            /* 3 - Step + draw the awake pixels only. */
+            let drew = false;
+            const dtPhase = 0.001 * (deltaTime / 16);
+            for (let k = awake.length - 1; k >= 0; k--) {
+                const pixel = awake[k]!;
+
+                // Recompute target intensity from the CURRENT pointer distance
+                const centerX = pixel.x + pixel.size / 2;
+                const centerY = pixel.y + pixel.size / 2;
+                const dx = mouseX - centerX;
+                const dy = mouseY - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < wakeRadius) {
+                    // Smooth falloff curve
+                    pixel.targetIntensity = Math.pow(1 - distance / wakeRadius, 1.5);
+                } else {
+                    pixel.targetIntensity = 0;
+                }
+
+                // Smooth interpolation towards target
+                const lerpSpeed = pixel.targetIntensity > pixel.intensity
+                    ? 0.3 // Quick light up
+                    : speed; // Slow decay for trailing
+
+                pixel.intensity += (pixel.targetIntensity - pixel.intensity) * lerpSpeed;
+
+                // Retire faded pixels: back to sleep, out of the list.
+                if (pixel.intensity <= 0.01 && pixel.targetIntensity === 0) {
+                    pixel.intensity = 0;
+                    pixel.awake = false;
+                    awake.splice(k, 1);
+                    continue;
+                }
+
+                // Shift color phase slowly for shimmer effect
+                pixel.colorPhase = (pixel.colorPhase + dtPhase) % 1;
+
+                // Draw if visible
+                if (pixel.intensity > 0.01) {
+                    drew = true;
+                    const color = getColorFromIntensity(pixel.intensity, pixel.colorPhase);
+
+                    // Glow effect: draw larger, blurred version first
+                    if (variant === "glow" && pixel.intensity > 0.2) {
+                        for (let g = 2; g > 0; g--) {
+                            const glowSize = pixel.size + g * 4;
+                            const glowOffset = (glowSize - pixel.size) / 2;
+                            ctx.globalAlpha = pixel.intensity * 0.15 / g;
+                            ctx.fillStyle = color;
+                            ctx.fillRect(
+                                pixel.x - glowOffset,
+                                pixel.y - glowOffset,
+                                glowSize,
+                                glowSize
+                            );
+                        }
+                    }
+
+                    // Main pixel
+                    ctx.globalAlpha = pixel.intensity * maxAlpha;
+                    ctx.fillStyle = color;
+
+                    if (variant === "trail") {
+                        // Rounded pixels for trail variant
+                        const cornerRadius = pixel.size * 0.3;
+                        ctx.beginPath();
+                        ctx.roundRect(pixel.x, pixel.y, pixel.size, pixel.size, cornerRadius);
+                        ctx.fill();
+                    } else {
+                        ctx.fillRect(pixel.x, pixel.y, pixel.size, pixel.size);
+                    }
+                }
+            }
+
             ctx.globalAlpha = 1;
+            drewLast = drew;
+
+            /* 4 - IDLE SLEEP: pointer off-field and every pixel faded -
+                  STOP the loop outright. The next pointermove restarts
+                  it, so a page nobody is moving a mouse over runs ZERO
+                  animation frames. */
+            if (awake.length === 0 && offField) {
+                animationRef.current = 0;
+                return;
+            }
+
             animationRef.current = requestAnimationFrame(draw);
         };
 
+        const startLoop = () => {
+            if (animationRef.current === 0 && running) {
+                lastTimeRef.current = performance.now();
+                animationRef.current = requestAnimationFrame(draw);
+            }
+        };
+
         const onMouseMove = (e: MouseEvent) => {
-            const rect = canvas.getBoundingClientRect();
             mouseRef.current = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top,
+                x: e.clientX - rectLeft,
+                y: e.clientY - rectTop,
             };
+            startLoop();
         };
 
         const onMouseLeave = () => {
@@ -235,11 +329,11 @@ export function PixelCanvas({
             if (e.touches.length > 0) {
                 const touch = e.touches[0];
                 if (touch) {
-                    const rect = canvas.getBoundingClientRect();
                     mouseRef.current = {
-                        x: touch.clientX - rect.left,
-                        y: touch.clientY - rect.top,
+                        x: touch.clientX - rectLeft,
+                        y: touch.clientY - rectTop,
                     };
+                    startLoop();
                 }
             }
         };
@@ -248,31 +342,33 @@ export function PixelCanvas({
             mouseRef.current = { x: -1000, y: -1000 };
         };
 
-        // Initialize
+        // Initialize (does NOT start the loop: nothing is awake yet)
         initPixels();
-        lastTimeRef.current = performance.now();
-        animationRef.current = requestAnimationFrame(draw);
 
         // Event listeners
         const resizeObserver = new ResizeObserver(() => initPixels());
         resizeObserver.observe(container);
 
         if (!noFocus) {
-        window.addEventListener("mousemove", onMouseMove);
-        window.addEventListener("mouseleave", onMouseLeave);
-        window.addEventListener("touchmove", onTouchMove, { passive: true });
-        window.addEventListener("touchend", onTouchEnd);
+            window.addEventListener("mousemove", onMouseMove);
+            window.addEventListener("mouseleave", onMouseLeave);
+            window.addEventListener("touchmove", onTouchMove, { passive: true });
+            window.addEventListener("touchend", onTouchEnd);
         }
 
         return () => {
-        cancelAnimationFrame(animationRef.current);
-        resizeObserver.disconnect();
-        window.removeEventListener("mousemove", onMouseMove);
-        window.removeEventListener("mouseleave", onMouseLeave);
-        window.removeEventListener("touchmove", onTouchMove);
-        window.removeEventListener("touchend", onTouchEnd);
+            running = false;
+            if (animationRef.current !== 0) {
+                cancelAnimationFrame(animationRef.current);
+                animationRef.current = 0;
+            }
+            resizeObserver.disconnect();
+            window.removeEventListener("mousemove", onMouseMove);
+            window.removeEventListener("mouseleave", onMouseLeave);
+            window.removeEventListener("touchmove", onTouchMove);
+            window.removeEventListener("touchend", onTouchEnd);
         };
-    }, [gap, speed, noFocus, variant, getColorFromIntensity]);
+    }, [gap, speed, noFocus, variant, radius, maxAlpha, getColorFromIntensity]);
 
     return (
         <div

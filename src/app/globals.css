@@ -37,85 +37,154 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: 0px;
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 2px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
 }
 
 /* ================================================================== */
-/* HARSH FLUTED GLASS                                                  */
-/* Dark-first glassmorphism with vertical fluted (ribbed) texture,     */
-/* hairline borders, near-zero corner radii and cool mint accents.     */
+/* FLUTED INK - the one artstyle of Hackmate                          */
+/*                                                                     */
+/* Every page shares one ground: a near-black ink canvas ruled with    */
+/* fine vertical FLUTES (the lined wall), one soft jade ink bloom      */
+/* top-right and a neutral pool bottom-left. Fixed-attachment, so      */
+/* the wall never moves under the content.                             */
+/*                                                                     */
+/* Every surface is DEBOSSED - pressed INTO the page, rendered the    */
+/* SOFT DIFFUSED way (per the reference image): a blurred dark inset  */
+/* shadow cast from the top-left (the recess wall blocking the        */
+/* light), a faint diffused light catch on the bottom-right interior  */
+/* (the floor catching ambient light), and a soft AO pool deepening   */
+/* the centre. No crisp lips, no hard edges - shallow presses into    */
+/* frosted material. Nothing floats, nothing glows, a debossed       */
+/* object never casts an outer shadow.                                */
+/*                                                                     */
+/* Frosted glass is TRANSLUCENT + GLOSSY: every pane is see-through    */
+/* with a 5px backdrop blur (the wall's flutes smear into soft        */
+/* streaks behind it) and a glossy specular sheen catching the top     */
+/* edge. The ONE texture in the app is the GrainGradient's own        */
+/* inbuilt film grain on the login page - never disable it.            */
+/*                                                                     */
+/* Motion is spring-language: damped-spring entrances (anime.js        */
+/* spring), pointer tilt with overshoot settle. NO 3D objects.         */
+/*                                                                     */
+/* TOKEN SYSTEM (one system, everywhere):                              */
+/*   radius  : --radius = 1rem - every corner, no exceptions            */
+/*             (rounded-full is reserved for circles: avatars, dots)    */
+/*   card pad: p-5 / CardHeader px-6          grid gaps: gap-4          */
+/*   page    : pt-8 pb-4 under the floating dock and tray               */
+/*   pills   : px-3.5 py-1.5 text-xs uppercase tracking-[0.14em]        */
 /* ================================================================== */
 
 :root {
-  --radius: 0.125rem; /* harsh: sharp corners everywhere */
-  --background: oklch(0.975 0.005 160);
-  --foreground: oklch(0.21 0.012 160);
-  --card: oklch(1 0 0 / 74%);
-  --card-foreground: oklch(0.21 0.012 160);
-  --popover: oklch(0.99 0.003 160 / 96%);
-  --popover-foreground: oklch(0.21 0.012 160);
-  --primary: oklch(0.52 0.11 158);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.93 0.012 160);
-  --secondary-foreground: oklch(0.3 0.015 160);
-  --muted: oklch(0.945 0.008 160 / 82%);
-  --muted-foreground: oklch(0.47 0.012 160);
-  --accent: oklch(0.93 0.03 160);
-  --accent-foreground: oklch(0.25 0.015 160);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.22 0.015 160 / 13%);
-  --input: oklch(0.22 0.015 160 / 16%);
-  --ring: oklch(0.52 0.11 158);
-  --chart-1: oklch(0.52 0.11 158);
-  --chart-2: oklch(0.646 0.222 41.116);
-  --chart-3: oklch(0.6 0.118 184.704);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.975 0.005 160);
-  --sidebar-foreground: oklch(0.21 0.012 160);
-  --sidebar-primary: oklch(0.52 0.11 158);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.93 0.03 160);
-  --sidebar-accent-foreground: oklch(0.25 0.015 160);
-  --sidebar-border: oklch(0.22 0.015 160 / 13%);
-  --sidebar-ring: oklch(0.52 0.11 158);
+  /* One radius to rule them all: cards, buttons, inputs, popovers,
+     the dock, the peek windows - all corners share this rounding. */
+  --radius: 1rem;
+
+  /* Ink wash palette - the app is dark-first and stays dark; both
+     theme blocks carry the same values so every page looks identical.
+     The canvas sits at 0.11 lightness: deep ink, never pure black -
+     the flutes and the jade bloom keep it alive. */
+  --background: oklch(0.11 0.004 90);
+  --foreground: oklch(0.94 0.004 90);
+  /* Frost panes are genuinely translucent: the fluted wall and the
+     ink pixel trail behind them bleed through the 5px blur. */
+  --card: oklch(0.17 0.004 90 / 46%);
+  --card-foreground: oklch(0.94 0.004 90);
+  --popover: oklch(0.13 0.003 90 / 88%);
+  --popover-foreground: oklch(0.94 0.004 90);
+  --primary: oklch(0.71 0.15 158); /* jade ink-stamp green */
+  --primary-foreground: oklch(0.13 0.03 158);
+  --secondary: oklch(0.24 0.004 90 / 88%);
+  --secondary-foreground: oklch(0.94 0.004 90);
+  --muted: oklch(0.22 0.003 90 / 65%);
+  --muted-foreground: oklch(0.72 0.005 90);
+  --accent: oklch(0.28 0.025 158 / 60%);
+  --accent-foreground: oklch(0.96 0.003 90);
+  --destructive: oklch(0.62 0.19 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.71 0.15 158);
+  --chart-1: oklch(0.71 0.15 158);
+  --chart-2: oklch(0.72 0.005 90);
+  --chart-3: oklch(0.5 0.005 90);
+  --chart-4: oklch(0.36 0.005 90);
+  --chart-5: oklch(0.85 0.09 158);
+  --sidebar: oklch(0.115 0.003 90);
+  --sidebar-foreground: oklch(0.94 0.004 90);
+  --sidebar-primary: oklch(0.71 0.15 158);
+  --sidebar-primary-foreground: oklch(0.13 0.03 158);
+  --sidebar-accent: oklch(0.24 0.004 90);
+  --sidebar-accent-foreground: oklch(0.94 0.004 90);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.71 0.15 158);
+
+  /* ---- Deboss levels - DEEP SOFT DIFFUSED (per the reference image,
+     pressed MUCH deeper than before at the user's request) ----
+     The look of a deep press into frosted material: a LARGE BLURRED
+     dark inset shadow cast from the top-left (the tall wall of the
+     recess blocking the light), a faint diffused light catch on the
+     bottom-right interior (the floor of the well catching ambient
+     light, INSET, never outset), and a wide soft AO pool darkening
+     the whole floor. No crisp 1px lips, no hard edges, and NO outer
+     shadow of any kind: a debossed object never casts one. */
+  --deboss-chip:
+    inset 2px 3px 7px -2px oklch(0 0 0 / 0.62),
+    inset -1px -2px 4px -1px oklch(1 0 0 / 0.12);
+  --deboss-1:
+    inset 3px 5px 12px -2px oklch(0 0 0 / 0.64),
+    inset -2px -2px 6px -2px oklch(1 0 0 / 0.12),
+    inset 0 0 16px -3px oklch(0 0 0 / 0.28);
+  --deboss-2:
+    inset 5px 9px 22px -3px oklch(0 0 0 / 0.66),
+    inset -2px -3px 8px -2px oklch(1 0 0 / 0.12),
+    inset 0 0 40px -8px oklch(0 0 0 / 0.36);
+  /* Pressed-deeper hover state for the big panes. */
+  --deboss-2-pressed:
+    inset 7px 12px 30px -4px oklch(0 0 0 / 0.72),
+    inset -3px -3px 10px -2px oklch(1 0 0 / 0.1),
+    inset 0 0 55px -10px oklch(0 0 0 / 0.44);
+
+  /* Spring settle curve - soft overshoot, used by every transition. */
+  --ease-spring: cubic-bezier(0.34, 1.45, 0.64, 1);
 }
 
 .dark {
-  --background: oklch(0.15 0.012 160);
-  --foreground: oklch(0.955 0.005 160);
-  --card: oklch(0.212 0.014 160 / 40%);
-  --card-foreground: oklch(0.955 0.005 160);
-  --popover: oklch(0.185 0.014 160 / 94%);
-  --popover-foreground: oklch(0.955 0.005 160);
-  --primary: oklch(0.865 0.11 162); /* light mint green accent */
-  --primary-foreground: oklch(0.16 0.03 160);
-  --secondary: oklch(0.28 0.016 160 / 88%);
-  --secondary-foreground: oklch(0.955 0.005 160);
-  --muted: oklch(0.255 0.014 160 / 62%);
-  --muted-foreground: oklch(0.69 0.014 160);
-  --accent: oklch(0.31 0.04 160 / 72%);
-  --accent-foreground: oklch(0.965 0.005 160);
-  --destructive: oklch(0.66 0.2 25);
-  --border: oklch(1 0 0 / 13%);
-  --input: oklch(1 0 0 / 18%);
-  --ring: oklch(0.865 0.11 162);
-  --chart-1: oklch(0.865 0.11 162);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.185 0.012 160);
-  --sidebar-foreground: oklch(0.955 0.005 160);
-  --sidebar-primary: oklch(0.865 0.11 162);
-  --sidebar-primary-foreground: oklch(0.16 0.03 160);
-  --sidebar-accent: oklch(0.28 0.016 160);
-  --sidebar-accent-foreground: oklch(0.955 0.005 160);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.865 0.11 162);
+  /* Identical to :root - the ink look is the only look. */
+  --background: oklch(0.11 0.004 90);
+  --foreground: oklch(0.94 0.004 90);
+  --card: oklch(0.17 0.004 90 / 46%);
+  --card-foreground: oklch(0.94 0.004 90);
+  --popover: oklch(0.13 0.003 90 / 88%);
+  --popover-foreground: oklch(0.94 0.004 90);
+  --primary: oklch(0.71 0.15 158);
+  --primary-foreground: oklch(0.13 0.03 158);
+  --secondary: oklch(0.24 0.004 90 / 88%);
+  --secondary-foreground: oklch(0.94 0.004 90);
+  --muted: oklch(0.22 0.003 90 / 65%);
+  --muted-foreground: oklch(0.72 0.005 90);
+  --accent: oklch(0.28 0.025 158 / 60%);
+  --accent-foreground: oklch(0.96 0.003 90);
+  --destructive: oklch(0.62 0.19 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.71 0.15 158);
+  --chart-1: oklch(0.71 0.15 158);
+  --chart-2: oklch(0.72 0.005 90);
+  --chart-3: oklch(0.5 0.005 90);
+  --chart-4: oklch(0.36 0.005 90);
+  --chart-5: oklch(0.85 0.09 158);
+  --sidebar: oklch(0.115 0.003 90);
+  --sidebar-foreground: oklch(0.94 0.004 90);
+  --sidebar-primary: oklch(0.71 0.15 158);
+  --sidebar-primary-foreground: oklch(0.13 0.03 158);
+  --sidebar-accent: oklch(0.24 0.004 90);
+  --sidebar-accent-foreground: oklch(0.94 0.004 90);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.71 0.15 158);
 }
 
 @layer base {
@@ -123,69 +192,36 @@
     @apply border-border outline-ring/50;
   }
 
-  /* ---- Fluted wall: the whole viewport gets vertical glass ribs ---- */
+  /* ---- FLUTED WALL - the one ground of every page ----
+     Near-black ink canvas ruled with fine vertical lines (the flutes),
+     one soft jade ink bloom top-right, one neutral pool bottom-left.
+     background-attachment: fixed pins the wall to the viewport, so it
+     is pixel-identical on every page and never parallax-shifts under
+     scrolling content. The frosted panes above blur these flutes into
+     soft streaks - that interplay IS the frosted-glass read. */
   body {
     @apply bg-background text-foreground;
     background-image:
-      radial-gradient(1100px 520px at 88% -6%, oklch(0.72 0.08 160 / 0.16), transparent 62%),
+      radial-gradient(1100px 520px at 88% -6%, oklch(0.55 0.1 158 / 0.16), transparent 62%),
+      radial-gradient(760px 420px at -8% 108%, oklch(0.34 0.006 90 / 0.16), transparent 55%),
       repeating-linear-gradient(
         90deg,
-        oklch(0.22 0.015 160 / 0.05) 0px,
-        oklch(0.22 0.015 160 / 0.05) 1px,
+        oklch(1 0 0 / 0.028) 0px,
+        oklch(1 0 0 / 0.028) 1px,
         transparent 1px,
         transparent 11px
       );
     background-attachment: fixed;
-  }
-  .dark body {
-    background-image:
-      radial-gradient(1100px 520px at 88% -6%, oklch(0.5 0.08 160 / 0.17), transparent 62%),
-      radial-gradient(760px 420px at -8% 108%, oklch(0.42 0.06 160 / 0.12), transparent 55%),
-      repeating-linear-gradient(
-        90deg,
-        oklch(1 0 0 / 0.032) 0px,
-        oklch(1 0 0 / 0.032) 1px,
-        transparent 1px,
-        transparent 11px
-      );
-    background-attachment: fixed;
-  }
-
-  /* ---- Glass surfaces: blur behind every floating panel ----
-     Blur is intentionally light (8px) so the fluted ribs stay faintly
-     visible THROUGH panels — like real fluted glass distorting what's
-     behind it, not an opaque smoked sheet. */
-  [data-slot="card"] {
-    backdrop-filter: blur(8px) saturate(140%);
-    -webkit-backdrop-filter: blur(8px) saturate(140%);
-    border-radius: 2px;
-  }
-  [data-slot="popover-content"],
-  [data-slot="dropdown-menu-content"],
-  [data-slot="dialog-content"],
-  [data-slot="sheet-content"],
-  [data-slot="command"],
-  [data-slot="tooltip-content"] {
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-  }
-
-  /* Mint top-edge highlight on cards — like light catching glass */
-  [data-slot="card"] {
-    box-shadow:
-      inset 0 1px 0 0 oklch(1 0 0 / 0.08),
-      0 1px 2px 0 oklch(0 0 0 / 0.25);
-  }
-  :root:not(.dark) [data-slot="card"] {
-    box-shadow:
-      inset 0 1px 0 0 oklch(1 0 0 / 0.9),
-      0 1px 3px 0 oklch(0.22 0.015 160 / 0.08);
   }
 
   ::selection {
     background: color-mix(in oklch, var(--primary) 30%, transparent);
   }
 }
+
+/* ================================================================== */
+/* (the ground itself lives on <body> - see the FLUTED WALL above)      */
+/* ================================================================== */
 
 @layer utilities {
   .scrollbar-slim::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -196,9 +232,35 @@
   }
   .text-balance { text-wrap: balance; }
 
-  /* ---- Harsh fluted-glass toolkit ---- */
+  /* SplineReveal mount. The tilt transform lives HERE (never inline -
+     anime.js writes inline transforms during the entrance, which
+     would clobber it). NO default transition: while the pointer is
+     over the element the tilt tracks 1:1 (a transition restarted on
+     every pointermove is exactly what reads as "twitching"); the
+     settle transition lives on .tilt-settle, applied on leave only. */
+  .spline-reveal {
+    will-change: transform;
+  }
+  .spline-tilt {
+    transform: perspective(900px)
+      rotateX(var(--tilt-x, 0deg))
+      rotateY(var(--tilt-y, 0deg));
+  }
+  .tilt-settle {
+    transition: transform 0.5s var(--ease-spring);
+  }
+  .tilt-tracking {
+    transition: none !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .spline-reveal,
+    .spline-tilt {
+      transform: none !important;
+      transition: none !important;
+    }
+  }
 
-  /* Micro label: uppercase, wide tracking — the "harsh" voice */
+  /* Micro label: uppercase, wide tracking - the app's small voice. */
   .label-harsh {
     font-size: 11px;
     font-weight: 700;
@@ -207,29 +269,120 @@
     color: var(--muted-foreground);
   }
 
-  /* Dashed mint hairline — fluted edge for headers/footers */
-  .flute-edge {
-    height: 1px;
-    width: 100%;
-    background: repeating-linear-gradient(
-      90deg,
-      color-mix(in oklch, var(--primary) 55%, transparent) 0px,
-      color-mix(in oklch, var(--primary) 55%, transparent) 6px,
-      transparent 6px,
-      transparent 14px
-    );
-    opacity: 0.5;
+  /* Navbar active link: pressed-in underline, no layout shift. */
+  .nav-link {
+    border-radius: var(--radius);
+    transition: color 150ms ease, background-color 150ms ease;
+  }
+  .nav-link[data-active="true"] {
+    background: color-mix(in oklch, var(--primary) 10%, transparent);
+    box-shadow: inset 0 -2px 0 0 var(--primary);
   }
 
-  /* Strong fluted glass panel — hero moments. Coarse ribs + blur. */
+  /* ---- DEBOSSED: the one relief - pressed INTO the page ----
+     Small controls (icon buttons, command trigger, chips) sit in
+     shallow recesses. The recipe is pure inset: dark ceiling lip,
+     faint light catch on the bottom edge, rim. No outer shadow -
+     a debossed object never casts one. */
+  .debossed {
+    box-shadow: var(--deboss-1);
+  }
+  /* Legacy aliases from the emboss era - mapped to the same recess
+     so old markup keeps working. Everything is debossed now. */
+  .embossed {
+    box-shadow: var(--deboss-1);
+  }
+  .deboss-well,
+  .debossed-well {
+    box-shadow: var(--deboss-1);
+  }
+
+  /* ---- The dock (header) ----
+     A slab of rough frost recessed into the ink canvas: the crisp
+     ceiling lip shades its top, one hairline of light catches the
+     bottom edge, and a soft AO pool deepens the floor of the recess.
+     5px blur - the wall's flutes smear to streaks behind it. */
+  .deboss-dock,
+  .emboss-dock {
+    background: color-mix(in oklch, var(--background) 62%, transparent);
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
+    border: 1px solid oklch(1 0 0 / 0.08);
+    box-shadow: var(--deboss-2);
+  }
+
+  /* ---- The footer tray ----
+     The bottom counterpart of the dock: a floating slab pressed into
+     the page the same way, same width rhythm, same 5px frost. */
+  .deboss-tray,
+  .embossed-tray {
+    background: color-mix(in oklch, var(--background) 55%, transparent);
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
+    border: 1px solid oklch(1 0 0 / 0.07);
+    border-radius: var(--radius);
+    box-shadow: var(--deboss-2);
+  }
+
+  /* ---- Peek window: the hover preview INSIDE a card ----
+     Hovering a card un-clips this full-cover pane from the card's
+     centre - a frosted window recessed one level deeper than the
+     card that hosts it, showing the hub preview. */
+  .peep-window {
+    position: relative;
+    overflow: hidden;
+    background: color-mix(in oklch, var(--popover) 90%, transparent);
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
+    border: 1px solid oklch(1 0 0 / 0.08);
+    border-radius: calc(var(--radius) - 1px);
+    box-shadow: var(--deboss-1);
+  }
+
+  /* ---- Nav pills - the header's pressed-in text buttons ----
+     Each link is a shallow translucent well (5px frost - every
+     translucent surface blurs); the label sits at its floor. Hover
+     deepens the press a touch; the ACTIVE route is pressed deepest
+     of all and tinted jade - ink pooling in the lowest well. */
+  .nav-well {
+    background: color-mix(in oklch, var(--background) 45%, transparent);
+    -webkit-backdrop-filter: blur(5px) saturate(140%);
+    backdrop-filter: blur(5px) saturate(140%);
+    border: 1px solid oklch(1 0 0 / 0.05);
+    box-shadow: var(--deboss-1);
+    transition:
+      transform 0.35s var(--ease-spring),
+      box-shadow 0.35s var(--ease-spring),
+      background-color 0.35s ease,
+      color 0.35s ease;
+  }
+  .nav-well:hover {
+    background: color-mix(in oklch, var(--muted) 55%, transparent);
+    box-shadow:
+      inset 3px 5px 12px -2px oklch(0 0 0 / 0.62),
+      inset -2px -2px 5px -1px oklch(1 0 0 / 0.1);
+  }
+  .nav-well-active {
+    background: color-mix(in oklch, var(--primary) 13%, transparent);
+    border-color: color-mix(in oklch, var(--primary) 26%, transparent);
+    box-shadow:
+      inset 4px 7px 16px -2px oklch(0 0 0 / 0.66),
+      inset -2px -2px 6px -1px oklch(1 0 0 / 0.11),
+      inset 0 0 24px -4px oklch(0 0 0 / 0.32);
+    color: var(--primary);
+  }
+
+  /* Frosted hero panel (profile page): translucent + 5px blur + the same
+     recess, with the fluted ribs kept - frosting smears them. */
   .fluted-panel {
     position: relative;
     overflow: hidden;
     border: 1px solid var(--border);
-    background: color-mix(in oklch, var(--card) 90%, transparent);
-    backdrop-filter: blur(18px) saturate(150%);
-    -webkit-backdrop-filter: blur(18px) saturate(150%);
-    border-radius: 2px;
+    background: color-mix(in oklch, var(--card) 85%, transparent);
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
+    border-radius: var(--radius);
+    box-shadow: var(--deboss-2);
   }
   .fluted-panel::before {
     content: "";
@@ -238,37 +391,251 @@
     pointer-events: none;
     background: repeating-linear-gradient(
       90deg,
-      oklch(1 0 0 / 0.055) 0px,
-      oklch(1 0 0 / 0.055) 2px,
+      oklch(1 0 0 / 0.045) 0px,
+      oklch(1 0 0 / 0.045) 2px,
       transparent 2px,
       transparent 12px
     );
   }
-  html:not(.dark) .fluted-panel::before {
-    background: repeating-linear-gradient(
-      90deg,
-      oklch(0.22 0.015 160 / 0.05) 0px,
-      oklch(0.22 0.015 160 / 0.05) 2px,
-      transparent 2px,
-      transparent 12px
+}
+
+/* ================================================================== */
+/* GLASS SURFACES - translucent, glossy, debossed                      */
+/* ================================================================== */
+
+@layer base {
+  /* Every card: a pane of TRANSLUCENT FROSTED GLASS pressed into the
+     wall. The translucency is real (46% alpha + 5px blur + saturation),
+     so the fluted lines of the ground smear into soft streaks behind
+     the pane - 5px is the sweet spot: the flutes stay legible as
+     streaks instead of being erased. No noise pass - clean frost. */
+  [data-slot="card"] {
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
+    border-radius: var(--radius);
+    position: relative;
+    box-shadow: var(--deboss-2);
+    transition:
+      transform 0.5s var(--ease-spring),
+      box-shadow 0.5s var(--ease-spring),
+      border-color 0.35s ease;
+  }
+  /* Hover presses the pane deeper into the page - the deboss
+     interaction: never lift, always sink. The spring curve gives the
+     settle its soft overshoot. */
+  [data-slot="card"]:hover {
+    box-shadow: var(--deboss-2-pressed);
+  }
+  /* Recess lighting - DIRECTIONAL, matching the soft deboss: the
+     top-left of the pane falls into shade (the recess wall blocks
+     the light) and a faint catch of light lands on the bottom-right
+     floor. Soft falloffs only - the lighting of a shallow physical
+     recess, so the pane reads as pressed INTO the page, never
+     floating on top of it. */
+  [data-slot="card"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    z-index: 29;
+    background: linear-gradient(
+      135deg,
+      oklch(0 0 0 / 0.34) 0%,
+      oklch(0 0 0 / 0.1) 18%,
+      transparent 42%,
+      transparent 76%,
+      oklch(1 0 0 / 0.08) 100%
     );
   }
+  /* Sandblast REMOVED - no bolted-on noise overlays anywhere: the
+     frost is the blur, the roughness is the ribs smeared behind it.
+     (The login page's GrainGradient keeps its own INBUILT shader
+     grain - that is part of its look, not an overlay.) */
 
-  /* Navbar active link: hard inset underline, no layout shift */
-  .nav-link {
-    border-radius: 0;
-    transition: color 150ms ease, background-color 150ms ease;
-  }
-  .nav-link[data-active="true"] {
-    background: color-mix(in oklch, var(--primary) 10%, transparent);
-    box-shadow: inset 0 -2px 0 0 var(--primary);
+  /* Floating layers (popovers, dialogs, sheets, menus) are recessed
+     frost too - one material everywhere, one blur everywhere. */
+  [data-slot="popover-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="select-content"],
+  [data-slot="dialog-content"],
+  [data-slot="command"],
+  [data-slot="command-dialog"],
+  [data-slot="tooltip-content"],
+  [data-slot="alert-dialog-content"] {
+    -webkit-backdrop-filter: blur(5px) saturate(150%);
+    backdrop-filter: blur(5px) saturate(150%);
+    box-shadow: var(--deboss-2);
   }
 
-  /* Hard edge glow for primary CTAs on glass */
-  .btn-harsh {
+  /* Tabs: the track is a recessed tray; the ACTIVE trigger is
+     pressed deepest and tinted jade - a stamp sunk into the slot. */
+  [data-slot="tabs-list"] {
+    -webkit-backdrop-filter: blur(5px) saturate(140%);
+    backdrop-filter: blur(5px) saturate(140%);
+    background: color-mix(in oklch, var(--background) 40%, transparent);
+    box-shadow: var(--deboss-1);
+  }
+  [data-slot="tabs-trigger"][data-state="active"] {
     box-shadow:
-      inset 0 1px 0 0 oklch(1 0 0 / 0.22),
-      0 0 0 1px color-mix(in oklch, var(--primary) 35%, transparent),
-      0 4px 18px -6px color-mix(in oklch, var(--primary) 45%, transparent);
+      inset 3px 5px 12px -2px oklch(0 0 0 / 0.62),
+      inset -2px -2px 6px -2px oklch(1 0 0 / 0.11),
+      inset 0 0 0 1px color-mix(in oklch, var(--primary) 20%, transparent);
   }
+
+  /* Inputs are wells: typed text sits at the floor of a translucent
+     frosted recess - 5px blur like every other translucent surface. */
+  [data-slot="input"],
+  [data-slot="textarea"] {
+    -webkit-backdrop-filter: blur(5px) saturate(130%);
+    backdrop-filter: blur(5px) saturate(130%);
+    box-shadow: var(--deboss-1);
+    background: color-mix(in oklch, var(--background) 45%, transparent);
+  }
+
+  /* Filled buttons (primary jade, destructive, outline, secondary) are
+     stamps pressed into the page - same recess recipe, sized for a
+     small control. Ghost and link variants stay flat by design. */
+  [data-slot="button"][data-variant="default"],
+  [data-slot="button"][data-variant="destructive"],
+  [data-slot="button"][data-variant="outline"],
+  [data-slot="button"][data-variant="secondary"] {
+    box-shadow: var(--deboss-1);
+  }
+  [data-slot="button"][data-variant="default"]:active,
+  [data-slot="button"][data-variant="destructive"]:active,
+  [data-slot="button"][data-variant="outline"]:active,
+  [data-slot="button"][data-variant="secondary"]:active {
+    box-shadow:
+      inset 3px 5px 12px -2px oklch(0 0 0 / 0.68),
+      inset -1px -2px 4px -1px oklch(1 0 0 / 0.08);
+  }
+
+  /* Command palette: highlighted items get a hard jade caret so focus
+     is legible by shape, not just background tint. */
+  [data-slot="command-item"][data-selected="true"] {
+    box-shadow: inset 2px 0 0 0 var(--primary);
+  }
+}
+
+/* ================================================================== */
+/* DEBOSS EVERYTHING - every component is a recessed pane of frost,    */
+/* not just the buttons. These rules live UNLAYERED (outside           */
+/* @layer) so they beat any Tailwind utility that would paint a flat   */
+/* opaque fill over the glass. Focus rings are re-declared on          */
+/* :focus-visible so keyboard affordances survive the box-shadow       */
+/* takeover.                                                           */
+/* ================================================================== */
+
+/* Badges - glass chips: translucent tint + 5px blur + chip recess. */
+[data-slot="badge"] {
+  -webkit-backdrop-filter: blur(5px) saturate(140%);
+  backdrop-filter: blur(5px) saturate(140%);
+}
+[data-slot="badge"]:not(:focus-visible) {
+  box-shadow: var(--deboss-chip);
+}
+[data-slot="badge"]:focus-visible {
+  box-shadow:
+    var(--deboss-chip),
+    0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent);
+}
+[data-slot="badge"][data-variant="default"] {
+  background-color: color-mix(in oklch, var(--primary) 22%, transparent);
+  color: var(--primary);
+  border-color: color-mix(in oklch, var(--primary) 30%, transparent);
+}
+[data-slot="badge"][data-variant="secondary"] {
+  background-color: color-mix(in oklch, var(--secondary) 55%, transparent);
+}
+[data-slot="badge"][data-variant="destructive"] {
+  background-color: color-mix(in oklch, var(--destructive) 24%, transparent);
+  color: oklch(0.85 0.14 25);
+  border-color: color-mix(in oklch, var(--destructive) 32%, transparent);
+}
+
+/* Alerts - full frosted panes pressed into the page. */
+[data-slot="alert"] {
+  -webkit-backdrop-filter: blur(5px) saturate(140%);
+  backdrop-filter: blur(5px) saturate(140%);
+  box-shadow: var(--deboss-2);
+}
+
+/* Select triggers - translucent frosted wells like the inputs. */
+[data-slot="select-trigger"]:not(:focus-visible),
+[data-slot="checkbox"]:not(:focus-visible),
+[data-slot="switch"]:not(:focus-visible) {
+  box-shadow: var(--deboss-1);
+}
+[data-slot="select-trigger"] {
+  -webkit-backdrop-filter: blur(5px) saturate(130%);
+  backdrop-filter: blur(5px) saturate(130%);
+  background-color: color-mix(in oklch, var(--background) 45%, transparent);
+}
+
+/* Progress tracks and skeletons - shallow recesses. */
+[data-slot="progress"],
+[data-slot="skeleton"] {
+  box-shadow: var(--deboss-chip);
+}
+
+/* Avatars - a softly recessed frosted rim (translucent fallbacks
+   get the 5px frost too). */
+[data-slot="avatar"] {
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  box-shadow:
+    inset 2px 3px 7px -2px oklch(0 0 0 / 0.5),
+    inset -1px -2px 4px -1px oklch(1 0 0 / 0.1);
+}
+
+/* Sonner toasts - floating frost (Sonner styles inline, so the
+   important flag is the only way to press them into the page). */
+[data-sonner-toast] {
+  -webkit-backdrop-filter: blur(5px) saturate(140%) !important;
+  backdrop-filter: blur(5px) saturate(140%) !important;
+  border: 1px solid oklch(1 0 0 / 0.08) !important;
+  box-shadow: var(--deboss-2) !important;
+}
+
+/* The fluted-panel's own ::before carries the ribbing - see above. */
+
+/* ================================================================== */
+/* TRANSLUCENT BUTTONS & DIALOGS - frost on the last hold-outs        */
+/* (unlayered on purpose: the Tailwind bg-* utilities painted on    */
+/* these variants live in the utilities layer, and unlayered rules */
+/* outrank every layer, so the translucency cannot be painted over) */
+/* ================================================================== */
+
+/* Outline / secondary / debossed buttons are panes of frost too:
+   see-through tint + the 5px blur, so whatever moves behind them
+   (the soft cursor glow, the wall's ribs) smears through. The
+   primary jade stamp stays solid: the one raised-ink CTA. */
+[data-slot="button"][data-variant="outline"] {
+  -webkit-backdrop-filter: blur(5px) saturate(140%);
+  backdrop-filter: blur(5px) saturate(140%);
+  background-color: color-mix(in oklch, var(--background) 55%, transparent);
+}
+[data-slot="button"][data-variant="outline"]:hover {
+  background-color: color-mix(in oklch, var(--accent) 75%, transparent);
+}
+[data-slot="button"][data-variant="secondary"] {
+  -webkit-backdrop-filter: blur(5px) saturate(140%);
+  backdrop-filter: blur(5px) saturate(140%);
+  background-color: color-mix(in oklch, var(--secondary) 60%, transparent);
+}
+[data-slot="button"][data-variant="secondary"]:hover {
+  background-color: color-mix(in oklch, var(--secondary) 82%, transparent);
+}
+[data-slot="button"][data-variant="debossed"],
+[data-slot="button"][data-variant="embossed"] {
+  -webkit-backdrop-filter: blur(5px) saturate(140%);
+  backdrop-filter: blur(5px) saturate(140%);
+}
+
+/* Dialogs are panes of frost, not opaque slabs: the page's glow and
+   ribs smear through the 5px blur behind them. */
+[data-slot="dialog-content"],
+[data-slot="alert-dialog-content"] {
+  background-color: color-mix(in oklch, var(--popover) 92%, transparent);
 }

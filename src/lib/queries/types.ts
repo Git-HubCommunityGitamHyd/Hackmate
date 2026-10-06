@@ -45,6 +45,13 @@ export interface PersonCardDTO {
   matchScore?: number;
   matchReasons?: string[];
   matchBreakdown?: MatchBreakdown;
+  /** Set when listing people for a specific hackathon - their per-event signal. */
+  hackathonProfile?: {
+    preferredRoleSlug: string | null;
+    motivation: string | null;
+    hasIdea: boolean;
+    ideaBlurb: string | null;
+  };
   karma?: number;
 }
 
@@ -76,9 +83,10 @@ export interface HackathonCardDTO {
 export interface TeamCardDTO {
   id: string;
   name: string;
-  hackathonId: string;
-  hackathonName: string;
-  hackathonSlug: string;
+  /** null = idea-first team (posted before choosing an event). */
+  hackathonId: string | null;
+  hackathonName: string | null;
+  hackathonSlug: string | null;
   ideaDomain: string | null;
   ideaTitle: string | null;
   ideaAnonymous: boolean;

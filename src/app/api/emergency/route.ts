@@ -4,13 +4,17 @@ import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { emergencySchema } from "@/lib/validations";
 import { ok, withUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 
 /**
- * POST /api/emergency — "Hackathon starts in 18 hours, our backend dev
+ * POST /api/emergency - "Hackathon starts in 18 hours, our backend dev
  * dropped out." Marks you immediately available with boosted ranking.
  * Auto-expires via cron + lazy timestamp checks in every ranking query.
  */
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(req, { key: "emergency", limit: 20, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   return withUser(async (user) => {
     const body = await req.json().catch(() => ({}));
     const parsed = emergencySchema.safeParse(body);
@@ -49,7 +53,7 @@ export async function POST(req: NextRequest) {
   });
 }
 
-/** GET /api/emergency — my current emergency status. */
+/** GET /api/emergency - my current emergency status. */
 export async function GET() {
   return withUser(async (user) => {
     const [row] = await db

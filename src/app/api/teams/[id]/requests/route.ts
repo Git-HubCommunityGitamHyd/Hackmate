@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, isNull, ne } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { getTeamDetail } from "@/lib/queries/teams";
@@ -7,7 +7,7 @@ import { joinRequestSchema } from "@/lib/validations";
 import { sendEmail, emailTemplates } from "@/lib/email";
 import { ok, fail, requireUser } from "@/lib/api";
 
-/** GET /api/teams/:id/requests — pending requests (admin only). */
+/** GET /api/teams/:id/requests - pending requests (admin only). */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -45,7 +45,7 @@ export async function GET(
   })));
 }
 
-/** POST /api/teams/:id/requests — send a join request with a short message. */
+/** POST /api/teams/:id/requests - send a join request with a short message. */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -73,7 +73,8 @@ export async function POST(
   if (existing?.status === "pending") return fail("You already have a pending request", 409);
   if (existing?.status === "accepted") return fail("You were already accepted to this team", 409);
 
-  /* Can't be on two teams in the same hackathon. */
+  /* Can't be on two teams in the same hackathon (idea-first teams count
+   * as their own "slot" so a founder can't double-post). */
   const [busy] = await db
     .select({ teamId: schema.teamMembers.teamId })
     .from(schema.teamMembers)
@@ -81,12 +82,20 @@ export async function POST(
     .where(
       and(
         eq(schema.teamMembers.userId, user.id),
-        eq(schema.teams.hackathonId, detail.hackathonId),
+        detail.hackathonId
+          ? eq(schema.teams.hackathonId, detail.hackathonId)
+          : isNull(schema.teams.hackathonId),
         ne(schema.teams.status, "disbanded"),
       ),
     )
     .limit(1);
-  if (busy) return fail("You're already on another team for this hackathon", 409);
+  if (busy)
+    return fail(
+      detail.hackathonId
+        ? "You're already on another team for this hackathon"
+        : "You're already on an idea-first team",
+      409,
+    );
 
   if (existing) {
     await db
@@ -135,7 +144,7 @@ export async function POST(
   return ok({ status: "sent" }, { status: 201 });
 }
 
-/** PATCH /api/teams/:id/requests — accept or decline (admin only). */
+/** PATCH /api/teams/:id/requests - accept or decline (admin only). */
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -167,7 +176,7 @@ export async function PATCH(
       userId: request.userId,
       type: "request_declined",
       title: `Your request to join ${detail.name} wasn't accepted`,
-      body: "Keep browsing — there are more teams recruiting.",
+      body: "Keep browsing - there are more teams recruiting.",
       link: "/discover",
     });
     return ok({ status: "declined" });

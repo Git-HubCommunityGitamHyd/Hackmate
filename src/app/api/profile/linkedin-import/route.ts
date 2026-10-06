@@ -1,7 +1,9 @@
 import { eq, sql, type SQL } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 import { db, schema } from "@/lib/db";
 import type { LinkedInImport } from "@/lib/db/schema";
 import { fail, ok, withUser } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { normalizeLinkedInProfileUrl, parseLinkedInCsv } from "@/lib/linkedin-import";
 
 const MAX_CSV_BYTES = 5 * 1024 * 1024;
@@ -10,7 +12,10 @@ const MAX_CSV_BYTES = 5 * 1024 * 1024;
  * Import the authenticated user's LinkedIn URL and optional CSV export.
  * Fill empty profile fields and import sections while preserving existing content.
  */
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const rl = rateLimit(req, { key: "li-import", limit: 6, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   return withUser(async (user) => {
     let form: FormData;
     try {

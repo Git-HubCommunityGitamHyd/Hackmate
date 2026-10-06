@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { eq, inArray } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { ok, fail, withPublic } from "@/lib/api";
+import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { scorePersonForTeam, type PersonMatchInput } from "@/lib/matching/engine";
 import { getProfile, people } from "@/lib/queries/people";
 import type { EqualCandidateDTO } from "@/lib/queries/types";
@@ -29,7 +30,19 @@ function personInput(profile: Profile): PersonMatchInput {
   };
 }
 
+/** Cap on how many candidates get a full profile fetch + match scoring.
+ *  Each scored candidate costs one getProfile (≈7 queries), so an
+ *  unbounded loop over the whole directory was a query amplifier - a
+ *  single request could fire 700+ queries. 24 karma-nearest candidates
+ *  comfortably fills the top-8 response at a bounded cost. */
+const MAX_SCORED_CANDIDATES = 24;
+
 export async function GET(req: NextRequest) {
+  /* Public but expensive (matching engine + profile fan-out): tight
+     per-IP budget, tighter than the directory endpoints. */
+  const rl = rateLimit(req, { key: "find-equal", limit: 12, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl.retryAfterSec);
+
   return withPublic(async () => {
     const userId = req.nextUrl.searchParams.get("userId");
     if (!userId) return fail("userId query parameter is required");
@@ -64,6 +77,15 @@ export async function GET(req: NextRequest) {
     });
     if (eligibleCards.length === 0) return ok([] satisfies EqualCandidateDTO[]);
 
+    /* Bound the fan-out: score only the karma-nearest candidates. */
+    const toScore = eligibleCards
+      .sort(
+        (a, b) =>
+          Math.abs((karmaByUser.get(a.id) ?? 0) - ownerKarma) -
+          Math.abs((karmaByUser.get(b.id) ?? 0) - ownerKarma),
+      )
+      .slice(0, MAX_SCORED_CANDIDATES);
+
     const ownerInput = personInput(ownerProfile);
     const equalTeam = {
       teamId: `equal:${userId}`,
@@ -76,7 +98,7 @@ export async function GET(req: NextRequest) {
     };
 
     const scored = await Promise.all(
-      eligibleCards.map(async (card) => {
+      toScore.map(async (card) => {
         const profile = await getProfile(card.id);
         const karma = karmaByUser.get(card.id);
         if (!profile || karma === undefined) return null;

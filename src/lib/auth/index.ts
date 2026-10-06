@@ -8,12 +8,12 @@ import { importGithubData } from "./github";
 import { isAdminEmail, promoteIfAdminEmail } from "@/lib/admin";
 
 /**
- * Auth.js v5 — full server config.
+ * Auth.js v5 - full server config.
  *
  *  - GitHub OAuth for developers (imports repos/languages/contributions)
  *  - Email magic link via Resend for designers/PMs/pitchers
  *  - Database sessions via the Drizzle adapter (CockroachDB)
- *  - NO Google, NO Meta — by product decision.
+ *  - NO Google, NO Meta - by product decision.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -41,7 +41,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         userId: user.id,
         type: "system",
         title: "Welcome to HackMate 👋",
-        body: "Complete your profile so teams can find you — skills, availability and commitment take 2 minutes.",
+        body: "Complete your profile so teams can find you - skills, availability and commitment take 2 minutes.",
         link: "/profile/edit",
       });
     },

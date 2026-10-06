@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -17,15 +17,49 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PersonCard } from "@/components/discover/person-card";
+import { SortMenu, type SortOption } from "@/components/discover/sort-menu";
 import { api, useCurrentUser } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
+import type { PersonCardDTO } from "@/lib/queries/types";
 
 const HOURS_OPTIONS = [6, 12, 18, 24, 48, 72];
+
+/* ------------------------------------------------------------------ */
+/* Solidarity-feed sort - the same debossed pill Discover uses.        */
+/* ------------------------------------------------------------------ */
+
+type FeedSort = "recent" | "hours" | "skills" | "name";
+
+const FEED_SORTS: ReadonlyArray<SortOption<FeedSort>> = [
+  { value: "recent", label: "Recently boosted" },
+  { value: "hours", label: "Most available" },
+  { value: "skills", label: "Most skilled" },
+  { value: "name", label: "A–Z" },
+];
+
+function sortFeed(list: PersonCardDTO[], sort: FeedSort): PersonCardDTO[] {
+  const out = [...list];
+  if (sort === "hours") {
+    out.sort((a, b) => b.hoursPerWeek - a.hoursPerWeek);
+  } else if (sort === "skills") {
+    out.sort(
+      (a, b) =>
+        b.topSkills.length - a.topSkills.length ||
+        b.hoursPerWeek - a.hoursPerWeek,
+    );
+  } else if (sort === "name") {
+    out.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  /* "recent" keeps the API order - the server already sorts by
+     most-recently-boosted first. */
+  return out;
+}
 
 export default function EmergencyPage() {
   const { isAuthenticated } = useCurrentUser();
   const qc = useQueryClient();
   const [hours, setHours] = useState("24");
+  const [feedSort, setFeedSort] = useState<FeedSort>("recent");
 
   const status = useQuery({
     queryKey: ["emergency-status"],
@@ -33,11 +67,15 @@ export default function EmergencyPage() {
     enabled: isAuthenticated,
   });
 
-  /* Other students currently in emergency mode — solidarity feed. */
+  /* Other students currently in emergency mode - solidarity feed. */
   const others = useQuery({
     queryKey: ["emergency-others"],
-    queryFn: () => api<any[]>("/api/users?emergency=true"),
+    queryFn: () => api<PersonCardDTO[]>("/api/users?emergency=true"),
   });
+  const sortedOthers = useMemo(
+    () => sortFeed(others.data ?? [], feedSort),
+    [others.data, feedSort],
+  );
 
   const toggle = useMutation({
     mutationFn: (enabled: boolean) =>
@@ -47,7 +85,7 @@ export default function EmergencyPage() {
       }),
     onSuccess: (data: { emergencyAvailable: boolean }) => {
       toast[data.emergencyAvailable ? "success" : "info"](
-        data.emergencyAvailable ? "Emergency mode ON — you're boosted in searches" : "Emergency mode off",
+        data.emergencyAvailable ? "Emergency mode ON - you're boosted in searches" : "Emergency mode off",
       );
       qc.invalidateQueries({ queryKey: ["emergency-status"] });
       qc.invalidateQueries({ queryKey: ["people"] });
@@ -84,7 +122,7 @@ export default function EmergencyPage() {
         </h1>
         <p className="text-muted-foreground mt-2 text-balance">
           Your team lost someone hours before a deadline? Activate to appear at the top of
-          gap-matched team searches — for everyone who needs exactly your skills, right now.
+          gap-matched team searches - for everyone who needs exactly your skills, right now.
         </p>
       </div>
 
@@ -104,7 +142,7 @@ export default function EmergencyPage() {
                 </Label>
                 <p className="text-xs text-muted-foreground">
                   {active && status.data?.until
-                    ? `Boosted until ${new Date(status.data.until).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} — auto-expires via cron`
+                    ? `Boosted until ${new Date(status.data.until).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} - auto-expires via cron`
                     : "Boosted ranking + red pulse on your profile"}
                 </p>
               </div>
@@ -119,7 +157,9 @@ export default function EmergencyPage() {
 
           <div className="mt-5 flex items-center gap-3">
             <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Active for</span>
+            <span className="text-sm text-muted-foreground">
+              {active ? "Boost duration (locked while active)" : "Boost duration when activated"}
+            </span>
             <Select value={hours} onValueChange={setHours} disabled={active}>
               <SelectTrigger className="w-32">
                 <SelectValue />
@@ -136,16 +176,28 @@ export default function EmergencyPage() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-1.5">
-            <Radar className="h-4 w-4 text-primary" /> Others in emergency mode right now
-          </CardTitle>
-          <CardDescription>Solidarity feed — teams with a hole to fill are seeing these people first.</CardDescription>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle className="text-sm flex items-center gap-1.5">
+                <Radar className="h-4 w-4 text-primary" /> Others in emergency mode right now
+              </CardTitle>
+              <CardDescription>Solidarity feed - teams with a hole to fill are seeing these people first.</CardDescription>
+            </div>
+            {(others.data ?? []).length > 1 && (
+              <SortMenu
+                value={feedSort}
+                onChange={setFeedSort}
+                options={FEED_SORTS}
+                ariaLabel="Sort the emergency solidarity feed"
+              />
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           {(others.data ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">All quiet. No emergencies active.</p>
           ) : (
-            (others.data ?? []).map((p) => <PersonCard key={p.id} person={p} />)
+            sortedOthers.map((p) => <PersonCard key={p.id} person={p} />)
           )}
         </CardContent>
       </Card>
@@ -153,7 +205,7 @@ export default function EmergencyPage() {
       <p className="text-xs text-muted-foreground flex items-start gap-1.5">
         <Zap className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
         Auto-expiry runs twice daily via Vercel Cron, and every ranking query also lazy-checks the
-        timestamp — so an expired boost never lingers.
+        timestamp - so an expired boost never lingers.
       </p>
     </div>
   );
