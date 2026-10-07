@@ -18,9 +18,9 @@
 | Email | Resend | Magic links + notification digests |
 | File storage | Vercel Blob | Avatars/logos (public store) + college IDs (private store) |
 | Charts | Recharts | Profile/track-record visuals |
-| Verification service | Python microservice (`services/surya-ocr`) | OCR pipeline for college ID verification, Bearer-token authenticated |
+| Verification OCR | Datalab managed OCR API | College ID text recognition via `src/lib/verification/datalab-client.ts`; needs `DATALAB_API_KEY` |
 | Package manager / runtime | Bun 1.1+ (bun.lock committed) | Also runs with Node 20+ / npm if preferred |
-| Local sandbox DB | Embedded Postgres 18 (`scripts/pgbin`) | Dev-only convenience; any Postgres 14+ works, see SETUP.md |
+| Local sandbox DB | Embedded Postgres 18 (`scripts/pgbin`, Linux x64 only, optional dependency) | Dev-only convenience; any Postgres 14+ works, see SETUP.md |
 
 ## Architecture
 
@@ -48,7 +48,6 @@ src/
     reputation.ts       karma/badges engine (+ tests)
     rate-limit.ts       per-IP fixed-window limiter used across public endpoints
     api.ts              ok/fail/withUser/withAdmin helpers + UUID guard
-  services/surya-ocr/   Python OCR microservice (Dockerfile included)
 scripts/                db create/migrate/seed, demo seed, embedded-postgres bootstrap, pentest suite
 ```
 

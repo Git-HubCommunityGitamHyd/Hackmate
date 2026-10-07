@@ -6,7 +6,6 @@
       "name": "hackmate",
       "dependencies": {
         "@auth/drizzle-adapter": "^1.11.3",
-        "@embedded-postgres/linux-x64": "^18.4.0-beta.17",
         "@radix-ui/react-accordion": "^1.2.11",
         "@radix-ui/react-alert-dialog": "^1.1.14",
         "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -79,6 +78,9 @@
         "tailwindcss": "^4.3.3",
         "tw-animate-css": "^1.3.5",
         "typescript": "^5",
+      },
+      "optionalDependencies": {
+        "@embedded-postgres/linux-x64": "^18.4.0-beta.17",
       },
     },
   },
