@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { api } from "@/hooks/use-api";
 import { cn } from "@/lib/utils";
+import { saveEntityEmbedding } from "@/lib/matching/needle-browser";
+import { prepareSemanticText } from "@/lib/matching/taxonomy";
 
 const THEME_SUGGESTIONS = [
   "AI/ML",
@@ -102,6 +104,17 @@ export function HackathonForm({ initial }: { initial?: Partial<HackathonFormValu
       );
     },
     onSuccess: (h) => {
+      void saveEntityEmbedding(
+        "hackathon",
+        h.id,
+        prepareSemanticText({
+          kind: "hackathon",
+          text: [form.name, form.tagline, form.description].join(" "),
+          skills: themes,
+        }),
+      ).catch((error: unknown) => {
+        console.warn("[hackathon] Semantic embedding was not saved:", error);
+      });
       toast.success(isEdit ? "Hackathon updated" : "Hackathon posted!");
       router.push(`/hackathons/${h.slug}`);
       router.refresh();

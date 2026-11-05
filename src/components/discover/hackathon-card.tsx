@@ -129,6 +129,13 @@ export function HackathonCard({ hackathon, delay = 0 }: { hackathon: HackathonCa
             ))}
           </div>
         )}
+        {hackathon.searchExplanation?.reasons?.length ? (
+          <ul className="mt-3 space-y-0.5">
+            {hackathon.searchExplanation.reasons.slice(0, 2).map((reason) => (
+              <li key={reason} className="text-[11px] text-muted-foreground">✓ {reason}</li>
+            ))}
+          </ul>
+        ) : null}
       </CardContent>
       <CardFooter className="px-5 py-3 border-t bg-muted/30 flex items-center justify-between">
         {noActivity ? (

@@ -26,6 +26,9 @@ import { ROLE_TAXONOMY, SKILLS, COMMITMENT_LEVELS, SKILL_CATEGORY_META } from "@
 import type { SkillCategory } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import type { TeamDetailDTO } from "@/lib/queries/types";
+import { BuilderPanel } from "@/components/team/builder-panel";
+import { saveEntityEmbedding } from "@/lib/matching/needle-browser";
+import { prepareSemanticText } from "@/lib/matching/taxonomy";
 
 export default function NewTeamPage() {
   return (
@@ -39,10 +42,11 @@ function NewTeamForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselected = searchParams.get("hackathon");
+  const builderCandidates = (searchParams.get("builderCandidates") ?? "").split(",").filter(Boolean);
 
   const hackathons = useQuery({
     queryKey: ["hackathons-create"],
-    queryFn: () => api<{ id: string; name: string; teamSizeMin: number; teamSizeMax: number }[]>("/api/hackathons"),
+    queryFn: () => api<{ id: string; slug: string; name: string; teamSizeMin: number; teamSizeMax: number }[]>("/api/hackathons"),
     select: (list) => list.filter((h) => (h as any).status !== "completed"),
   });
 
@@ -62,10 +66,13 @@ function NewTeamForm() {
   const [skillSlugs, setSkillSlugs] = useState<string[]>([]);
   /* Idea-first mode: float the idea now, attach the event later. */
   const [ideaFirst, setIdeaFirst] = useState(false);
+  const [selectedBuilderCandidates, setSelectedBuilderCandidates] = useState(builderCandidates);
+  const [sendBuilderInvites, setSendBuilderInvites] = useState(builderCandidates.length > 0);
 
   /* Default-select the first hackathon once data arrives (render-time fallback). */
   const effectiveHackathonId =
     form.hackathonId || (hackathons.data && hackathons.data.length > 0 ? hackathons.data[0].id : "");
+  const selectedHackathon = hackathons.data?.find((hackathon) => hackathon.id === effectiveHackathonId);
 
   const create = useMutation({
     mutationFn: () =>
@@ -79,7 +86,32 @@ function NewTeamForm() {
           skillSlugs,
         }),
       }),
-    onSuccess: (team) => {
+    onSuccess: async (team) => {
+      void saveEntityEmbedding(
+        "team",
+        team.id,
+        prepareSemanticText({
+          kind: "team",
+          text: [team.name, team.ideaTitle ?? "", team.ideaDomain ?? ""].join(" "),
+          skills: team.missingSkills,
+          roles: team.openRoles,
+        }),
+      ).catch((error: unknown) => {
+        console.warn("[team] Semantic embedding was not saved:", error);
+      });
+      if (sendBuilderInvites && builderCandidates.length > 0) {
+        const results = await Promise.allSettled(
+          selectedBuilderCandidates.map((userId) =>
+            api(`/api/teams/${team.id}/invites`, {
+              method: "POST",
+              body: JSON.stringify({ userId }),
+            }),
+          ),
+        );
+        const failed = results.filter((result) => result.status === "rejected").length;
+        if (failed > 0) toast.error(`${failed} invitation${failed === 1 ? "" : "s"} could not be sent. Review them from your team page.`);
+        else toast.success("Selected invitations sent.");
+      }
       toast.success("Team created! Your workspace is ready.");
       router.push("/my-team");
     },
@@ -104,6 +136,21 @@ function NewTeamForm() {
 
   return (
     <div className="pt-8 pb-4 max-w-3xl">
+      {selectedHackathon && !ideaFirst && (
+        <div className="mb-6">
+          <BuilderPanel
+            hackathon={selectedHackathon.slug}
+            initialSelectedIds={selectedBuilderCandidates}
+            onSelectionChange={setSelectedBuilderCandidates}
+          />
+        </div>
+      )}
+      {selectedBuilderCandidates.length > 0 && !ideaFirst && (
+        <label className="mb-6 flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/[0.03] p-3 text-sm">
+          <input type="checkbox" checked={sendBuilderInvites} onChange={(event) => setSendBuilderInvites(event.target.checked)} className="mt-1" />
+          <span><span className="font-medium">Send invitations after creating this team</span><br /><span className="text-xs text-muted-foreground">Only the candidates you selected in Build my team will be invited. Nothing is sent until you confirm by creating the team.</span></span>
+        </label>
+      )}
       <div className="mb-6">
         <h1 className="text-2xl font-extrabold tracking-tight flex items-center gap-2">
           <Rocket className="h-6 w-6 text-primary" /> Create a team

@@ -144,6 +144,14 @@ export const SKILL_CATEGORY_META: Record<SkillCategory, { label: string; color: 
   hardware: { label: "Hardware", color: "bg-stone-100 text-stone-800 dark:bg-stone-900 dark:text-stone-300 border-stone-300 dark:border-stone-700" },
   cybersecurity: { label: "Security", color: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-200 dark:border-red-800" },
   research: { label: "Research", color: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-950 dark:text-fuchsia-300 border-fuchsia-200 dark:border-fuchsia-800" },
+  mobile: { label: "Mobile", color: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800" },
+  data: { label: "Data", color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800" },
+  databases: { label: "Databases", color: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border-sky-200 dark:border-sky-800" },
+  systems: { label: "Systems", color: "bg-slate-100 text-slate-800 dark:bg-slate-950 dark:text-slate-300 border-slate-200 dark:border-slate-800" },
+  blockchain: { label: "Blockchain", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800" },
+  testing: { label: "Testing", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800" },
+  collaboration: { label: "Collaboration", color: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800" },
+  interdisciplinary: { label: "Interdisciplinary", color: "bg-gray-100 text-gray-800 dark:bg-gray-950 dark:text-gray-300 border-gray-200 dark:border-gray-800" },
 };
 
 /** Default workspace checklist inserted for every new team. */

@@ -25,6 +25,7 @@ import { PersonCard } from "@/components/discover/person-card";
 import { TeamCard } from "@/components/discover/team-card";
 import { EmptyState } from "@/components/shared/empty-state";
 import { LookingDialog } from "@/components/hackathons/looking-dialog";
+import { BuilderPanel } from "@/components/team/builder-panel";
 import { useHackathonHub, useCurrentUser } from "@/hooks/use-api";
 
 export default function HackathonHubPage({
@@ -150,6 +151,12 @@ export default function HackathonHubPage({
               )}
             </div>
           </div>
+
+          {isAuthenticated && !myTeam && (
+            <div className="mt-6">
+              <BuilderPanel hackathon={slug} />
+            </div>
+          )}
 
           {roleDemand.length > 0 && (
             <Card className="lg:w-72 h-fit bg-muted/30">

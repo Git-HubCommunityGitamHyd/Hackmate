@@ -53,6 +53,7 @@ export interface PersonCardDTO {
     ideaBlurb: string | null;
   };
   karma?: number;
+  searchExplanation?: import("@/lib/matching/ranking").SearchExplanation;
 }
 
 export type EqualCandidateDTO = PersonCardDTO & {
@@ -78,6 +79,8 @@ export interface HackathonCardDTO {
   organizer: string | null;
   recruitingTeamCount: number;
   peopleLookingCount: number;
+  description?: string | null;
+  searchExplanation?: import("@/lib/matching/ranking").SearchExplanation;
 }
 
 export interface TeamCardDTO {
@@ -102,6 +105,7 @@ export interface TeamCardDTO {
   matchReasons?: string[];
   memberNames: string[];
   createdAt: string;
+  searchExplanation?: import("@/lib/matching/ranking").SearchExplanation;
 }
 
 export interface TeamDetailDTO extends TeamCardDTO {
@@ -141,6 +145,8 @@ export interface TeamDetailDTO extends TeamCardDTO {
 }
 
 export interface ProfileDTO extends PersonCardDTO {
+  openToOpportunities: boolean;
+  matchDigestEmails: boolean;
   idVerificationStatus?: IdVerificationStatus;
   email: string;
   username: string | null;

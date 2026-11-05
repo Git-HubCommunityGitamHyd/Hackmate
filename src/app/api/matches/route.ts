@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getTeamMatchesForUser, getPeopleMatchesForTeam } from "@/lib/queries/teams";
 import { ok, fail, withUser } from "@/lib/api";
+import { getActiveMatches } from "@/lib/matching/proactive";
 
 /**
  * GET /api/matches - deterministic matching for the signed-in viewer.
@@ -14,6 +15,9 @@ export async function GET(req: NextRequest) {
 
     if (type === "teams") {
       return ok(await getTeamMatchesForUser(user.id, 12));
+    }
+    if (type === "active") {
+      return ok(await getActiveMatches(user.id));
     }
     if (type === "people") {
       const teamId = p.get("teamId");
