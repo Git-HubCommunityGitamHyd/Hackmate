@@ -24,7 +24,16 @@ export function SearchBar({
   onChange: (v: string) => void;
   onSearch: (v: string) => void;
   loading: boolean;
-  parsed?: { skills: string[]; roles: string[]; teamSize: number | null; intent: string } | null;
+  parsed?: {
+    skills: string[];
+    roles: string[];
+    teamSize: number | null;
+    intent: string;
+    explicitSkills?: string[];
+    contextualConcepts?: string[];
+    relatedSuggestions?: string[];
+    excludedSkills?: string[];
+  } | null;
 }) {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -95,6 +104,21 @@ export function SearchBar({
           {parsed.skills.map((s) => (
             <Badge key={s} variant="outline" className="text-[11px] py-0 bg-primary/5 border-primary/30 text-primary">
               {s}
+            </Badge>
+          ))}
+          {(parsed.contextualConcepts ?? []).map((concept) => (
+            <Badge key={`context-${concept}`} variant="outline" className="text-[11px] py-0 bg-sky-500/10 border-sky-500/30 text-sky-700 dark:text-sky-400">
+              context: {concept}
+            </Badge>
+          ))}
+          {(parsed.relatedSuggestions ?? []).map((concept) => (
+            <Badge key={`related-${concept}`} variant="outline" className="text-[11px] py-0 bg-muted">
+              related: {concept}
+            </Badge>
+          ))}
+          {(parsed.excludedSkills ?? []).map((skill) => (
+            <Badge key={`excluded-${skill}`} variant="outline" className="text-[11px] py-0 text-destructive">
+              excluded: {skill}
             </Badge>
           ))}
           {parsed.roles.map((r) => (

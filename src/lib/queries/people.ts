@@ -15,6 +15,9 @@ export interface PeopleFilters {
   hackathonId?: string; // people with an active hackathon profile for this event
   excludeTeamHackathonId?: string; // exclude people already on a team here
   emergencyOnly?: boolean;
+  openToOpportunitiesOnly?: boolean;
+  excludedSkillIds?: string[];
+  roleSlugs?: string[];
   limit?: number;
 }
 
@@ -25,6 +28,9 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
     where.push(gt(schema.users.emergencyAvailableUntil, new Date()));
   } else {
     where.push(findablePeopleFilter());
+  }
+  if (filters.openToOpportunitiesOnly) {
+    where.push(eq(schema.users.openToOpportunities, true));
   }
   if (filters.experienceLevel) where.push(eq(schema.users.experienceLevel, filters.experienceLevel as any));
   if (filters.commitment) where.push(eq(schema.users.commitment, filters.commitment as any));
@@ -165,6 +171,8 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
     experienceLevel: u.experienceLevel ?? null,
     commitment: u.commitment ?? null,
     recruitmentStatus: u.recruitmentStatus ?? null,
+    openToOpportunities: u.openToOpportunities,
+    matchDigestEmails: u.matchDigestEmails,
     emergencyAvailable: !!u.emergencyAvailableUntil && u.emergencyAvailableUntil > new Date(),
     githubUsername: u.githubUsername,
     topSkills: (skillsByUser.get(u.id) ?? [])
@@ -188,6 +196,14 @@ export async function people(filters: PeopleFilters = {}): Promise<PersonCardDTO
     list = list.filter((p) =>
       (skillsByUser.get(p.id) ?? []).some((s) => cats.has(s.category)),
     );
+  }
+  if (filters.excludedSkillIds && filters.excludedSkillIds.length > 0) {
+    const excluded = new Set(filters.excludedSkillIds);
+    list = list.filter((p) => !p.topSkills.some((skill) => excluded.has(skill.id)));
+  }
+  if (filters.roleSlugs && filters.roleSlugs.length > 0) {
+    const wantedRoles = new Set(filters.roleSlugs);
+    list = list.filter((p) => p.roles.some((role) => wantedRoles.has(role.slug)));
   }
 
   return list;
@@ -338,6 +354,8 @@ export async function getProfile(userId: string): Promise<ProfileDTO | null> {
     experienceLevel: u.experienceLevel ?? null,
     commitment: u.commitment ?? null,
     recruitmentStatus: u.recruitmentStatus ?? null,
+    openToOpportunities: u.openToOpportunities,
+    matchDigestEmails: u.matchDigestEmails,
     emergencyAvailable: !!u.emergencyAvailableUntil && u.emergencyAvailableUntil > new Date(),
     githubUsername: u.githubUsername,
     topSkills: (skillsByUser.get(u.id) ?? [])

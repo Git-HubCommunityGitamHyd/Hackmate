@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     const parsed = teamSchema.safeParse(body);
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid data");
     const data = parsed.data;
+    let roleExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     /* Idea-first teams skip the event; event teams are validated. */
     if (data.hackathonId) {
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
         .limit(1);
       if (!hackathon) return fail("Hackathon not found", 404);
       if (hackathon.status === "completed") return fail("This hackathon has ended");
+      if (hackathon.endsAt < roleExpiresAt) roleExpiresAt = hackathon.endsAt;
 
       /* One active team per hackathon per user. */
       const [existingMembership] = await db
@@ -131,6 +133,7 @@ export async function POST(req: NextRequest) {
             teamId: team.id,
             roleId: r!.id,
             priority: data.rolePriorities?.[i] === "nice" ? ("nice" as const) : ("must" as const),
+            expiresAt: roleExpiresAt,
           })),
         );
     }

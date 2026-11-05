@@ -8,23 +8,40 @@ const resend = process.env.RESEND_API_KEY
  * Notification emails via Resend (free tier: 3,000/month).
  * Silent no-op in dev when RESEND_API_KEY is unset.
  */
+export async function sendEmailWithResult(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  idempotencyKey?: string;
+}): Promise<{ delivered: boolean; providerMessageId: string | null }> {
+  if (!resend) {
+    console.info(`[email:skipped] "${opts.subject}" → ${opts.to}`);
+    return { delivered: false, providerMessageId: null };
+  }
+  try {
+    const from = process.env.EMAIL_FROM ?? "HackMate <onboarding@resend.dev>";
+    const { idempotencyKey, ...message } = opts;
+    const result = await resend.emails.send(
+      { from, ...message },
+      idempotencyKey ? { idempotencyKey } : undefined,
+    );
+    if (result.error) {
+      console.error("[email:error]", result.error);
+      return { delivered: false, providerMessageId: null };
+    }
+    return { delivered: true, providerMessageId: result.data?.id ?? null };
+  } catch (err) {
+    console.error("[email:error]", err);
+    return { delivered: false, providerMessageId: null };
+  }
+}
+
 export async function sendEmail(opts: {
   to: string;
   subject: string;
   html: string;
 }): Promise<boolean> {
-  if (!resend) {
-    console.info(`[email:skipped] "${opts.subject}" → ${opts.to}`);
-    return false;
-  }
-  try {
-    const from = process.env.EMAIL_FROM ?? "HackMate <onboarding@resend.dev>";
-    await resend.emails.send({ from, ...opts });
-    return true;
-  } catch (err) {
-    console.error("[email:error]", err);
-    return false;
-  }
+  return (await sendEmailWithResult(opts)).delivered;
 }
 
 function shell(title: string, body: string, cta?: { label: string; url: string }) {
@@ -71,6 +88,14 @@ export const emailTemplates = {
       `${hackathonName} submission is due ${when}`,
       `Your team still has unchecked items on the submission checklist.`,
       { label: "Open checklist", url: "/my-team" },
+    ),
+  }),
+  matchDigest: (groups: { role: string; count: number }[], invitations = 0) => ({
+    subject: "New hackathon team opportunities match your skills",
+    html: shell(
+      "New team opportunities match your skills",
+      `${invitations > 0 ? `<strong>${invitations} pending team invitation${invitations === 1 ? "" : "s"}</strong><br />` : ""}${groups.map((group) => `${group.role}: ${group.count} opportunities.`).join("<br />")}`,
+      { label: "Explore your matches", url: "/matches" },
     ),
   }),
 };

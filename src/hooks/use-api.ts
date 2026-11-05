@@ -69,6 +69,23 @@ export function useMyProfile() {
   return useApi<ProfileDTO>(["me"], isAuthenticated ? "/api/users/me" : null);
 }
 
+export interface ActiveMatch {
+  id: string;
+  teamId: string;
+  teamName: string;
+  hackathonId: string | null;
+  hackathonName: string | null;
+  roleId: string;
+  roleName: string;
+  score: number;
+  reasons: string[];
+  createdAt: string;
+}
+
+export function useActiveMatches(enabled = true) {
+  return useApi<ActiveMatch[]>(["active-matches"], enabled ? "/api/matches?type=active" : null);
+}
+
 /* ------------------------------------------------------------------ */
 /* Hackathons                                                          */
 /* ------------------------------------------------------------------ */
@@ -325,19 +342,40 @@ export function useToggleBookmark() {
 export function useSearch(q: string) {
   return useQuery({
     queryKey: ["search", q],
-    queryFn: () =>
-      api<{
+    queryFn: async () => {
+      let embedding: number[] | undefined;
+      let semanticError: string | null = null;
+      if (typeof window !== "undefined") {
+        try {
+          const { embedNeedleText } = await import("@/lib/matching/needle-browser");
+          const { prepareSemanticText } = await import("@/lib/matching/taxonomy");
+          embedding = await embedNeedleText(prepareSemanticText({ kind: "query", text: q }));
+        } catch (error) {
+          semanticError = error instanceof Error ? error.message : "Local semantic search is unavailable.";
+        }
+      }
+      const result = await api<{
         parsed: {
           intent: string;
           skills: string[];
           roles: string[];
           teamSize: number | null;
           terms: string[];
+          explicitSkills: string[];
+          contextualConcepts: string[];
+          relatedSuggestions: string[];
+          excludedSkills: string[];
         } | null;
         hackathons: HackathonCardDTO[];
         teams: TeamCardDTO[];
         people: PersonCardDTO[];
-      }>(`/api/search?q=${encodeURIComponent(q)}`),
+        semantic?: { requested: boolean; available: boolean };
+      }>("/api/search", {
+        method: "POST",
+        body: JSON.stringify({ q, embedding }),
+      });
+      return { ...result, semanticError };
+    },
     enabled: q.trim().length >= 2,
     staleTime: 60_000,
   });

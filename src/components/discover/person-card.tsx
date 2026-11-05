@@ -154,7 +154,15 @@ export function PersonCard({
               </div>
             )}
 
-            {person.matchReasons && person.matchReasons.length > 0 && (
+            {person.searchExplanation?.reasons?.length ? (
+              <ul className="mt-3 space-y-0.5">
+                {person.searchExplanation.reasons.slice(0, 2).map((reason) => (
+                  <li key={reason} className="text-[11px] text-muted-foreground flex items-start gap-1">
+                    <span className="text-primary mt-0.5">✓</span> {reason}
+                  </li>
+                ))}
+              </ul>
+            ) : person.matchReasons && person.matchReasons.length > 0 && (
               <ul className="mt-3 space-y-0.5">
                 {person.matchReasons.slice(0, 2).map((r) => (
                   <li key={r} className="text-[11px] text-muted-foreground flex items-start gap-1">

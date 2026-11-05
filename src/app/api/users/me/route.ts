@@ -9,7 +9,8 @@ import { ok, fail, withUser } from "@/lib/api";
 import { rateLimit, tooManyRequests } from "@/lib/rate-limit";
 import { PROCESSING_STALE_AFTER_MS } from "@/lib/verification/constants";
 import { deleteCollegeIdImage } from "@/lib/verification/storage";
-import { ROLE_TAXONOMY, SKILLS } from "@/lib/constants";
+import { ROLE_TAXONOMY } from "@/lib/constants";
+import { canonicalTaxonomySkills } from "@/lib/matching/taxonomy";
 
 /** GET /api/users/me - full own profile + my active team. */
 export async function GET() {
@@ -121,7 +122,7 @@ export async function PUT(req: NextRequest) {
 
       let skillRows = await tx.select().from(schema.skills);
       const existingSkillSlugs = new Set(skillRows.map((skill) => skill.slug));
-      const missingSkills = SKILLS.filter((skill) => !existingSkillSlugs.has(skill.slug));
+      const missingSkills = canonicalTaxonomySkills().filter((skill) => !existingSkillSlugs.has(skill.slug));
       if (missingSkills.length > 0) {
         await tx.insert(schema.skills).values(missingSkills).onConflictDoNothing();
         skillRows = await tx.select().from(schema.skills);
@@ -196,6 +197,9 @@ export async function PUT(req: NextRequest) {
           experienceLevel: data.experienceLevel,
           commitment: data.commitment,
           recruitmentStatus: data.recruitmentStatus,
+          openToOpportunities: data.openToOpportunities,
+          matchDigestEmails: data.matchDigestEmails,
+          profileEmbeddingStatus: "stale" as const,
           onboarded: true,
           updatedAt: new Date(),
         })

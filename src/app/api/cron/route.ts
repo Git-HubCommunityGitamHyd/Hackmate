@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { schema } from "@/lib/db";
 import { sendEmail, emailTemplates } from "@/lib/email";
 import { ok, fail } from "@/lib/api";
+import { cleanupStaleInvitations, runProactiveMatching } from "@/lib/matching/proactive";
 
 /**
  * Vercel Cron endpoint (Hobby plan: 2 jobs/day - see vercel.json).
@@ -12,7 +13,8 @@ import { ok, fail } from "@/lib/api";
  * Jobs:
  *   1. deadline reminders  - registration/submission deadlines within 48h
  *   2. emergency expiry    - expire emergency availability windows
- *   3. keep-alive ping     - SELECT 1 against CockroachDB
+ *   3. proactive matching  - discover matches and process due digests
+ *   4. keep-alive ping     - SELECT 1 against CockroachDB
  */
 async function runDailyJobs() {
   const results: Record<string, unknown> = {};
@@ -86,7 +88,13 @@ async function runDailyJobs() {
     .returning({ id: schema.users.id });
   results.emergencyExpired = expired.length;
 
-  /* --- 3. Keep-alive ping ------------------------------------------ */
+  /* --- 3. Stale invitation cleanup ------------------------------- */
+  results.invitationsExpired = await cleanupStaleInvitations();
+
+  /* --- 3. Proactive matching --------------------------------------- */
+  results.proactiveMatching = await runProactiveMatching();
+
+  /* --- 4. Keep-alive ping ------------------------------------------ */
   await db.execute(sql`select 1`);
   results.keepAlive = "ok";
 

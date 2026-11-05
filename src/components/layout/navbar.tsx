@@ -150,9 +150,14 @@ export function Navbar() {
     .join("")
     .toUpperCase();
 
-  const navLinks = isAdmin
-    ? [...NAV_LINKS, { href: "/admin", label: "Admin" }]
-    : NAV_LINKS;
+  const navLinks =
+    status === "authenticated"
+      ? [
+          { href: "/matches", label: "Matches" },
+          ...NAV_LINKS,
+          ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
+        ]
+      : [];
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);

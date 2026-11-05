@@ -35,6 +35,8 @@ import type { SkillCategory } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import { LinkedInImportCard } from "@/components/profile/linkedin-import-card";
 import { CollegeIdVerification } from "@/components/profile/college-id-verification";
+import { saveProfileEmbedding } from "@/lib/matching/needle-browser";
+import { prepareSemanticText } from "@/lib/matching/taxonomy";
 
 interface SkillSel {
   slug: string;
@@ -60,6 +62,8 @@ export default function EditProfilePage() {
     experienceLevel: "intermediate",
     commitment: "serious",
     recruitmentStatus: "looking",
+    openToOpportunities: true,
+    matchDigestEmails: false,
   });
   const [skills, setSkills] = useState<SkillSel[]>([]);
   const [roles, setRoles] = useState<{ slug: string; isPrimary: boolean }[]>([]);
@@ -94,6 +98,8 @@ export default function EditProfilePage() {
       experienceLevel: profile.experienceLevel ?? "intermediate",
       commitment: profile.commitment ?? "serious",
       recruitmentStatus: profile.recruitmentStatus ?? "looking",
+      openToOpportunities: profile.openToOpportunities,
+      matchDigestEmails: profile.matchDigestEmails,
     });
     setSkills(
       (profile.skills ?? []).map((s) => ({ slug: s.slug, level: s.level ?? 3, isPrimary: !!s.isPrimary })),
@@ -136,6 +142,17 @@ export default function EditProfilePage() {
       }),
     /** Refresh profile queries and navigate to the saved profile after a successful update. */
     onSuccess: async () => {
+      const sourceText = prepareSemanticText({
+        kind: "profile",
+        text: form.bio,
+        skills: skills.map((skill) => skill.slug),
+        roles: roles.map((role) => role.slug),
+        experienceLevel: form.experienceLevel,
+        commitment: form.commitment,
+      });
+      void saveProfileEmbedding(sourceText).catch((error: unknown) => {
+        console.warn("[profile] Semantic embedding was not saved:", error);
+      });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["me"] }),
         ...(profile
@@ -205,6 +222,22 @@ export default function EditProfilePage() {
           Save changes
         </Button>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Matching preferences</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <Checkbox checked={form.openToOpportunities} onCheckedChange={(checked) => setForm({ ...form, openToOpportunities: checked === true })} />
+            <span><span className="text-sm font-semibold block">Open to team opportunities</span><span className="text-xs text-muted-foreground">Let HackMate find relevant recruiting teams for you.</span></span>
+          </label>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <Checkbox checked={form.matchDigestEmails} onCheckedChange={(checked) => setForm({ ...form, matchDigestEmails: checked === true })} />
+            <span><span className="text-sm font-semibold block">Email match digests</span><span className="text-xs text-muted-foreground">Get one email every three days when at least five new matches are ready.</span></span>
+          </label>
+        </CardContent>
+      </Card>
 
       {/* Basics */}
       <Card>

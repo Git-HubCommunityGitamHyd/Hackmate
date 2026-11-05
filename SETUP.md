@@ -27,6 +27,8 @@ place. No keys ever go in the code.
 | `ID_BLOB_STORE_ID` | Private store ID for Vercel OIDC | Vercel Blob store settings | optional alternative to ID token |
 | `DATALAB_API_KEY` | Managed Datalab OCR API key | https://www.datalab.to/app/keys | college ID verification |
 | `CRON_SECRET` | Signs the Vercel Cron requests | generate any random string | production, for cron |
+| `MATCH_EMAIL_MONTHLY_QUOTA` | Monthly proactive match digest budget (default `3000`) | set in Vercel or `.env.local` | optional |
+| `INVITE_EXPIRY_DAYS` | Pending team invitation lifetime (default `7`) | set in Vercel or `.env.local` | optional |
 | `DATABASE_SSL_ROOT_CERT` | Path to the CockroachDB root cert for strict TLS | CockroachDB console, download CA cert | optional |
 | `ALLOW_DEMO_LOGIN` | Dev-only quick admin sign in button | set to `true` | dev only, never production |
 
@@ -116,7 +118,7 @@ bun install    # or: npm install
 ```bash
 bun run db:create        # CREATE DATABASE hackmate (no-op on CockroachDB)
 bun run db:migrate       # apply all schema migrations
-bun run db:seed          # taxonomy: 61 skills, 10 roles, 5 badges
+bun run db:seed          # idempotent taxonomy: 338 skills, 10 roles, 11 badges
 bun run db:seed:demo     # optional: 8 demo people, 3 hackathons, 5 teams
 ```
 
@@ -142,6 +144,58 @@ Optional integrations, the app degrades gracefully without them:
 - `RESEND_API_KEY` for magic links and notification emails
 - `PUSHER_*` for realtime chat (falls back to 4 second polling)
 - `BLOB_READ_WRITE_TOKEN` for avatar and logo uploads
+
+Proactive match digests run from `/api/cron` every six hours. A digest is sent
+only when a user is open to opportunities, has opted into digest emails, and
+has at least five **new, undelivered** eligible matches. Digests are limited
+to one successful email per user every 72 hours and the monthly budget is
+tracked in the database.
+
+Team invitations expire after seven days by default. The six-hour cron marks
+pending invitations as expired or revoked when that deadline, the hackathon
+end, team closure, team capacity, or recipient membership makes them invalid.
+Accepted invitations and resulting memberships are preserved.
+
+The AI Team Builder is available to signed-in users with a completed profile
+who are open to opportunities and are not already on a team for the selected
+hackathon. It is available from both the hackathon page and the new-team page.
+Recommendations are deterministic and use complementary role/skill coverage,
+availability hours, and commitment alignment. Generating a recommendation
+never creates a team or sends invitations. Candidates can be selected or
+deselected, and invitations are sent only after the user confirms team
+creation. Candidate eligibility is checked again by the existing invitation
+endpoint before each invitation is persisted.
+
+## Semantic matching proof of concept
+
+The browser-only Needle 3 proof of concept is available at
+`/semantic-poc` while the embedding integration is being validated. It uses
+the community-maintained `cactus-needle/browser` package, a module worker,
+and WebAssembly. Click **Run embedding proof** to load the cached model,
+embed two texts, validate finite non-zero vectors with the same dimension,
+and calculate cosine similarity. It requires HTTPS or localhost, WebAssembly,
+and module-worker support. No API key is used.
+
+The package currently pins a 35.3 MB Needle 3 model by default. The official
+Cactus documentation describes the full 20-layer artifact as approximately
+29 MB; these are not treated as interchangeable. The wider semantic
+matching integration should be enabled only after the exact desired model
+artifact and checksum are selected and verified.
+
+Semantic profile vectors are generated after a successful profile save and
+persisted through `/api/users/me/embedding`. Team admins can persist role
+vectors through `/api/teams/[teamId]/roles/[roleId]/embedding`. Both endpoints
+validate finite, non-zero vectors and record the Needle model, taxonomy
+version, text-preparation version, and normalized source-text hash. The
+shared preparation format canonicalizes aliases, deduplicates explicit skills,
+and adds only matched domain context; it does not append the complete taxonomy
+or infer a skill. Profile edits mark the previous vector stale before
+regeneration, and the browser caches unchanged prepared-text embeddings for
+the current session. Search, proactive match digests, and the AI Team Builder
+use current stored vectors when available; missing, invalid, stale,
+unavailable, or dimension-incompatible vectors use the existing deterministic
+behavior instead. Apply `drizzle/0014_semantic_embeddings.sql` before using
+the persistence endpoints.
 
 Dev-only quick sign in: with `ALLOW_DEMO_LOGIN=true`, the login page shows a
 quick admin sign in button that signs you in as your first `ADMIN_EMAILS`
@@ -278,9 +332,10 @@ pages get a panel explaining exactly how to get access.
 
 ### 6. Vercel Cron (deadline reminders, emergency expiry, keep alive)
 
-`vercel.json` already defines 2 daily cron hits to `/api/cron`, which is the
-Hobby plan limit. Set `CRON_SECRET` in your Vercel environment, Vercel signs
-each request with it.
+`vercel.json` defines a `/api/cron` run every six hours for deadline reminders,
+emergency expiry, and proactive matching. Set `CRON_SECRET` in your Vercel
+environment; Vercel signs each request with it. Confirm that your Vercel plan
+allows four cron invocations per day before deploying.
 
 ## Deploying to Vercel ($0)
 
@@ -319,7 +374,8 @@ confirm the migration ran and that the Vercel runtime can reach port 26257
 | `bun run build` / `start` | Production build / serve |
 | `bun run lint` | ESLint |
 | `bun run db:migrate` | Apply every pending `drizzle/*.sql` migration via the custom `__migrations` tracker |
-| `bun run db:seed` | Re-seed system taxonomies (truncates first, no demo data) |
+| `bun run db:seed` | Idempotently seed/update system taxonomies (no demo data) |
+| `npm run test:db:skills` | Verify an extracted alias filters a profile through the database |
 | `bun run db:studio` | Drizzle Studio (browse the database) |
 
 `bun run db:migrate` is the authoritative migration command. The custom

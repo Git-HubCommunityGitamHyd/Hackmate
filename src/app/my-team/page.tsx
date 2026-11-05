@@ -171,6 +171,11 @@ function TeamWorkspace({
   });
 
   const incoming = notif?.incomingRequests?.filter((r) => r.teamId === team.id) ?? [];
+  const outgoingInvites = useQuery({
+    queryKey: ["team-invites", team.id],
+    queryFn: () => api<{ id: string; userId: string; name: string | null; image: string | null; status: string; expiresAt: string | null }[]>(`/api/teams/${team.id}/invites`),
+    enabled: isAdmin,
+  });
 
   return (
     <div className="pt-8 pb-4">
@@ -310,7 +315,7 @@ function TeamWorkspace({
               </TabsTrigger>
               <TabsTrigger value="tasks" className="data-[state=active]:bg-background">Checklist</TabsTrigger>
               <TabsTrigger value="members" className="data-[state=active]:bg-background">Members</TabsTrigger>
-              {isAdmin && incoming.length > 0 && (
+              {isAdmin && (incoming.length > 0 || (outgoingInvites.data?.length ?? 0) > 0) && (
                 <TabsTrigger value="requests" className="gap-1.5 data-[state=active]:bg-background">
                   Requests
                   <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{incoming.length}</Badge>
@@ -401,39 +406,33 @@ function TeamWorkspace({
               <TabsContent value="requests" className="mt-4">
                 <Card>
                   <CardContent className="p-4 space-y-3">
-                    {incoming.length === 0 ? (
+                    {incoming.length === 0 && (outgoingInvites.data?.length ?? 0) === 0 ? (
                       <p className="text-sm text-muted-foreground py-4 text-center">
-                        No pending requests. Invites you send appear in their notifications.
+                        No pending requests or outgoing invitations.
                       </p>
                     ) : (
-                      incoming.map((r) => (
-                        <div key={r.id} className="flex items-start gap-3 p-3 rounded-lg border">
-                          <UserAvatar name={r.userName} image={r.userImage} className="h-10 w-10" />
-                          <div className="flex-1 min-w-0">
-                            <Link href={`/profile/${r.userId}`} className="font-semibold text-sm hover:text-primary">
-                              {r.userName}
-                            </Link>
-                            <p className="text-sm text-muted-foreground mt-0.5">{r.message}</p>
+                      <>
+                        {incoming.map((r) => (
+                          <div key={r.id} className="flex items-start gap-3 p-3 rounded-lg border">
+                            <UserAvatar name={r.userName} image={r.userImage} className="h-10 w-10" />
+                            <div className="flex-1 min-w-0">
+                              <Link href={`/profile/${r.userId}`} className="font-semibold text-sm hover:text-primary">{r.userName}</Link>
+                              <p className="text-sm text-muted-foreground mt-0.5">{r.message}</p>
+                            </div>
+                            <div className="flex gap-2 shrink-0">
+                              <Button size="sm" onClick={() => respond.mutate({ requestId: r.id, action: "accepted" })} disabled={respond.isPending}><Check className="h-4 w-4 mr-1" /> Accept</Button>
+                              <Button size="sm" variant="outline" onClick={() => respond.mutate({ requestId: r.id, action: "declined" })} disabled={respond.isPending}><X className="h-4 w-4 mr-1" /> Decline</Button>
+                            </div>
                           </div>
-                          <div className="flex gap-2 shrink-0">
-                            <Button
-                              size="sm"
-                              onClick={() => respond.mutate({ requestId: r.id, action: "accepted" })}
-                              disabled={respond.isPending}
-                            >
-                              <Check className="h-4 w-4 mr-1" /> Accept
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => respond.mutate({ requestId: r.id, action: "declined" })}
-                              disabled={respond.isPending}
-                            >
-                              <X className="h-4 w-4 mr-1" /> Decline
-                            </Button>
+                        ))}
+                        {outgoingInvites.data?.map((invite) => (
+                          <div key={invite.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                            <UserAvatar name={invite.name ?? "Candidate"} image={invite.image} className="h-9 w-9" />
+                            <div className="flex-1"><Link href={`/profile/${invite.userId}`} className="text-sm font-semibold hover:text-primary">{invite.name ?? "Candidate"}</Link><p className="text-xs text-muted-foreground">Invitation status</p></div>
+                            <Badge variant={invite.status === "accepted" ? "default" : invite.status === "pending" ? "secondary" : "outline"}>{invite.status}</Badge>
                           </div>
-                        </div>
-                      ))
+                        ))}
+                      </>
                     )}
                   </CardContent>
                 </Card>

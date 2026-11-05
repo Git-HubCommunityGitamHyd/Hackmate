@@ -36,6 +36,7 @@ export async function listHackathons(
     slug: h.slug,
     name: h.name,
     tagline: h.tagline,
+    description: h.description,
     mode: h.mode,
     location: h.location,
     themes: h.themes ?? [],

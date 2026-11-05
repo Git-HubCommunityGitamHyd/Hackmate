@@ -173,6 +173,12 @@ function DiscoverContent() {
   const sortedTeams = useMemo(() => sortTeams(teamList, teamSort), [teamList, teamSort]);
   const sortedPeople = useMemo(() => sortPeople(peopleList, peopleSort), [peopleList, peopleSort]);
   const loading = isSearching ? search.isLoading : hackathons.isLoading || teams.isLoading || people.isLoading;
+  const searchError = isSearching && search.isError
+    ? (search.error instanceof Error ? search.error.message : "Search failed. Try again.")
+    : null;
+  const semanticWarning = isSearching && search.data?.semanticError
+    ? `Semantic ranking is unavailable; showing deterministic matches. ${search.data.semanticError}`
+    : null;
 
   return (
     <div className="pt-8 pb-4">
@@ -278,7 +284,11 @@ function DiscoverContent() {
         </div>
 
         <TabsContent value="hackathons" className="mt-5">
-          {loading ? (
+          {searchError ? (
+            <p role="alert" className="text-sm text-destructive">{searchError}</p>
+          ) : semanticWarning ? (
+            <p role="status" className="text-sm text-muted-foreground">{semanticWarning}</p>
+          ) : loading ? (
             <SkeletonList />
           ) : hackathonList.length === 0 ? (
             <EmptyState

@@ -1,138 +1,122 @@
-import { SKILLS, ROLE_TAXONOMY } from "@/lib/constants";
-
-/**
- * Natural-language search parser - deterministic, no AI.
- *
- * Understands queries like:
- *   "Need someone who knows Next.js and has ML experience for a 4-person team"
- *   "looking for a backend dev with AWS for HackVerse"
- *   "designer who can pitch, weekends only"
- *
- * Extracts: skill slugs, roles, team size, and search intent (people vs teams).
- */
+import { ROLE_TAXONOMY } from "@/lib/constants";
+import { normalizeSemanticSkills, SEMANTIC_TAXONOMY } from "./taxonomy";
 
 export interface ParsedQuery {
   raw: string;
-  terms: string[]; // leftover free-text terms
-  skillSlugs: string[]; // matched skill slugs (from SKILLS)
-  roleSlugs: string[]; // matched role slugs
-  teamSize?: number; // "4-person team", "team of 5"
-  intent: "people" | "teams" | "any"; // "need someone" → people, "team" alone → teams
+  terms: string[];
+  skillSlugs: string[];
+  explicitSkills: string[];
+  contextualConcepts: string[];
+  relatedSuggestions: string[];
+  excludedSkills: string[];
+  roleSlugs: string[];
+  teamSize?: number;
+  intent: "people" | "teams" | "any";
 }
 
-const SKILL_ALIASES: Record<string, string> = {
-  ml: "scikit-learn",
-  ai: "llm-finetuning",
-  "machine learning": "scikit-learn",
-  "deep learning": "pytorch",
-  llm: "llm-finetuning",
-  llms: "llm-finetuning",
-  aws: "aws",
-  postgres: "postgresql",
-  sql: "postgresql",
-  mongo: "mongodb",
-  k8s: "kubernetes",
-  reactjs: "react",
-  "next js": "nextjs",
-  "react.js": "react",
-  figma: "figma",
-  tailwindcss: "tailwind",
-};
+const CONTEXT_PHRASES: Array<[RegExp, string[]]> = [
+  [/\b(?:builds?|designs?|develops?)\s+(?:web\s+)?apis?\b/i, ["API Design"]],
+  [/\bdeploys?\s+(?:web\s+)?apps?\b/i, ["CI/CD", "Cloud / DevOps"]],
+  [/\btrains?\s+(?:ai|ml|machine learning)\s+models?\b/i, ["Model Training", "MLOps"]],
+  [/\bbuilds?\s+(?:ai\s+)?chatbots?\b/i, ["LLMs", "NLP"]],
+  [/\boptimi[sz]es?\s+sql\s+queries?\b/i, ["Query Optimization", "SQL"]],
+  [/\bdesigns?\s+user\s+interfaces?\b/i, ["UI Design", "UX Design"]],
+];
 
-const ROLE_KEYWORDS: Record<string, string> = {
-  frontend: "frontend",
-  frontenddeveloper: "frontend",
-  backend: "backend",
-  backenddeveloper: "backend",
-  devops: "cloud-devops",
-  cloud: "cloud-devops",
-  designer: "ui-ux-design",
-  design: "ui-ux-design",
-  ui: "ui-ux-design",
-  ux: "ui-ux-design",
-  ml: "ai-ml",
-  ai: "ai-ml",
-  pitcher: "pitching",
-  pitch: "pitching",
-  pm: "product",
-  product: "product",
-  hardware: "hardware",
-  security: "cybersecurity",
-  researcher: "research",
-};
+const NEGATION_RE = /\b(?:not|without|avoid|except|excluding|exclude|no)\s+(?:any\s+)?$/i;
+
+function normalizedQuery(raw: string): string {
+  return raw.toLowerCase()
+    .replace(/[’']/g, "'")
+    .replace(/[._/\\-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function boundaryPattern(value: string): RegExp {
+  const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+");
+  return new RegExp(`(^|[^a-z0-9+#])${escaped}(?=$|[^a-z0-9+#])`, "i");
+}
+
+function isNegated(query: string, start: number): boolean {
+  return NEGATION_RE.test(query.slice(Math.max(0, start - 28), start));
+}
+
+function skillMatches(query: string) {
+  const normalized = normalizedQuery(query);
+  const hits: Array<{ slug: string; name: string; index: number; length: number }> = [];
+  for (const skill of SEMANTIC_TAXONOMY.skills) {
+    const globalAliases = Object.entries(SEMANTIC_TAXONOMY.aliases)
+      .filter(([, slug]) => slug === skill.slug)
+      .map(([alias]) => alias);
+    const names = [skill.name, skill.slug, ...skill.aliases, ...globalAliases];
+    for (const name of names) {
+      const match = boundaryPattern(normalizedQuery(name)).exec(normalized);
+      const start = match ? match.index + match[1].length : -1;
+      if (match && !isNegated(normalized, start)) {
+        hits.push({ slug: skill.slug, name: skill.name, index: start, length: match[0].length - match[1].length });
+        break;
+      }
+    }
+  }
+  return hits
+    .sort((a, b) => a.index - b.index || b.length - a.length)
+    .filter((hit, index, all) => !all.slice(0, index).some((previous) =>
+      hit.index < previous.index + previous.length && previous.index < hit.index + hit.length));
+}
 
 export function parseSearchQuery(raw: string): ParsedQuery {
-  const q = raw.toLowerCase().trim();
-  const tokens = q.split(/[^a-z0-9+#.]+/).filter(Boolean);
-  const joined = tokens.join(" ");
-
-  const skillSlugs = new Set<string>();
-  const consumed = new Set<number>();
-
-  // Multi-word skill names first ("machine learning", "next js")
-  for (const skill of SKILLS) {
-    const lower = skill.name.toLowerCase();
-    if (lower.includes(" ") || lower.includes("/")) {
-      const idx = joined.indexOf(lower);
-      if (idx >= 0 && raw.toLowerCase().includes(lower)) skillSlugs.add(skill.slug);
-    }
-  }
-  // Alias multi-word phrases
-  for (const [phrase, slug] of Object.entries(SKILL_ALIASES)) {
-    if (phrase.includes(" ") && q.includes(phrase)) skillSlugs.add(slug);
-  }
-
-  // Single-token skills + aliases + roles
-  tokens.forEach((tok, i) => {
-    const skill = SKILLS.find((s) => s.name.toLowerCase() === tok || s.slug === tok);
-    if (skill) {
-      skillSlugs.add(skill.slug);
-      consumed.add(i);
-      return;
-    }
-    const alias = SKILL_ALIASES[tok];
-    if (alias && !alias.includes(" ")) {
-      const target = SKILLS.find((s) => s.slug === alias);
-      if (target) skillSlugs.add(target.slug);
-      consumed.add(i);
-      return;
-    }
-  });
+  const q = raw.trim();
+  const normalized = normalizedQuery(q);
+  const hits = skillMatches(q);
+  const explicitBySlug = new Map<string, string>();
+  for (const hit of hits) explicitBySlug.set(hit.slug, hit.name);
+  const excludedSkills = normalizeSemanticSkills(
+    SEMANTIC_TAXONOMY.skills
+      .filter((skill) => skillMatches(`not ${skill.name}`).length === 0 && /\b(?:not|without|avoid|except|excluding|exclude|no)\s+/i.test(normalized))
+      .filter((skill) => {
+        const index = normalized.indexOf(normalizedQuery(skill.name));
+        return index >= 0 && isNegated(normalized, index);
+      })
+      .map((skill) => skill.name),
+  );
+  const contextualConcepts = [...new Set(
+    CONTEXT_PHRASES.filter(([pattern]) => pattern.test(q)).flatMap(([, concepts]) => concepts),
+  )].filter((concept) => !explicitBySlug.has(normalizedQuery(concept).replace(/\s/g, "-")));
+  const relatedSuggestions = [...new Set(
+    [...explicitBySlug.keys()]
+      .flatMap((slug) => SEMANTIC_TAXONOMY.skills.find((skill) => skill.slug === slug)?.related ?? []),
+  )].filter((concept) => !explicitBySlug.has(normalizedQuery(concept).replace(/\s/g, "-")));
 
   const roleSlugs = new Set<string>();
-  tokens.forEach((tok, i) => {
-    const roleKey = ROLE_KEYWORDS[tok] ?? ROLE_KEYWORDS[tok.replace(/\./g, "")];
-    if (roleKey && ROLE_TAXONOMY.some((r) => r.slug === roleKey)) {
-      roleSlugs.add(roleKey);
-      consumed.add(i);
+  for (const role of ROLE_TAXONOMY) {
+    if (boundaryPattern(normalizedQuery(role.name)).test(normalized) || boundaryPattern(role.slug).test(normalized)) {
+      roleSlugs.add(role.slug);
     }
-  });
-
-  // Team size: "4-person team", "team of 5", "4 person"
-  let teamSize: number | undefined;
-  const sizeMatch = q.match(/(\d+)\s*(?:-|\s)?\s*(?:person|people|member)s?\s*(?:team)?/) ??
-    q.match(/team\s*(?:of|with)\s*(\d+)/);
-  if (sizeMatch) teamSize = parseInt(sizeMatch[1], 10);
-
-  // Intent detection
-  const peopleIntent = /(need|want|looking for|seeking)\s+(someone|a|an|people|person)/.test(q) ||
-    /\b(designer|developer|dev|engineer|pitcher|researcher)\b/.test(q) ||
-    roleSlugs.size > 0;
-  const teamIntent = /\bteams?\b/.test(q) && !peopleIntent;
-
-  const terms = tokens.filter((_, i) => !consumed.has(i)).filter((t) => !/^\d+$/.test(t));
+  }
+  const teamSizeMatch = normalized.match(/(\d+)\s*(?:person|people|member)s?(?:\s+team)?/) ?? normalized.match(/team\s+(?:of|with)\s+(\d+)/);
+  const teamSize = teamSizeMatch ? Number(teamSizeMatch[1]) : undefined;
+  const peopleIntent = /(need|want|looking for|seeking)\s+(someone|a|an|people|person)/i.test(q) ||
+    /\b(designer|developer|dev|engineer|pitcher|researcher)\b/i.test(q) || roleSlugs.size > 0;
+  const teamIntent = /\bteams?\b/i.test(q) && !peopleIntent;
+  const explicitSkills = [...explicitBySlug.values()].sort((a, b) => a.localeCompare(b));
+  const consumed = new Set(explicitSkills.flatMap((skill) => normalizedQuery(skill).split(" ")));
+  const terms = normalized.split(" ").filter((term) => term.length > 1 && !consumed.has(term) && !/^\d+$/.test(term));
 
   return {
     raw,
     terms,
-    skillSlugs: [...skillSlugs],
-    roleSlugs: [...roleSlugs],
+    skillSlugs: [...explicitBySlug.keys()].sort(),
+    explicitSkills,
+    contextualConcepts,
+    relatedSuggestions,
+    excludedSkills,
+    roleSlugs: [...roleSlugs].sort(),
     teamSize,
     intent: peopleIntent ? "people" : teamIntent ? "teams" : "any",
   };
 }
 
-/** Turn a parsed query into structured DB filters. */
 export interface StructuredFilters {
   q?: string;
   skillSlugs: string[];
@@ -144,8 +128,7 @@ export interface StructuredFilters {
 export function toStructuredFilters(parsed: ParsedQuery): StructuredFilters {
   const categories = new Set<string>();
   for (const roleSlug of parsed.roleSlugs) {
-    const role = ROLE_TAXONOMY.find((r) => r.slug === roleSlug);
-    role?.skillCategories.forEach((c) => categories.add(c));
+    ROLE_TAXONOMY.find((role) => role.slug === roleSlug)?.skillCategories.forEach((category) => categories.add(category));
   }
   return {
     q: parsed.terms.length > 0 ? parsed.terms.join(" ") : undefined,

@@ -125,6 +125,13 @@ export function TeamCard({ team, showMatch, delay = 0 }: { team: TeamCardDTO; sh
                 ))}
               </div>
             )}
+            {team.searchExplanation?.reasons?.length ? (
+              <ul className="mt-3 space-y-0.5">
+                {team.searchExplanation.reasons.slice(0, 2).map((reason) => (
+                  <li key={reason} className="text-[11px] text-muted-foreground">✓ {reason}</li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
           {showMatch && team.matchScore !== undefined && (

@@ -61,6 +61,18 @@ export const users = pgTable(
       .$type<RecruitmentStatus>()
       .default("looking"),
     activelyLooking: boolean("actively_looking").default(true),
+    openToOpportunities: boolean("open_to_opportunities").notNull().default(true),
+    matchDigestEmails: boolean("match_digest_emails").notNull().default(false),
+    profileEmbedding: real("profile_embedding").array(),
+    profileEmbeddingModel: text("profile_embedding_model"),
+    profileEmbeddingTaxonomy: text("profile_embedding_taxonomy"),
+    profileEmbeddingPreparation: text("profile_embedding_preparation"),
+    profileEmbeddingSourceHash: text("profile_embedding_source_hash"),
+    profileEmbeddingStatus: text("profile_embedding_status")
+      .$type<"ready" | "missing" | "invalid" | "stale">()
+      .notNull()
+      .default("missing"),
+    lastMatchDigestAt: timestamp("last_match_digest_at", { withTimezone: true }),
     emergencyAvailableUntil: timestamp("emergency_available_until", {
       withTimezone: true,
     }),
@@ -401,8 +413,74 @@ export const teamRolesNeeded = pgTable(
       .$type<"must" | "nice">()
       .notNull()
       .default("must"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    embedding: real("embedding").array(),
+    embeddingModel: text("embedding_model"),
+    embeddingTaxonomy: text("embedding_taxonomy"),
+    embeddingPreparation: text("embedding_preparation"),
+    embeddingSourceHash: text("embedding_source_hash"),
+    embeddingStatus: text("embedding_status")
+      .$type<"ready" | "missing" | "invalid" | "stale">()
+      .notNull()
+      .default("missing"),
   },
   (t) => [primaryKey({ columns: [t.teamId, t.roleId] })],
+);
+
+export const searchEmbeddings = pgTable(
+  "search_embedding",
+  {
+    entityType: text("entity_type").$type<"team" | "hackathon">().notNull(),
+    entityId: uuid("entity_id").notNull(),
+    vector: real("vector").array(),
+    modelVersion: text("model_version"),
+    taxonomyVersion: text("taxonomy_version"),
+    preparationVersion: text("preparation_version"),
+    sourceHash: text("source_hash"),
+    status: text("status")
+      .$type<"ready" | "missing" | "invalid" | "stale">()
+      .notNull()
+      .default("missing"),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.entityType, t.entityId] }),
+    index("search_embedding_entity_idx").on(t.entityType, t.entityId),
+    index("search_embedding_status_idx").on(t.status),
+  ],
+);
+
+export const userMatches = pgTable(
+  "user_match",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+    roleId: uuid("role_id").notNull().references(() => roleTaxonomy.id, { onDelete: "cascade" }),
+    score: integer("score").notNull(),
+    reasons: jsonb("reasons").$type<string[]>().notNull().default([]),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    evaluatedAt: timestamp("evaluated_at", { withTimezone: true }).notNull().defaultNow(),
+    digestClaimedAt: timestamp("digest_claimed_at", { withTimezone: true }),
+    digestSentAt: timestamp("digest_sent_at", { withTimezone: true }),
+    digestProviderId: text("digest_provider_id"),
+  },
+  (t) => [
+    uniqueIndex("user_match_identity_idx").on(t.userId, t.teamId, t.roleId),
+    index("user_match_active_idx").on(t.userId, t.active),
+  ],
+);
+
+export const emailQuota = pgTable(
+  "email_quota",
+  {
+    month: text("month").primaryKey(),
+    successfulSends: integer("successful_sends").notNull().default(0),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
 );
 
 /** Skills the team is explicitly looking for. */
@@ -465,16 +543,21 @@ export const invites = pgTable(
     roleId: uuid("role_id").references(() => roleTaxonomy.id),
     message: text("message"),
     status: text("status")
-      .$type<"pending" | "accepted" | "declined">()
+      .$type<"pending" | "accepted" | "declined" | "revoked" | "expired">()
       .notNull()
       .default("pending"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    digestClaimedAt: timestamp("digest_claimed_at", { withTimezone: true }),
+    digestSentAt: timestamp("digest_sent_at", { withTimezone: true }),
+    digestProviderId: text("digest_provider_id"),
   },
   (t) => [
     uniqueIndex("invite_uniq").on(t.teamId, t.userId),
     index("invite_user_idx").on(t.userId),
+    index("invite_pending_idx").on(t.userId, t.status),
   ],
 );
 
@@ -652,6 +735,7 @@ export const notifications = pgTable(
         | "system"
       >()
       .notNull(),
+    inviteId: uuid("invite_id").references(() => invites.id, { onDelete: "set null" }),
     title: text("title").notNull(),
     body: text("body"),
     link: text("link"),
@@ -796,6 +880,14 @@ export type RecruitmentStatus =
 export type SkillCategory =
   | "frontend"
   | "backend"
+  | "mobile"
+  | "data"
+  | "databases"
+  | "systems"
+  | "blockchain"
+  | "testing"
+  | "collaboration"
+  | "interdisciplinary"
   | "ai_ml"
   | "cloud_devops"
   | "ui_ux_design"

@@ -29,6 +29,8 @@ export const profileSchema = z.object({
   experienceLevel: experienceSchema,
   commitment: commitmentSchema,
   recruitmentStatus: recruitmentStatusSchema,
+  openToOpportunities: z.boolean().default(true),
+  matchDigestEmails: z.boolean().default(false),
   skills: z
     .array(z.object({ slug: z.string(), level: z.number().int().min(1).max(5), isPrimary: z.boolean() }))
     .max(25),

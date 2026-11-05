@@ -1,6 +1,6 @@
 /**
  * Seed script - system taxonomies ONLY (skills, roles, badges).
- * Run: bun run db:seed   (after bun run db:push)
+ * Run: npm run db:seed   (after npm run db:push)
  *
  * NO demo data: no example hackathons, no example people, no example teams.
  * The database starts empty. To populate hackathons:
@@ -11,25 +11,10 @@
 import { loadEnv } from "./load-env";
 loadEnv();
 
-import { sql } from "drizzle-orm";
-import { ROLE_TAXONOMY, SKILLS, BADGE_SEED } from "@/lib/constants";
+import { ROLE_TAXONOMY, BADGE_SEED } from "@/lib/constants";
+import { canonicalTaxonomySkills } from "@/lib/matching/taxonomy";
 
 type Db = any;
-
-async function reset(db: Db) {
-  console.log("· clearing all existing data…");
-  /* No RESTART IDENTITY: CockroachDB doesn't support it (and every PK here
-     is a uuid, so there are no sequences to reset anyway). */
-  await db.execute(sql`
-    truncate table
-      notification, bookmark, hackathon_result, user_badge, badge,
-      task, message, invite, join_request, team_skill_wanted, team_role_needed,
-      team_member, team, hackathon_profile, hackathon, club, college,
-      compat_answers, availability, user_role, user_skill, skill, role_taxonomy,
-      verification_token, session, account, "user"
-    cascade
-  `);
-}
 
 async function main() {
   /* Dynamic import: ensure dotenv (override) has run before the DB client
@@ -38,11 +23,10 @@ async function main() {
   const db: Db = mod.db ?? mod.default?.db;
   const schema = mod.schema ?? mod.default?.schema;
 
-  await reset(db);
-
   /* ---------------- Taxonomies (system data, not demo data) ---------------- */
   console.log("· seeding skill catalog…");
-  await db.insert(schema.skills).values(SKILLS);
+  const skillCatalog = canonicalTaxonomySkills();
+  await db.insert(schema.skills).values(skillCatalog).onConflictDoNothing();
 
   console.log("· seeding role taxonomy…");
   await db.insert(schema.roleTaxonomy).values(
@@ -53,10 +37,10 @@ async function main() {
       skillCategories: r.skillCategories,
       sortOrder: i,
     })),
-  );
+  ).onConflictDoNothing();
 
   console.log("· seeding badge definitions…");
-  await db.insert(schema.badges).values(BADGE_SEED);
+  await db.insert(schema.badges).values(BADGE_SEED).onConflictDoNothing();
 
   const skillRows: any[] = await db.select().from(schema.skills);
   const roleRows: any[] = await db.select().from(schema.roleTaxonomy);
